@@ -319,6 +319,16 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "sales":
       checkSales(screen, where, answers);
       return;
+    case "picture":
+      text(screen.title, `${where} title`);
+      list(screen.pages, `${where} pages`, 1).forEach((page, i) => {
+        if (!isObj(page)) fail(`${where} page ${i + 1} is malformed.`);
+        text(page.id, `${where} page ${i + 1} id`);
+        text(page.image, `${where} page ${i + 1} image`);
+        text(page.alt, `${where} page ${i + 1} alt`);
+        text(page.body, `${where} page ${i + 1} body`);
+      });
+      return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }

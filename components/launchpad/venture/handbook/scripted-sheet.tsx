@@ -5,6 +5,7 @@ import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-valu
 import { AccentLabel, WORKBOOK_BODY, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
+import { BudgetSplit } from "@/components/launchpad/venture/handbook/budget-split";
 
 function Part({ part }: { part: ScriptedPart }) {
   const templates = useTemplateBlanks();
@@ -37,6 +38,9 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
               </span>
             </h3>
           );
+        }
+        if (block.kind === "budget") {
+          return <BudgetSplit key={index} heading={block.heading} earnedLabel={block.earnedLabel} />;
         }
         if (block.kind === "list") {
           return (

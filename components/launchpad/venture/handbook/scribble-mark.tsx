@@ -29,7 +29,7 @@ const RHYTHM_ROT = [-8, 6, -4, 9];
 export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
   root.querySelectorAll("[data-rhythm-doodle]").forEach((node) => node.remove());
   const paras = [...root.querySelectorAll("p, li")].filter((el) => {
-    if (el.closest("[data-scribble-large], button, [data-inline-editor], [data-cost-workbook], [data-price-sheet], [data-jobs-sheet], [data-cost-row]")) return false;
+    if (el.closest("[data-scribble-large], button, [data-inline-editor], [data-cost-workbook], [data-price-sheet], [data-jobs-sheet], [data-cost-row], [data-budget-sheet]")) return false;
     return (el.textContent ?? "").trim().length > 0;
   });
   let cursor = Math.max(0, pageNumber - 1) * 3;

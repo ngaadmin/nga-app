@@ -40,6 +40,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "funding-start",
   "getting-ready",
   "sales",
+  "picture",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -508,6 +509,13 @@ export type SalesPieceField = {
   options: readonly SalesOption[];
 };
 
+/** A read-through on the shared lesson page: one picture and one paragraph per step. */
+export type LaunchpadPictureScreen = TaskScreenBase & {
+  type: "picture";
+  title: string;
+  pages: readonly { id: string; image: string; alt: string; body: string }[];
+};
+
 /** Rows 35-37. One step per door. Copy and options live on the screen. */
 export type LaunchpadSalesScreen = TaskScreenBase & {
   type: "sales";
@@ -571,7 +579,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadCompetitorScreen
   | LaunchpadFundingScreen
   | LaunchpadGettingReadyScreen
-  | LaunchpadSalesScreen;
+  | LaunchpadSalesScreen
+  | LaunchpadPictureScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

@@ -61,6 +61,7 @@ import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/l
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
+import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
@@ -680,6 +681,21 @@ export function VentureFlow({
               save(updated);
               go({ screen: "corridor", level: floor.level, entering: false });
               setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
+            }}
+          />
+        );
+        break;
+      }
+      const pictureScreen = current?.screens.find((s) => s.type === "picture");
+      if (pictureScreen && pictureScreen.type === "picture" && current) {
+        const taskId = current.id;
+        body = (
+          <PictureFlow
+            screen={pictureScreen}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={() => {
+              save(completeTask(progress, taskId));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

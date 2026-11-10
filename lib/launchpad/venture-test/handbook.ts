@@ -134,6 +134,8 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       }
     } else if (page.silver.id === "l2-s3") {
       out.push({ ...page, sheet: "funding" });
+    } else if (page.silver.id === "l6-s1") {
+      out.push({ ...page, kind: "summary", sheet: "budget-split" });
     } else if (page.silver.id === "l4-s1") {
       const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
       const sheets = salesWorkbookSheets(progress.answers, name);
@@ -299,7 +301,8 @@ export function handbookPagesForLevel(
       floorName: floor.name,
       silverNumber: 1,
       silver,
-      kind: "placeholder",
+      kind: silver.id === "l6-s1" ? "summary" : "placeholder",
+      sheet: silver.id === "l6-s1" ? "budget-split" : undefined,
       bronzeTitles: [],
       done: false,
     },

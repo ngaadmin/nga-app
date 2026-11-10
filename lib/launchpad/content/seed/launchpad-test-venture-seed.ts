@@ -32,6 +32,7 @@ import { competitorBronze, customerBronze, offerBronze } from "@/lib/launchpad/c
 import { fundingBronze } from "@/lib/launchpad/content/planning/funding";
 import { learnJourneySilver, testTweakSilver } from "@/lib/launchpad/content/getting-ready/screens";
 import { applySalesDoors } from "@/lib/launchpad/content/sales/screens";
+import { applyBudgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -115,6 +116,12 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
         return {
           ...floor,
           silvers: floor.silvers.map((silver) => (silver.id === "l4-s1" ? applySalesDoors(silver) : silver)),
+        };
+      }
+      if (floor.level === 6) {
+        return {
+          ...floor,
+          silvers: floor.silvers.map((silver) => (silver.id === "l6-s1" ? applyBudgetingDoor(silver) : silver)),
         };
       }
       if (floor.level === 3) {

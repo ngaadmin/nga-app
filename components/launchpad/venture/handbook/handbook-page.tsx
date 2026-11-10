@@ -35,6 +35,7 @@ import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-read
 import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { ScriptedSheetPage } from "@/components/launchpad/venture/handbook/scripted-sheet";
+import { budgetSplitSheet } from "@/lib/launchpad/content/budgeting/workbook";
 import { LevelTemplateSections } from "@/components/launchpad/venture/handbook/level-template";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
@@ -460,6 +461,8 @@ export function HandbookPage({
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.sheet?.startsWith("sales-") ? (
         <SalesWorkbookPage sheet={page.sheet} />
+      ) : page.sheet === "budget-split" ? (
+        <ScriptedSheetPage sheet={budgetSplitSheet()} />
       ) : page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (

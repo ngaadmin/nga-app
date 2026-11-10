@@ -41,13 +41,10 @@ describe("budget split dollars", () => {
     expect(stepSplitPercent(98, 1)).toBe(100);
   });
 
-  it("takes a non-5 giving percent out of Pay yourself", () => {
-    expect(budgetPercents(null)).toEqual(DEFAULT);
+  it("keeps Pay yourself at 40 when Giving is not 5", () => {
+    expect(budgetPercents(null)).toEqual([5, 15, 40, 40]);
     expect(budgetPercents(5)).toEqual(DEFAULT);
-    const ten = budgetPercents(10);
-    expect(ten).toEqual([10, 15, 35, 40]);
-    expect(splitDollars(100, ten)).toEqual([10, 15, 35, 40]);
-    expect(splitDollars(250, ten)).toEqual([25, 37, 88, 100]);
-    expect(splitDollars(250, ten).reduce((sum, value) => sum + value, 0)).toBe(250);
+    expect(budgetPercents(10)).toEqual([10, 15, 40, 40]);
+    expect(budgetPercents(10).reduce((sum, value) => sum + value, 0)).toBe(105);
   });
 });

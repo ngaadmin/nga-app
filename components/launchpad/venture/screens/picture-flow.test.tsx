@@ -3,9 +3,12 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
 import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
+import { fieldsAnswer } from "@/lib/launchpad/content/answers";
 import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE } from "@/lib/launchpad/content/budgeting/copy";
-import { readBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
+import { readBudgetSplit, writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
+import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
+import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 
 vi.mock("@/lib/academy/lessons/story-audio/playback", async (importOriginal) => {
@@ -97,6 +100,58 @@ describe("Budgeting picture screens", () => {
     fireEvent.click(lock);
     expect(readBudgetSplit()).toEqual([5, 15, 40, 40]);
     expect(onFinish).toHaveBeenCalled();
+  });
+
+  it("starts at 105 when Giving is 10 and enables the lock after one minus step", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    render(
+      <LaunchpadAnswersProvider
+        value={{
+          iconVentureId: "dog-walking",
+          answers: { "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false) },
+          setAnswer: () => {},
+          floors,
+        }}
+      >
+        <PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />
+      </LaunchpadAnswersProvider>,
+    );
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const lock = screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement;
+    expect(screen.getByText("Total 105%")).toBeTruthy();
+    expect(lock.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Less Emergencies" }));
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect(lock.disabled).toBe(false);
+  });
+
+  it("uses a saved split instead of the Giving default", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    writeBudgetSplit([12, 18, 30, 40]);
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    render(
+      <LaunchpadAnswersProvider
+        value={{
+          iconVentureId: "dog-walking",
+          answers: { "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false) },
+          setAnswer: () => {},
+          floors,
+        }}
+      >
+        <PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />
+      </LaunchpadAnswersProvider>,
+    );
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    expect(screen.getByText("12%")).toBeTruthy();
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("puts the split context, guidance, and question above the first row, in that order", () => {

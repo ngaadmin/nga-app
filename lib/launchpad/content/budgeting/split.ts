@@ -40,15 +40,13 @@ export function writeBudgetSplit(percents: readonly number[]): void {
 }
 
 /**
- * Giving is the Module 1 giving percent when one is stored, otherwise 5.
- * Emergencies stays 15 and Grow your business stays 40.
- * If Giving is not 5, the difference comes out of Pay yourself.
- * Pay yourself does not go below 0.
+ * Giving is the Module 1 percent when it is above 0, otherwise 5.
+ * Emergencies, Pay yourself, and Grow your business stay 15, 40, and 40.
+ * The four numbers do not have to add up to 100.
  */
 export function budgetPercents(givingPercent: number | null): number[] {
   const giving = givingPercent != null && Number.isFinite(givingPercent) && givingPercent > 0 ? givingPercent : GIVING_BASE;
-  const pay = Math.max(0, PAY_BASE - (giving - GIVING_BASE));
-  return [giving, 15, pay, 40];
+  return [giving, 15, PAY_BASE, 40];
 }
 
 /** Module 1 "Support a cause" percent, when the learner stored one above 0. */

@@ -87,6 +87,7 @@ export function PictureFlow({
         title={current.split ? "Set your own split" : screen.title}
         onBack={() => (page === 0 ? leave(onExit) : show(page - 1))}
         progress={total > 1 ? { index: page + 1, total } : undefined}
+        progressClassName={current.split ? "mt-8" : undefined}
         showMute={screen.voice === true}
         creditSlot={screen.pages.some((item) => pageCredit(item))}
         aboveFooter={pageAudio(current) ? <StoryAudioPlayer inline clip={pageAudio(current)} preloadSrc={pageAudio(screen.pages[page + 1])?.src} /> : null}

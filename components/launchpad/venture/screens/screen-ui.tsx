@@ -32,6 +32,7 @@ export function LessonTopBar({
   onBack,
   progress,
   trailing,
+  progressClassName = "mt-3.5",
 }: {
   title: string;
   onBack: () => void;
@@ -39,6 +40,8 @@ export function LessonTopBar({
   progress?: { index: number; total: number };
   /** Extra title-row content that is not the shared progress row. */
   trailing?: ReactNode;
+  /** Gap under the title. Only a screen that needs more air passes this. */
+  progressClassName?: string;
 }) {
   return (
     <div className="px-5 pt-[34px]" data-lesson-top-bar="">
@@ -52,7 +55,7 @@ export function LessonTopBar({
         {trailing}
       </div>
       {progress && (
-        <div className="mt-3.5 flex items-center gap-2" data-lesson-progress="">
+        <div className={`${progressClassName} flex items-center gap-2`} data-lesson-progress="">
           {Array.from({ length: progress.total }, (_, index) => (
             <span
               key={index}
@@ -147,6 +150,7 @@ export function LessonSurface({
   showMute = false,
   creditSlot = false,
   aboveFooter,
+  progressClassName,
 }: {
   title: string;
   onBack: () => void;
@@ -159,12 +163,14 @@ export function LessonSurface({
   creditSlot?: boolean;
   /** Sits above the credit and Continue, in the footer flow. */
   aboveFooter?: ReactNode;
+  /** Gap under the title, before the progress row. */
+  progressClassName?: string;
 }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const frame = (
     <section className={`flex min-h-0 flex-1 flex-col bg-white ${showMute ? "relative" : ""}`} data-lesson-surface="">
       {showMute ? <MasterMuteButton /> : null}
-      <LessonTopBar title={title} onBack={onBack} progress={progress} />
+      <LessonTopBar title={title} onBack={onBack} progress={progress} progressClassName={progressClassName} />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
       <div className="px-5 pb-[18px]">
         {aboveFooter}

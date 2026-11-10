@@ -509,11 +509,25 @@ export type SalesPieceField = {
   options: readonly SalesOption[];
 };
 
+/** One step of a picture lesson. `audio` is the narration file, when one exists. */
+export type LaunchpadPicturePage = {
+  id: string;
+  image: string;
+  alt: string;
+  body: string;
+  /** Footer credit, above Continue. Not part of the story paragraph. */
+  credit?: string;
+  /** Narration file. Omit when the screen has no audio yet. */
+  audio?: string;
+};
+
 /** A read-through on the shared lesson page: one picture and one paragraph per step. */
 export type LaunchpadPictureScreen = TaskScreenBase & {
   type: "picture";
   title: string;
-  pages: readonly { id: string; image: string; alt: string; body: string }[];
+  /** Show the shared mute control. Each page's audio file stays optional. */
+  voice?: boolean;
+  pages: readonly LaunchpadPicturePage[];
 };
 
 /** Rows 35-37. One step per door. Copy and options live on the screen. */

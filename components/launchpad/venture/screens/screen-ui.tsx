@@ -1,4 +1,9 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useContext, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { StoryCreditSlotContext } from "@/components/academy/lesson/academy-lesson-shell";
+import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 
 /** Navy Inter 400, 18px, line-height 1.44. Body, context, statements, and playback. */
@@ -117,6 +122,21 @@ export function ScreenIntro({ context, guidance }: { context: string; guidance?:
   );
 }
 
+/**
+ * Footer credit, portalled above Continue. Same slot as Academy's story credit,
+ * at the 16px floor. Medium weight, #5A6A99.
+ */
+export function LessonCredit({ credit }: { credit: string }) {
+  const slot = useContext(StoryCreditSlotContext);
+  if (!slot) return null;
+  return createPortal(
+    <p className="pb-1 text-center font-sans text-[16px] font-medium leading-[23px] text-[#5A6A99]" data-lesson-credit="">
+      {credit}
+    </p>,
+    slot,
+  );
+}
+
 /** White lesson frame: title bar, scroll, and the centered Continue. */
 export function LessonSurface({
   title,
@@ -124,20 +144,33 @@ export function LessonSurface({
   progress,
   footer,
   children,
+  showMute = false,
+  creditSlot = false,
 }: {
   title: string;
   onBack: () => void;
   progress?: { index: number; total: number };
   footer: ReactNode;
   children: ReactNode;
+  /** Shared Academy mute control. Off unless this screen asks for it. */
+  showMute?: boolean;
+  /** Mount the footer slot a story credit can portal into. */
+  creditSlot?: boolean;
 }) {
-  return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-lesson-surface="">
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null);
+  const frame = (
+    <section className={`flex min-h-0 flex-1 flex-col bg-white ${showMute ? "relative" : ""}`} data-lesson-surface="">
+      {showMute ? <MasterMuteButton /> : null}
       <LessonTopBar title={title} onBack={onBack} progress={progress} />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
-      <div className="px-5 pb-[18px]">{footer}</div>
+      <div className="px-5 pb-[18px]">
+        {creditSlot ? <div ref={setSlot} className="w-full" data-lesson-credit-slot="" /> : null}
+        {footer}
+      </div>
     </section>
   );
+  if (!creditSlot) return frame;
+  return <StoryCreditSlotContext.Provider value={slot}>{frame}</StoryCreditSlotContext.Provider>;
 }
 
 /** Navy Continue pill, 140 by 44. Disabled is the same pill at 35% opacity. */

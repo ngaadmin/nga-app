@@ -5,6 +5,9 @@
  */
 export const BUDGETING_TITLE = "Budgeting";
 
+/** Footer credit on screen 1 only. Exact wording. */
+export const BUDGETING_VOICE_CREDIT = "Voice created with Grok";
+
 export const BUDGETING_SCREEN_1 =
   "Your business is starting to make money. Now it's time to decide what that money does. Without a plan, it's easy to spend it all and wonder where it went. A budget is that plan. It makes sure your costs are covered, your business keeps going, and you still get to enjoy what you earned.";
 

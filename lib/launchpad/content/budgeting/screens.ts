@@ -1,5 +1,5 @@
 import type { LaunchpadBronze, LaunchpadPictureScreen, LaunchpadSilver, LaunchpadTask } from "@/lib/launchpad/content/types";
-import { BUDGETING_SCREEN_1, BUDGETING_SCREEN_2, BUDGETING_SCREEN_3, BUDGETING_TITLE } from "@/lib/launchpad/content/budgeting/copy";
+import { BUDGETING_SCREEN_1, BUDGETING_SCREEN_2, BUDGETING_SCREEN_3, BUDGETING_TITLE, BUDGETING_VOICE_CREDIT } from "@/lib/launchpad/content/budgeting/copy";
 
 const PAGES: LaunchpadPictureScreen["pages"] = [
   {
@@ -7,6 +7,7 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
     image: "/launchpad/budgeting/l6-s1-lars-cashbox.webp",
     alt: "Lars dropping a coin into a cash box",
     body: BUDGETING_SCREEN_1,
+    credit: BUDGETING_VOICE_CREDIT,
   },
   {
     id: "s2",
@@ -23,7 +24,7 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
 ];
 
 function budgetingScreen(taskId: string): LaunchpadPictureScreen {
-  return { id: `${taskId}-s1`, type: "picture", title: BUDGETING_TITLE, pages: PAGES };
+  return { id: `${taskId}-s1`, type: "picture", title: BUDGETING_TITLE, voice: true, pages: PAGES };
 }
 
 function budgetingTask(id: string): LaunchpadTask {

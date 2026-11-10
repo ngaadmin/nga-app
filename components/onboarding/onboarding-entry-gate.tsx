@@ -6,8 +6,8 @@ import {
   ONBOARDING_START_PATH,
 } from "@/lib/onboarding/guest-session";
 
-const PENNY_HOMEPAGE_SRC =
-  "/assets/illustrations/characters/penny/penny-master-512.webp";
+const HOLLY_HOMEPAGE_SRC =
+  "/assets/illustrations/characters/holly/holly-waving-512.webp";
 
 /** Local to this screen so the shared button variants stay orange and uppercase. */
 const welcomeActionClass =
@@ -39,8 +39,8 @@ export function OnboardingEntryGate({
         <div className="order-1 flex items-center justify-center lg:order-none lg:justify-end">
           <div className="flex w-full max-w-[15.6rem] items-center justify-center sm:max-w-[18rem] lg:max-w-[19.5rem]">
             <Image
-              src={PENNY_HOMEPAGE_SRC}
-              alt="Penny, your money-skills guide"
+              src={HOLLY_HOMEPAGE_SRC}
+              alt="Holly waving"
               width={720}
               height={720}
               className="h-auto max-h-[14.1rem] w-full object-contain object-center sm:max-h-[16.8rem] lg:max-h-[19.5rem]"

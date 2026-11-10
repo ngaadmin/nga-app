@@ -115,7 +115,7 @@ describe("lesson close screen reward rendering", () => {
     expect(html).toContain("+50");
     expect(html).not.toContain("Bonus run");
     expect(html).toContain('data-lesson-reward-total="150"');
-    expect(html).toContain("penny-master-512.webp");
+    expect(html).toContain("holly-waving-512.webp");
   });
 
   it("renders the bonus line only when bonus coins are above zero", () => {

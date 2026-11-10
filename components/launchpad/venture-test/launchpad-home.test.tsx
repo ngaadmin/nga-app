@@ -114,6 +114,22 @@ describe("Launchpad home In Progress tile", () => {
     const level2 = payload.floors[1]!.name;
     expect(document.querySelector("[data-tile-level-name]")?.textContent).toBe(level2);
   });
+
+  it("after the Level 6 split is locked, home opens the workbook on Level 6, not locked Level 7", async () => {
+    const payload = launchpadTestVentureSeed("dog-walking");
+    const done = payload.floors.filter((floor) => floor.level < 7);
+    saveVentureTestProgress("dog-walking", {
+      completedTaskIds: done.flatMap((floor) => floor.silvers.flatMap((silver) => silver.bronzes.flatMap((bronze) => bronze.tasks.map((task) => task.id)))),
+    });
+    const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", source: "seed" } };
+    render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={ventures} reset={false} />);
+    expect(await screen.findByText("Growing")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
+    expect(await screen.findByRole("heading", { name: "My budget split" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Level 6, Budgeting/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Level 7/ })).toBeNull();
+    expect(document.querySelector("[data-handbook-scope]")?.getAttribute("data-handbook-scope")).toBe("6");
+  });
 });
 
 describe("In Progress tile: open tasks (Come back to this later)", () => {

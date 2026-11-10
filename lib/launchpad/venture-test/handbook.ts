@@ -26,11 +26,13 @@ import { clampBusinessName, IDENTITY_ANSWER_VERSION, type BusinessIdentityAnswer
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   currentLevel,
+  floorState,
   isBronzeDone,
   isFloorDone,
   isSilverDone,
   isTaskDone,
   setProgressAnswer,
+  ventureTestFloorUnlocked,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 
@@ -276,6 +278,28 @@ export function handbookScopePages(
   return expandSheets(progress, views, true)
     .filter((page) => page.level === level)
     .map((page, index) => ({ ...page, number: index + 1 }));
+}
+
+/** A real workbook page, not a locked placeholder floor. */
+function floorHasWorkbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[], level: number): boolean {
+  return handbookScopePages(progress, floors, level).some((page) => page.kind !== "placeholder");
+}
+
+/**
+ * Where the home workbook opens. The highest level the learner has reached
+ * that has workbook pages. A locked Growing floor is not that level, even
+ * when it is the next floor after Budgeting. The test route counts Sales,
+ * Delivery, and Budgeting as reached.
+ */
+export function workbookLandingLevel(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): number {
+  const current = currentLevel(progress, floors);
+  const reached = floors.filter((floor) => {
+    if (!floorHasWorkbookPages(progress, floors, floor.level)) return false;
+    if (isFloorDone(progress, floor) || ventureTestFloorUnlocked(floor.level)) return true;
+    return floor.level === current && floorState(progress, floors, floor.level) !== "locked";
+  });
+  if (!reached.length) return floors[0]?.level ?? 1;
+  return Math.max(...reached.map((floor) => floor.level));
 }
 
 /**

@@ -17,6 +17,7 @@ import {
   hasHandbook,
   isHandbookPageEditable,
   withShortcutSampleAnswers,
+  workbookLandingLevel,
 } from "@/lib/launchpad/venture-test/handbook";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
@@ -123,6 +124,32 @@ describe("handbook pages", () => {
     expect(isHandbookPageEditable("building", false)).toBe(false);
     expect(isHandbookPageEditable("home", true)).toBe(false);
     expect(isHandbookPageEditable("home", false)).toBe(false);
+  });
+});
+
+describe("workbook landing level", () => {
+  const taskIds = (floors: typeof FLOORS, level: number) =>
+    floors.filter((floor) => floor.level === level).flatMap((floor) => floor.silvers.flatMap((silver) => silver.bronzes.flatMap((bronze) => bronze.tasks.map((task) => task.id))));
+
+  it("opens on the highest reached level with workbook pages, and not on locked Growing", () => {
+    expect(workbookLandingLevel(EMPTY_VENTURE_TEST_PROGRESS, FLOORS)).toBe(1);
+    const throughBudgeting = {
+      completedTaskIds: FLOORS.filter((floor) => floor.level < 7).flatMap((floor) => taskIds(FLOORS, floor.level)),
+    };
+    expect(workbookLandingLevel(throughBudgeting, FLOORS)).toBe(6);
+    const onlyBudgeting = { completedTaskIds: taskIds(FLOORS, 6) };
+    expect(workbookLandingLevel(onlyBudgeting, FLOORS)).toBe(6);
+  });
+
+  it("counts the test-route unlock as reaching Budgeting", () => {
+    const previous = process.env.VERCEL_ENV;
+    process.env.VERCEL_ENV = "preview";
+    try {
+      expect(workbookLandingLevel(EMPTY_VENTURE_TEST_PROGRESS, FLOORS)).toBe(6);
+    } finally {
+      if (previous == null) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = previous;
+    }
   });
 });
 

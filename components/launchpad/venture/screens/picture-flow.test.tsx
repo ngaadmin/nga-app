@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
 import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
+import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE } from "@/lib/launchpad/content/budgeting/copy";
 import { readBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
@@ -96,6 +97,33 @@ describe("Budgeting picture screens", () => {
     fireEvent.click(lock);
     expect(readBudgetSplit()).toEqual([5, 15, 40, 40]);
     expect(onFinish).toHaveBeenCalled();
+  });
+
+  it("puts the split context, guidance, and question above the first row, in that order", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const editor = document.querySelector("[data-budget-editor]")!;
+    const text = editor.textContent ?? "";
+    const contextAt = text.indexOf(BUDGETING_SPLIT_CONTEXT);
+    const guidanceAt = text.indexOf(BUDGETING_SPLIT_GUIDANCE);
+    const askAt = text.indexOf(BUDGETING_SPLIT_ASK);
+    const givingAt = text.indexOf("Giving");
+    expect(contextAt).toBeGreaterThanOrEqual(0);
+    expect(contextAt).toBeLessThan(guidanceAt);
+    expect(guidanceAt).toBeLessThan(askAt);
+    expect(askAt).toBeLessThan(givingAt);
+    const context = editor.querySelector("[data-split-copy='context']")!;
+    expect(context.className).toContain("text-[18px]");
+    expect(context.className).toContain("leading-[26px]");
+    const guidance = [...editor.querySelectorAll("p")].find((node) => node.textContent === BUDGETING_SPLIT_GUIDANCE)!;
+    const ask = [...editor.querySelectorAll("p")].find((node) => node.textContent === BUDGETING_SPLIT_ASK)!;
+    expect(guidance.className).toContain("text-[16px]");
+    expect(ask.className).toContain("text-[21px]");
+    expect(editor.textContent).not.toMatch(/rule of thumb/i);
   });
 
   it("puts the Grok credit above Continue on screen 1 only, and keeps the mute control on every screen", () => {

@@ -62,9 +62,15 @@ import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
+import { primeStoryAudioFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
+
+/** A Budgeting-style picture door that has a narration file. */
+function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly { type: string; pages?: readonly { audio?: { src?: string } }[] }[] }[] }): boolean {
+  return bronze.tasks.some((task) => task.screens.some((screen) => screen.type === "picture" && screen.pages?.some((page) => Boolean(page.audio?.src))));
+}
 
 /** What the forward button is waiting for on a capture page. */
 function pageHint(page: TaskPage | undefined): string | undefined {
@@ -436,7 +442,11 @@ export function VentureFlow({
               setHandbook({ ventureId, entry: "building", openSilverId: view.workbookCue?.silverId, level: floor.level, openLevel: floor.level }),
           }}
           onBack={toBuilding}
-          onOpenSilver={(silverId) => go({ screen: "doors", level: floor.level, silverId })}
+          onOpenSilver={(silverId) => {
+            const target = floor.silvers.find((item) => item.id === silverId);
+            if (target?.bronzes.some(bronzeHasVoice)) primeStoryAudioFromGesture();
+            go({ screen: "doors", level: floor.level, silverId });
+          }}
         />
       );
       break;
@@ -468,6 +478,7 @@ export function VentureFlow({
           onOpenBronze={(bronzeId) => {
             const bronze = silver.bronzes.find((b) => b.id === bronzeId);
             if (!bronze) return;
+            if (bronzeHasVoice(bronze)) primeStoryAudioFromGesture();
             // No task list: the door opens the first unfinished task (or the first, to review).
             openTask({ level: floor.level, silverId: silver.id, bronzeId }, bronzeEntryTaskIndex(progress, bronze));
           }}

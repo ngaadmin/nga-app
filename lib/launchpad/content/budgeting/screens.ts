@@ -8,18 +8,21 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
     alt: "Lars dropping a coin into a cash box",
     body: BUDGETING_SCREEN_1,
     credit: BUDGETING_VOICE_CREDIT,
+    audio: { src: "/launchpad/budgeting/l6-s1-vo.mp3", durationMs: 15073 },
   },
   {
     id: "s2",
     image: "/launchpad/budgeting/l6-s2-lars-tower.webp",
     alt: "Lars beside a tower of bricks, with a house, a car and a rocket",
     body: BUDGETING_SCREEN_2,
+    audio: { src: "/launchpad/budgeting/l6-s2-vo.mp3", durationMs: 20820 },
   },
   {
     id: "s3",
     image: "/launchpad/budgeting/l6-s3-half-built.webp",
     alt: "A half-built house, car and rocket with loose bricks",
     body: BUDGETING_SCREEN_3,
+    audio: { src: "/launchpad/budgeting/l6-s3-vo.mp3", durationMs: 24346 },
   },
 ];
 

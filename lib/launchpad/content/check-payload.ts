@@ -329,7 +329,11 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
         text(page.alt, `${where} page ${i + 1} alt`);
         text(page.body, `${where} page ${i + 1} body`);
         text(page.credit, `${where} page ${i + 1} credit`, true);
-        text(page.audio, `${where} page ${i + 1} audio`, true);
+        if (page.audio !== undefined) {
+          if (!isObj(page.audio)) fail(`${where} page ${i + 1} audio is malformed.`);
+          text(page.audio.src, `${where} page ${i + 1} audio src`);
+          if (typeof page.audio.durationMs !== "number" || page.audio.durationMs <= 0) fail(`${where} page ${i + 1} audio duration is missing.`);
+        }
       });
       return;
     default:

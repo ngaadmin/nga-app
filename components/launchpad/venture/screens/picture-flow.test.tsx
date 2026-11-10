@@ -7,7 +7,10 @@ import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow
 
 vi.mock("@/lib/academy/lessons/story-audio/playback", () => ({
   playStoryClipOnScreen: vi.fn(() => Promise.resolve(false)),
+  playStoryClipFromGesture: vi.fn(),
   stopStoryAudio: vi.fn(),
+  storyAudioElement: vi.fn(() => null),
+  installStoryAudioFallback: vi.fn(() => () => {}),
   applyMasterMute: (muted: boolean) => {
     window.localStorage.setItem("nga_master_muted", muted ? "1" : "0");
   },

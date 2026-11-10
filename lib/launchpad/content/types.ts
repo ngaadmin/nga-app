@@ -517,8 +517,8 @@ export type LaunchpadPicturePage = {
   body: string;
   /** Footer credit, above Continue. Not part of the story paragraph. */
   credit?: string;
-  /** Narration file. Omit when the screen has no audio yet. */
-  audio?: string;
+  /** Narration clip. Same shape as an Academy story beat. Omit when there is no file yet. */
+  audio?: { src: string; durationMs: number };
 };
 
 /** A read-through on the shared lesson page: one picture and one paragraph per step. */

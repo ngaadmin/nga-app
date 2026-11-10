@@ -24,7 +24,7 @@ describe("Agree the job", () => {
   it("starts on section 1 unticked, and Continue stays off until I've read this", () => {
     renderAgree();
     expect(screen.getByRole("heading", { name: "Agree the job" })).toBeTruthy();
-    expect(screen.getByText("1 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 1 of 4")).toBeTruthy();
     expect(screen.getByText(AGREE_PROMPT)).toBeTruthy();
     expect(screen.getByRole("heading", { name: AGREE_ITEMS[0]!.title })).toBeTruthy();
     expect(screen.getByText("name,")).toBeTruthy();
@@ -34,7 +34,7 @@ describe("Agree the job", () => {
     expect(tick.getAttribute("aria-pressed")).toBe("false");
     expect(continueButton.disabled).toBe(true);
     fireEvent.click(continueButton);
-    expect(screen.getByText("1 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 1 of 4")).toBeTruthy();
     fireEvent.click(tick);
     expect(continueButton.disabled).toBe(false);
     expect(document.body.textContent).not.toMatch(/\b(silver|bronze|gold|NGA)\b/);
@@ -44,22 +44,22 @@ describe("Agree the job", () => {
     const { onFinish } = renderAgree();
     fireEvent.click(screen.getByRole("button", { name: "I've read this" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("2 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 2 of 4")).toBeTruthy();
     const subheading = screen.getByText("Suggested additional questions:");
     expect(subheading.className).toContain("mt-4");
-    expect(subheading.className).toContain("text-[16px]");
+    expect(subheading.className).toContain("text-[18px]");
     expect(screen.getByText("Is there anything the dog isn't allowed to do?")).toBeTruthy();
     expect((screen.getByRole("button", { name: "I've read this" }) as HTMLButtonElement).getAttribute("aria-pressed")).toBe("false");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "I've read this" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("3 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 3 of 4")).toBeTruthy();
     expect(screen.getByText("and where the job will happen.")).toBeTruthy();
     expect(screen.getByText("or an app.")).toBeTruthy();
     expect(screen.queryByText(/Venmo|PayPal|Cash App/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "I've read this" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("4 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 4 of 4")).toBeTruthy();
     expect(screen.getByText("or you need to cut the walk short.")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "I've read this" }));
@@ -86,7 +86,7 @@ describe("Agree the job", () => {
     fireEvent.click(screen.getByRole("button", { name: "I've read this" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    expect(screen.getByText("1 of 4")).toBeTruthy();
+    expect(screen.getByText("Section 1 of 4")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
     expect(onExit).not.toHaveBeenCalled();
   });

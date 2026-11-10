@@ -1,6 +1,6 @@
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { offerOf, priceOf } from "@/lib/launchpad/content/answers";
-import { formatMoney } from "@/lib/dashboard/currency/format-money";
+import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import { availabilityPhrase, chipLabel } from "@/lib/launchpad/content/planning/catalog";
 import { OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
@@ -91,7 +91,7 @@ export function marketingLines(
     return {
       id: row.serviceId,
       name: row.serviceId === "dog-walking" ? "Dog walking" : row.serviceId === "grooming" ? "Grooming" : row.serviceId,
-      price: formatMoney(row.price, currency),
+      price: formatWorkbookMoney(row.price, currency),
       unit: jobPhrase(row.serviceId, offering?.packages[0]),
     };
   });

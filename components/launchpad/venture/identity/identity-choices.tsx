@@ -13,7 +13,7 @@ import {
   type NameFontId,
 } from "@/lib/launchpad/content/identity";
 import { LogoMark } from "@/components/launchpad/venture/identity/business-logo";
-import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { FREDOKA_CLASS, NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 
 /*
@@ -59,7 +59,7 @@ function LogoTile({
       aria-label={label}
       data-option={option}
       onClick={onPick}
-      className="flex min-w-0 max-w-[92px] flex-1 flex-col items-center gap-2 text-[13px] font-medium text-[#374151]"
+      className="flex min-w-0 max-w-[92px] flex-1 flex-col items-center gap-2 text-[18px] font-medium text-[#374151]"
     >
       <span
         aria-hidden="true"
@@ -127,7 +127,7 @@ export function ColorChoices({
           );
         })}
       </Group>
-      <p className="mt-3.5 min-h-5 text-center text-sm font-medium text-[#374151]" aria-hidden="true" data-color-name="">
+      <p className="mt-3.5 min-h-5 text-center text-[18px] font-medium text-[#374151]" aria-hidden="true" data-color-name="">
         {picked?.label ?? ""}
       </p>
     </div>
@@ -155,10 +155,10 @@ export function IconChoices({
   );
 }
 
-/** r10 section heading (18px Poppins 600). */
+/** Section heading: Fredoka 600, 18px. */
 export function SectionHeading({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h3 id={id} className="mb-3 font-heading text-lg font-semibold leading-[1.3] text-[#111827]">
+    <h3 id={id} className={`mb-3 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#19347D]`}>
       {children}
     </h3>
   );
@@ -186,7 +186,7 @@ export function NameInput({
   const count = Array.from(value).length;
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className={visibleLabel ? "mb-2 text-[13px] font-medium text-[#374151]" : "sr-only"}>
+      <label htmlFor={id} className={visibleLabel ? "mb-2 text-[18px] font-medium text-[#374151]" : "sr-only"}>
         {label}
       </label>
       <input
@@ -198,10 +198,10 @@ export function NameInput({
         autoComplete="off"
         aria-describedby={`${id}-count`}
         onChange={(e) => update("name", e.target.value)}
-        className="h-[54px] w-full rounded-xl bg-white px-4 text-[17px] font-medium text-[#111827] shadow-[inset_0_0_0_1.5px_#E5E7EB] outline-none placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_1.5px_#3FB7DA]"
+        className="h-[54px] w-full rounded-xl bg-white px-4 font-sans text-[18px] font-medium leading-[26px] text-[#111827] shadow-[inset_0_0_0_1.5px_#E5E7EB] outline-none placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_1.5px_#3FB7DA]"
         style={{ caretColor: IDENTITY_ACCENT }}
       />
-      <span id={`${id}-count`} className="mt-[7px] self-end text-xs text-[#9CA3AF]" aria-live="polite">
+      <span id={`${id}-count`} className="mt-[7px] self-end text-[16px] text-[#9CA3AF]" aria-live="polite">
         <span aria-hidden="true">
           {count}/{maxLength}
         </span>
@@ -299,7 +299,7 @@ export function NameColorChoices({
           >
             <Radio on={on} />
             <span aria-hidden="true" className="ml-0.5 size-[18px] flex-none rounded-full" style={{ background: hex }} />
-            <span className="-ml-1 text-base font-medium text-[#111827]">{o.label}</span>
+            <span className="-ml-1 font-sans text-[18px] font-medium leading-[26px] text-[#111827]">{o.label}</span>
           </button>
         );
       })}
@@ -371,7 +371,7 @@ export function Segmented<T extends string>({
             aria-selected={on}
             aria-controls={panelId}
             onClick={() => onChange(it.id)}
-            className={`relative flex h-[38px] flex-1 items-center justify-center rounded-[9px] text-sm font-medium before:absolute before:-inset-y-[3px] before:inset-x-0 before:content-[''] ${
+            className={`relative flex h-[38px] flex-1 items-center justify-center rounded-[9px] text-[18px] font-medium before:absolute before:-inset-y-[3px] before:inset-x-0 before:content-[''] ${
               on ? "bg-white text-[#111827] shadow-[0_0_0_1px_#E5E7EB]" : "text-[#6B7280]"
             }`}
           >
@@ -417,9 +417,9 @@ export function IdentityEditor({
   const logo = LOGO_TABS.some((t) => t.id === field);
   return (
     <div data-identity-editor="">
-      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Logo</p>
+      <p className="mb-1.5 text-[16px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Logo</p>
       <Segmented label="Change your logo" items={LOGO_TABS} value={logo ? (field as (typeof LOGO_TABS)[number]["id"]) : null} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
-      <p className="mb-1.5 mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Name</p>
+      <p className="mb-1.5 mt-3 text-[16px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Name</p>
       <Segmented label="Change your name" items={NAME_TABS} value={logo ? null : (field as (typeof NAME_TABS)[number]["id"])} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
       <div id={panelId} role="tabpanel" aria-labelledby={`${idPrefix}-tab-${field}`} className="mt-5" data-editor={field}>
         <IdentityFieldEditor field={field} choices={choices} answer={answer} update={update} nameInputId={`${idPrefix}-name`} />

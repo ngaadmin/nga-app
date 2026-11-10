@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { CompetitorAnswer, CustomerAnswer, LaunchpadAnswers, OfferAnswer, ServiceOffering } from "@/lib/launchpad/content/answers";
 import { competitorOf, customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -36,8 +37,8 @@ function Chip({
 }) {
   if (lined) {
     return (
-      <button type="button" aria-pressed={selected} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-left text-[15px] text-[#19347D]">
-        <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] text-[12px] text-white ${selected ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>{selected ? "✓" : ""}</span>
+      <button type="button" aria-pressed={selected} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-left text-[18px] text-[#19347D]">
+        <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] text-[18px] text-white ${selected ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>{selected ? "✓" : ""}</span>
         {label}
       </button>
     );
@@ -51,7 +52,7 @@ function Chip({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`inline-flex h-9 items-center gap-1 rounded-full border bg-white px-3 text-[14px] font-medium ${selected ? on : "border-[#E5E7EB] text-[#19347D]"}`}
+      className={`inline-flex h-9 items-center gap-1 rounded-full border bg-white px-3 text-[18px] font-medium ${selected ? on : "border-[#E5E7EB] text-[#19347D]"}`}
     >
       {selected && <span aria-hidden="true">✓</span>}
       {label}
@@ -128,7 +129,7 @@ export function OfferLoopFlow({
         </p>
         {!onWhen && offering && catalog && (
           <>
-            <p className="mt-3 rounded-2xl bg-[#F7FAFD] px-3 py-3 text-[15px] leading-snug text-[#19347D]">
+            <p className="mt-3 rounded-2xl bg-[#F7FAFD] px-3 py-3 text-[18px] leading-snug text-[#19347D]">
               I offer {offering.packages.map((id) => chipLabel(id)).join(", ") || "…"}.
               {(offering.addons.length > 0 || offering.addonsExtra) && ` Extras I can add: ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
             </p>
@@ -156,7 +157,7 @@ export function OfferLoopFlow({
             </div>
             <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "addon" ? null : "addon")}>{screen.copy.addExtra}</button>
             {extraOpen === "addon" && (
-              <label className="mt-2 block text-[13px] text-[#6B7280]">
+              <label className="mt-2 block text-[16px] text-[#6B7280]">
                 Add another extra (optional)
                 <input aria-label="Your own extra" maxLength={40} value={offering.addonsExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, addonsExtra: event.target.value }))} className="mt-1 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type your own extra" />
               </label>
@@ -372,7 +373,7 @@ export function CompetitorFlow({
       <LessonTopBar
         title="What others charge"
         onBack={() => (step === 2 ? setStep(1) : onExit())}
-        trailing={<span className="text-[13px] font-semibold text-[#0A8FA8]">{step} of 2</span>}
+        trailing={<span className="text-[18px] font-semibold text-[#0A8FA8]">{step} of 2</span>}
       />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
         {step === 1 ? (
@@ -400,13 +401,13 @@ export function CompetitorFlow({
         ) : (
           <>
             <p className={LESSON_HINT}>{screen.copy.extrasIntro}</p>
-            <h2 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">They often include</h2>
+            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>They often include</h2>
             <div className="flex flex-wrap gap-2">
               {screen.addons.map((item) => (
                 <Chip key={item.id} tone="package" label={item.label} selected={draft.addons.includes(item.id)} onClick={() => write({ ...draft, addons: toggle(draft.addons, item.id) })} />
               ))}
             </div>
-            <h2 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">{screen.copy.ideaTitle}</h2>
+            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{screen.copy.ideaTitle}</h2>
             <button type="button" className="flex h-11 w-full items-center justify-between rounded-xl bg-white px-3 text-left font-semibold text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setIdeasOpen(true)}>
               {chipLabel(draft.doDifferently)}
               <span aria-hidden="true">▾</span>
@@ -414,16 +415,16 @@ export function CompetitorFlow({
             {ideasOpen && (
               <div className="mt-2 rounded-2xl bg-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.12)]" role="dialog" aria-label={screen.copy.ideaTitle}>
                 <p className="font-heading text-lg font-bold text-[#19347D]">{screen.copy.ideaTitle}</p>
-                <p className="text-[13px] text-[#6B7280]">{screen.copy.ideaHint}</p>
+                <p className="text-[16px] text-[#6B7280]">{screen.copy.ideaHint}</p>
                 <div className="mt-2 flex flex-col">
                   {screen.ideas.map((idea) => (
-                    <label key={idea.id} className="flex h-11 items-center gap-2 border-b border-[#F3F4F6] text-[15px] text-[#19347D]">
+                    <label key={idea.id} className="flex h-11 items-center gap-2 border-b border-[#F3F4F6] text-[18px] text-[#19347D]">
                       <input type="radio" name="do-differently" checked={draft.doDifferently === idea.id} onChange={() => write({ ...draft, doDifferently: idea.id })} />
                       {idea.label}
                     </label>
                   ))}
                 </div>
-                <p className="mt-2 text-[13px] text-[#6B7280]">{screen.copy.elseHint}</p>
+                <p className="mt-2 text-[16px] text-[#6B7280]">{screen.copy.elseHint}</p>
                 {draft.doDifferently === SOMETHING_ELSE_ID && (
                   <input aria-label="Your own idea" maxLength={80} value={draft.doDifferentlyExtra ?? ""} onChange={(event) => write({ ...draft, doDifferentlyExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
                 )}

@@ -5,8 +5,10 @@ import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/content/types";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
-import { MARKETING_MATERIALS_KEY, OWN_LABEL, SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
+import { OWN_LABEL, SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
+import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
+import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 import { LESSON_BODY, LESSON_HINT } from "@/components/launchpad/venture/screens/screen-ui";
 
@@ -54,12 +56,9 @@ function ChannelsStep({
   );
   const [extra, setExtra] = useState<Record<string, string>>({ ...(saved?.whereExtra ?? {}) });
   const groups = screen.whereGroups ?? [];
-  const pages = useMemo(() => {
-    const later = (screen.wherePages ?? []).map((ids) => ids.filter((id) => selected.includes(id))).filter((ids) => ids.length > 0);
-    return [[] as string[], ...later];
-  }, [screen.wherePages, selected]);
+  const pages = useMemo(() => [[] as string[], ...(screen.wherePages ?? []).map((ids) => [...ids])], [screen.wherePages]);
   const total = pages.length;
-  const current = pages[Math.min(page, total - 1)] ?? [];
+  const current = (pages[Math.min(page, total - 1)] ?? []).filter((id) => selected.includes(id));
   const ready = page === 0
     ? selected.some((id) => id !== "tbc")
     : current.every((id) => (where[id] ?? []).length > 0 || extra[id]?.trim());
@@ -106,7 +105,7 @@ function ChannelsStep({
                       <Chip key={option.id} label={option.label} selected={picked.includes(option.id)} onClick={() => setWhere({ ...where, [id]: toggle(picked, option.id) })} />
                     ))}
                     {group.allowOwn ? (
-                      <Chip label={OWN_LABEL} selected={picked.includes("own")} onClick={() => setWhere({ ...where, [id]: toggle(picked, "own") })} />
+                      <Chip dashed label={OWN_LABEL} selected={picked.includes("own")} onClick={() => setWhere({ ...where, [id]: toggle(picked, "own") })} />
                     ) : null}
                   </div>
                   {picked.includes("own") ? (
@@ -114,7 +113,7 @@ function ChannelsStep({
                       aria-label={`${group.heading} own place`}
                       value={extra[id] ?? ""}
                       onChange={(event) => setExtra({ ...extra, [id]: event.target.value.slice(0, 80) })}
-                      className="mt-2 h-11 w-full rounded-xl px-3 font-sans text-[16px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none"
+                      className="mt-2 h-11 w-full rounded-xl px-3 font-sans text-[18px] leading-[26px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none"
                     />
                   ) : null}
                 </div>
@@ -159,7 +158,7 @@ function MaterialsStep({
     if (field.channelId === "online") return selected.has("online");
     return false;
   });
-  const total = fields.length ? 2 : 1;
+  const total = 2;
   const required = fields.filter((field) => !field.optional);
   const ready = page === 0 ? Boolean(mainService && hook && proof) : required.every((field) => pieces[field.id]);
   const finish = () => {
@@ -179,17 +178,20 @@ function MaterialsStep({
     }
     onFinish(answer);
   };
-  const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void) => (
-    <label className="mt-4 block">
-      <ScreenPrompt tone="sub" flush>{label}</ScreenPrompt>
-      <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 h-11 w-full rounded-xl bg-white px-3 font-sans text-[16px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3] outline-none">
-        <option value="">Choose</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>{option.label}</option>
-        ))}
-      </select>
-    </label>
-  );
+  const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void) => {
+    const field: LaunchpadTextField = {
+      name: label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "") || "pick",
+      input: "choice",
+      label,
+      options: options.map((option) => ({ id: option.id, label: option.label })),
+    };
+    return (
+      <div className="mt-4">
+        <ScreenPrompt tone="sub" flush>{label}</ScreenPrompt>
+        <FieldControl field={field} value={value} onChange={(next) => onChange(String(next))} appearance="underline" idPrefix="sales" />
+      </div>
+    );
+  };
   return (
     <LessonSurface
       title={screen.title}
@@ -252,7 +254,7 @@ function TargetsStep({
       inputMode="numeric"
       value={counts[id] ?? ""}
       onChange={(event) => setCounts({ ...counts, [id]: event.target.value.replace(/\D/g, "").slice(0, 3) })}
-      className="mx-1 inline-flex h-9 w-12 rounded-lg border border-[#D5DAE3] text-center font-sans text-[16px] font-semibold text-[#19347D] outline-none"
+      className="mx-1 inline-flex h-9 w-12 rounded-lg border border-[#D5DAE3] text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none"
     />
   );
   return (

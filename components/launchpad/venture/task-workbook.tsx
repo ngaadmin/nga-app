@@ -53,7 +53,7 @@ export function TaskWorkbook(props: {
       {/* AC2: the body takes what's left and the nav stays pinned below it. */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto" data-workbook-body="">
       <TrailCrumb level={props.level} current={neutralTitle(task.title)} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
-      <div className="mx-5 mt-2.5 flex justify-between font-heading text-[13px] font-semibold">
+      <div className="mx-5 mt-2.5 flex justify-between font-sans text-[16px] font-semibold leading-[23px]">
         <button type="button" onClick={props.onExit} className="text-nga-slate">
           ✕ Exit
         </button>
@@ -81,7 +81,7 @@ export function TaskWorkbook(props: {
                 onClick={() => props.onJump(i)}
                 aria-current={cur ? "step" : undefined}
                 aria-label={`Task ${i + 1}${t.done ? ", done" : ""}`}
-                className={`inline-flex size-[30px] items-center justify-center rounded-full font-heading text-[13px] font-bold ${tone}`}
+                className={`inline-flex size-11 items-center justify-center rounded-full font-sans text-[16px] font-bold leading-none ${tone}`}
               >
                 {i + 1}
               </button>
@@ -91,7 +91,7 @@ export function TaskWorkbook(props: {
       </div>
       )}
       {props.eyebrow && (
-        <p className="mx-6 mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]" data-eyebrow="">
+        <p className="mx-6 mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]" data-eyebrow="">
           {props.eyebrow}
         </p>
       )}
@@ -105,7 +105,7 @@ export function TaskWorkbook(props: {
           <TaskScreen key={screen.id} screen={screen} />
         ))}
       {props.nextDisabled && props.nextHint && (
-        <p id="workbook-next-hint" className="mx-5 mb-2 text-center text-[13px] text-nga-slate">
+        <p id="workbook-next-hint" className="mx-5 mb-2 text-center font-sans text-[16px] leading-[23px] text-nga-slate">
           {props.nextHint}
         </p>
       )}
@@ -132,7 +132,7 @@ export function TaskWorkbook(props: {
           <button
             type="button"
             onClick={props.onSkip}
-            className="min-h-11 px-3 font-heading text-[15px] font-semibold text-nga-slate underline underline-offset-4"
+            className="min-h-11 px-3 font-sans text-[16px] font-semibold leading-[23px] text-nga-slate underline underline-offset-4"
             data-skip-for-now=""
           >
             Skip for now
@@ -144,7 +144,7 @@ export function TaskWorkbook(props: {
           <button
             type="button"
             onClick={props.onComeBackLater}
-            className="min-h-11 px-3 font-heading text-[15px] font-semibold text-nga-slate underline underline-offset-4"
+            className="min-h-11 px-3 font-sans text-[16px] font-semibold leading-[23px] text-nga-slate underline underline-offset-4"
             data-come-back-later=""
           >
             {COME_BACK_LATER_COPY.button}

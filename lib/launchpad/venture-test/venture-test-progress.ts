@@ -193,8 +193,13 @@ export function isBronzeDone(progress: VentureTestProgress, bronze: VentureTestB
   return bronze.tasks.every((t) => progress.completedTaskIds.includes(t.id));
 }
 
+/** A placeholder among real doors stays locked and is not required to finish the plaque. */
+function skippedPlaceholder(silver: VentureTestSilver, bronze: VentureTestBronze): boolean {
+  return bronze.placeholder && silver.bronzes.some((door) => !door.placeholder);
+}
+
 export function isSilverDone(progress: VentureTestProgress, silver: VentureTestSilver): boolean {
-  return silver.bronzes.every((b) => isBronzeDone(progress, b));
+  return silver.bronzes.every((b) => skippedPlaceholder(silver, b) || isBronzeDone(progress, b));
 }
 
 export function isFloorDone(progress: VentureTestProgress, floor: VentureTestFloor): boolean {
@@ -259,8 +264,10 @@ export function pricingBronzeStates(progress: VentureTestProgress, silver: Ventu
 
 export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
   // A door left open ("Come back") stays current and does not block the next door.
+  // A placeholder beside real doors (the Level 4 pitch) stays locked and does not gate the next door.
   let blocked = false;
   return silver.bronzes.map((b) => {
+    if (skippedPlaceholder(silver, b)) return "locked";
     if (isBronzeDone(progress, b)) return "done";
     if (!open || blocked) return "locked";
     if (!isBronzeSettled(progress, b)) blocked = true;

@@ -6,7 +6,7 @@ import { weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { availabilityPhrase, chipLabel, isAvailabilitySlot, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
-import { formatMoney } from "@/lib/dashboard/currency/format-money";
+import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
@@ -62,23 +62,23 @@ export function PriceSheet() {
         <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2">
           <div className={WORKBOOK_PRICE_ROW}>
             <h3 className={WORKBOOK_ANSWER}>{nameFor(row.serviceId, labels)}</h3>
-            <span className="text-left"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
+            <span className="text-left"><ChosenValue>{formatWorkbookMoney(row.price, currency)}</ChosenValue></span>
           </div>
           <p className={`mt-1 ${WORKBOOK_BODY}`}>for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
           <p className={WORKBOOK_BODY}>
             {compared && competitor ? (
               <>
-                Others charge <ChosenValue>{formatMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatMoney(competitor.priceHigh, currency)}</ChosenValue>. Mine is <ChosenValue>{row.comparedToOthers ?? "about the same as"}</ChosenValue> others.
+                Others charge <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>. Mine is <ChosenValue>{row.comparedToOthers ?? "about the same as"}</ChosenValue> others.
               </>
             ) : (
               "Others range: not checked yet."
             )}
           </p>
-          <p className={`mt-2 ${WORKBOOK_BODY}`}>Price <ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></p>
-          <p className={WORKBOOK_BODY}>Job cost per job <ChosenValue>{formatMoney(row.costPerJob, currency)}</ChosenValue></p>
-          <p className={WORKBOOK_BODY}>I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue></p>
+          <p className={`mt-2 ${WORKBOOK_BODY}`}>Price <ChosenValue>{formatWorkbookMoney(row.price, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_BODY}>Job cost per job <ChosenValue>{formatWorkbookMoney(row.costPerJob, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_BODY}>I keep <ChosenValue>{formatWorkbookMoney(row.keptPerJob, currency)}</ChosenValue></p>
           <p className={WORKBOOK_HINT}>
-            {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
+            {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
           </p>
         </div>
         );
@@ -129,27 +129,27 @@ export function JobsSheet() {
       {jobs.mode === "multi" && jobs.typicalWeek ? (
         <ul className="mt-3">
           {jobs.typicalWeek.map((row) => (
-            <li key={row.serviceId} className={`grid grid-cols-[minmax(0,1fr)_11rem] items-center gap-x-3 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
-              <span className="flex min-w-0 items-center gap-2">
+            <li key={row.serviceId} className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
+              <span className="flex shrink-0 items-center gap-2">
                 <button type="button" aria-label={`Fewer ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, -1)}>−</button>
                 <span className="w-4 text-center"><ChosenValue>{row.jobsPerWeek}</ChosenValue></span>
                 <button type="button" aria-label={`More ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, 1)}>+</button>
-                <span className="min-w-0">{nameFor(row.serviceId, labels)}</span>
+                <span className="whitespace-nowrap">{nameFor(row.serviceId, labels)}</span>
               </span>
-              <span className="text-left">I keep <ChosenValue>{formatMoney(row.subtotal, currency)}</ChosenValue></span>
+              <span className="shrink-0 whitespace-nowrap">I keep <ChosenValue>{formatWorkbookMoney(row.subtotal, currency)}</ChosenValue></span>
             </li>
           ))}
         </ul>
       ) : (
         <p className={`mt-3 ${WORKBOOK_BODY}`}>
-          <ChosenValue>{jobs.jobsPerWeek}</ChosenValue> jobs a week · I keep <ChosenValue>{formatMoney(jobs.keptPerJob ?? 0, currency)}</ChosenValue>
+          <ChosenValue>{jobs.jobsPerWeek}</ChosenValue> jobs a week · I keep <ChosenValue>{formatWorkbookMoney(jobs.keptPerJob ?? 0, currency)}</ChosenValue>
         </p>
       )}
-      <p className={`mt-3 ${WORKBOOK_BODY}`}>Weekly keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue></p>
+      <p className={`mt-3 ${WORKBOOK_BODY}`}>Weekly keep <ChosenValue>{formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue></p>
       <p className={WORKBOOK_BODY}>Start-up to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue></p>
       <p className={`mt-1 ${WORKBOOK_BODY}`}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover start-up.</p>
       <p className={`mt-1 ${WORKBOOK_HINT}`}>
-        {formatStartupMoney(jobs.startupTotal, currency)} ÷ {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week
+        {formatStartupMoney(jobs.startupTotal, currency)} ÷ {formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)} a week
         {jobs.weeklyKeep ? ` = ${(jobs.startupTotal / jobs.weeklyKeep).toFixed(2)}, round up to ${jobs.weeksNeeded}` : ""}.
       </p>
       <WeekBar label="Week 1" width={100} />
@@ -178,8 +178,8 @@ export function FundingSheet() {
   }
   const currency = funding.currency === "USD" ? "USD" : funding.currency;
   const total = formatStartupMoney(funding.startupTotal, currency as "USD");
-  const pay = funding.fundingPeriodPayment !== undefined ? formatMoney(funding.fundingPeriodPayment, currency as "USD") : "";
-  const weekly = funding.fundingWeeklyAmount !== undefined ? formatMoney(funding.fundingWeeklyAmount, currency as "USD") : "";
+  const pay = funding.fundingPeriodPayment !== undefined ? formatWorkbookMoney(funding.fundingPeriodPayment, currency as "USD") : "";
+  const weekly = funding.fundingWeeklyAmount !== undefined ? formatWorkbookMoney(funding.fundingWeeklyAmount, currency as "USD") : "";
   return (
     <div data-funding-wrap="">
       <AccentLabel as="h2">Planning</AccentLabel>
@@ -313,7 +313,7 @@ function PlanCosts() {
         Ongoing cost per job: {view.ongoing.map((row, index) => (
           <span key={row.serviceId}>
             {index > 0 ? ", " : ""}
-            {row.label} <ChosenValue>{formatMoney(row.perJob, currency)}</ChosenValue>
+            {row.label} <ChosenValue>{formatWorkbookMoney(row.perJob, currency)}</ChosenValue>
           </span>
         ))}
         .
@@ -336,7 +336,7 @@ function PlanOthers() {
         {competitor
           ? (
             <>
-              <ChosenValue>{competitor.walkersChecked}</ChosenValue> other walkers charge <ChosenValue>{formatMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatMoney(competitor.priceHigh, currency)}</ChosenValue>. They often include <ChosenValue>{addons}</ChosenValue>.
+              <ChosenValue>{competitor.walkersChecked}</ChosenValue> other walkers charge <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>. They often include <ChosenValue>{addons}</ChosenValue>.
             </>
           )
           : "Not checked yet."}
@@ -349,9 +349,9 @@ function PlanOthers() {
       <AccentLabel>My price</AccentLabel>
       {price?.prices.map((row) => (
         <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
-          {nameFor(row.serviceId, labels)} · I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue>
+          {nameFor(row.serviceId, labels)} · I keep <ChosenValue>{formatWorkbookMoney(row.keptPerJob, currency)}</ChosenValue>
           <span className={`block ${WORKBOOK_HINT}`}>
-            {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
+            {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
           </span>
         </p>
       ))}
@@ -368,17 +368,17 @@ function PlanWeek() {
   const templates = useTemplateBlanks();
   if (!jobs) return templates ? <p className={`mt-2 ${WORKBOOK_BODY}`}>A typical week <BlankSlot /></p> : null;
   const mix = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`).join(" + ") ?? "";
-  const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatMoney(row.keptPerJob, currency)}`).join(" + ");
+  const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatWorkbookMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
       <AccentLabel>Jobs to cover my costs</AccentLabel>
       <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Typical week</p>
       <p className={`mt-1 ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> a week.</p>
-      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>
+      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>
       <p className={WORKBOOK_BODY}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
       {math && (
         <p className={`mt-1 ${WORKBOOK_HINT}`}>
-          {math} = {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.
+          {math} = {formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)} a week.
         </p>
       )}
       <p className={`mt-2 ${WORKBOOK_HINT}`}>Your typical week stays read-only here.</p>

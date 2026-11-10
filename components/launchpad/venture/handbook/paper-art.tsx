@@ -10,9 +10,9 @@ import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/ven
 export const PAPER_ACCENT = "#0CC1E0";
 
 /** Workbook body: Inter 400, 16px, 24px line height, navy. Answers use WORKBOOK_ANSWER. */
-export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[24px] text-[#19347D]";
-/** A picked, typed, or calculated answer: Inter 600, 16px, 24px line height, navy. */
-export const WORKBOOK_ANSWER = "font-sans text-[16px] font-semibold leading-[24px] text-[#19347D]";
+export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[26px] text-[#19347D]";
+/** A picked, typed, or calculated answer: Inter 600, 16px, 26px line height, navy. */
+export const WORKBOOK_ANSWER = "font-sans text-[16px] font-semibold leading-[26px] text-[#19347D]";
 /** Workbook subhead: Fredoka 600, 16px, 24px line height, aqua. */
 export const WORKBOOK_SUB = `${FREDOKA_CLASS} text-[16px] font-semibold leading-6 text-[#0CC1E0]`;
 /** Cost-group label on a workbook page: Inter 600, 16px, navy. */

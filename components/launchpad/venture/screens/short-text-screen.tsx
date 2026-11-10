@@ -74,7 +74,7 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
           {screen.heading}
           {screen.optional && (
             <span
-              className="ml-2 inline-block rounded-full border border-nga-ink/40 bg-white px-2 py-0.5 align-[2px] font-heading text-[12px] font-semibold leading-none text-nga-ink/70"
+              className="ml-2 inline-block rounded-full border border-nga-ink/40 bg-white px-2 py-0.5 align-[2px] font-heading text-[18px] font-semibold leading-none text-nga-ink/70"
               data-optional-tag=""
             >
               Optional
@@ -141,7 +141,7 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
             const field = fieldByName(screen, name);
             if (!field) return null;
             return (
-              <label key={name} className="flex flex-col gap-1 text-[13px] font-semibold text-nga-slate">
+              <label key={name} className="flex flex-col gap-1 text-[16px] font-semibold text-nga-slate">
                 {field.label}
                 {control(field, true)}
               </label>
@@ -154,7 +154,7 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
           type="button"
           aria-pressed={na}
           onClick={() => save(fieldsAnswer({ ...values }, !na))}
-          className={`mx-5 mt-3 self-start rounded-full px-3.5 py-2 text-[13px] font-semibold ${na ? "bg-nga-ink text-white" : "bg-[#F3F4F6] text-nga-slate"}`}
+          className={`mx-5 mt-3 self-start rounded-full px-3.5 py-2 text-[16px] font-semibold ${na ? "bg-nga-ink text-white" : "bg-[#F3F4F6] text-nga-slate"}`}
         >
           {screen.notApplicableLabel}
         </button>

@@ -22,17 +22,18 @@ import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/ans
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 import { BinderCard } from "@/components/launchpad/venture/handbook/paper-art";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { BTN_CYAN_COMPACT, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 
 const CONTINUE_ON =
-  "mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[15px] font-semibold leading-none text-white";
+  "mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[16px] font-semibold leading-none text-white";
 const CONTINUE_OFF = `${CONTINUE_ON} pointer-events-none opacity-[0.35]`;
 const ADD =
-  "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-[#0CC1E0] px-3.5 font-heading text-[13.5px] font-bold text-white";
+  "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-[#0CC1E0] px-3.5 font-heading text-[18px] font-bold text-white";
 const GHOST =
-  "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-white px-3 font-heading text-[13.5px] font-bold text-[#0CC1E0] shadow-[inset_0_0_0_1.5px_#0CC1E0]";
+  "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-white px-3 font-heading text-[18px] font-bold text-[#0CC1E0] shadow-[inset_0_0_0_1.5px_#0CC1E0]";
 
 function newId(): string {
   return `c${Math.random().toString(36).slice(2, 10)}`;
@@ -52,7 +53,7 @@ function Crumb({
   onCorridor: () => void;
 }) {
   return (
-    <nav aria-label="Breadcrumb" className="mx-5 mt-2 truncate text-[12.5px] font-medium text-[#9AA3B5]">
+    <nav aria-label="Breadcrumb" className="mx-5 mt-2 truncate text-[16px] font-medium text-[#9AA3B5]">
       <button type="button" onClick={onBuilding} className="text-[#9AA3B5]">
         ‹ Building
       </button>
@@ -73,13 +74,13 @@ function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
           <path d="M15 5l-7 7 7 7" />
         </svg>
       </button>
-      <h1 className="font-heading text-[21px] font-bold leading-7 text-[#19347D]">{title}</h1>
+      <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{title}</h1>
     </div>
   );
 }
 
 function Eyebrow({ children }: { children: ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">{children}</p>;
+  return <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{children}</p>;
 }
 
 /**
@@ -111,7 +112,7 @@ function MoneyField({
   const value = draft ?? shown;
   return (
     <label className={`flex h-8 min-w-[86px] items-center justify-end gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8] ${amount === 0 && draft === null ? "text-[#9AA3B5]" : ""}`}>
-      <span className="text-[14px] text-[#9AA3B5]" aria-hidden="true">
+      <span className="font-sans text-[16px] leading-[23px] text-[#4A5568]" aria-hidden="true">
         {symbol}
       </span>
       <input
@@ -133,7 +134,7 @@ function MoneyField({
           }
           setDraft(null);
         }}
-        className={`w-12 bg-transparent text-right font-heading text-[15px] font-bold tabular-nums outline-none ${amount === 0 && draft === null ? "text-[#9AA3B5]" : "text-[#19347D]"}`}
+        className={`w-14 bg-transparent text-right font-sans text-[18px] font-bold leading-[26px] tabular-nums outline-none ${amount === 0 && draft === null ? "text-[#9AA3B5]" : "text-[#19347D]"}`}
       />
     </label>
   );
@@ -234,10 +235,10 @@ export function KnowYourCostFlow({
               setDrafts((prev) => ({ ...prev, [line.id]: label }));
               onRename(line.id, label);
             }}
-            className="min-w-0 flex-1 bg-transparent font-medium text-[14.5px] text-[#19347D] outline-none placeholder:text-[#9AA3B5]"
+            className="min-w-0 flex-1 bg-transparent font-medium text-[16px] text-[#19347D] outline-none placeholder:text-[#9AA3B5]"
           />
         ) : (
-          <span className="min-w-0 flex-1 font-medium text-[14.5px] leading-snug text-[#19347D]">{line.label}</span>
+          <span className="min-w-0 flex-1 font-medium text-[18px] leading-snug text-[#19347D]">{line.label}</span>
         )}
         <MoneyField label={line.label || "New item"} amount={line.amount} cents={cents} symbol={symbol} onCommit={(amount) => onAmount(line.id, amount)} />
         <RemoveButton label={line.label} onRemove={() => onRemove(line.id)} />
@@ -259,13 +260,13 @@ export function KnowYourCostFlow({
         <BackTitle title="Start-up costs" onBack={() => setStep({ name: "hub" })} />
         <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
-          <h2 className="mb-0.5 mt-3 text-[11px] font-bold uppercase tracking-[0.06em] text-[#9AA3B5]">{screen.copy.marketingLabel}</h2>
+          <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
+          <h2 className="mb-0.5 mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.marketingLabel}</h2>
           {lineRows(startup.marketing, false, (id, amount) => patchLine("marketing", id, amount), (id) =>
             update({ ...ref.current, startup: { ...ref.current.startup, marketing: ref.current.startup.marketing.filter((line) => line.id !== id) } }),
           )}
-          <h2 className="mb-0.5 mt-3 text-[11px] font-bold uppercase tracking-[0.06em] text-[#9AA3B5]">{screen.copy.starterLabel}</h2>
-          <p className="mb-1 text-[13px] leading-snug text-[#6B7280]">{screen.copy.starterNote}</p>
+          <h2 className="mb-0.5 mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.starterLabel}</h2>
+          <p className="mb-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">{screen.copy.starterNote}</p>
           {lineRows(
             startup.starterGear,
             false,
@@ -291,7 +292,7 @@ export function KnowYourCostFlow({
           )}
         </div>
         <div className="mx-5 mt-2 flex items-center justify-between rounded-xl bg-[#F7FAFC] px-3 py-2.5">
-          <span className="text-[13.5px] text-[#6B7280]">Start-up total</span>
+          <span className="text-[16px] text-[#6B7280]">Start-up total</span>
           <span className="font-heading text-xl font-bold tabular-nums text-[#19347D]" data-startup-total="">
             {formatStartupMoney(startupTotal(ref.current), currency)}
           </span>
@@ -332,7 +333,7 @@ export function KnowYourCostFlow({
         <>
           <BackTitle title={service.label} onBack={() => setStep({ name: "ongoing" })} />
           <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
-            <p className="text-[13.5px] leading-snug text-[#6B7280]">{intro}</p>
+            <p className="text-[16px] leading-snug text-[#6B7280]">{intro}</p>
             <div className="mt-2">
               {lineRows(
                 service.lines,
@@ -359,7 +360,7 @@ export function KnowYourCostFlow({
             )}
           </div>
           <div className="mx-5 mt-2 flex items-center justify-between rounded-xl bg-[#F7FAFC] px-3 py-2.5">
-            <span className="text-[13.5px] text-[#6B7280]">This job costs</span>
+            <span className="text-[16px] text-[#6B7280]">This job costs</span>
             <span className="font-heading text-xl font-bold tabular-nums text-[#19347D]" data-job-total="">
               {formatOngoingMoney(serviceTotal(ref.current.ongoing.find((row) => row.serviceId === service.serviceId)?.lines ?? []), currency)}
             </span>
@@ -399,9 +400,9 @@ export function KnowYourCostFlow({
         <BackTitle title="Ongoing costs" onBack={() => setStep({ name: "hub" })} />
         <div className={`mx-5 mt-1 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
+          <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
           <div className="mt-4 flex flex-col gap-2">
-            {services.length === 0 && <p className="text-[13.5px] text-[#6B7280]">You have not chosen a service yet. You can still mark this done.</p>}
+            {services.length === 0 && <p className="text-[16px] text-[#6B7280]">You have not chosen a service yet. You can still mark this done.</p>}
             {services.map((service) => (
               <article
                 key={service.serviceId}
@@ -409,8 +410,8 @@ export function KnowYourCostFlow({
                 data-service-card={service.serviceId}
                 data-service-tile-layout="row"
               >
-                <h2 className="shrink-0 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{service.label}</h2>
-                <p className="shrink-0 whitespace-nowrap text-right text-[12px] leading-tight text-[#6B7280]">
+                <h2 className="shrink-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
+                <p className="shrink-0 whitespace-nowrap text-right font-sans text-[16px] leading-[23px] text-[#4A5568]">
                   {service.done ? (
                     <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
                   ) : (
@@ -424,7 +425,7 @@ export function KnowYourCostFlow({
                 ) : (
                   <button
                     type="button"
-                    className="inline-flex h-8 shrink-0 items-center rounded-[10px] bg-[#0CC1E0] px-2.5 font-heading text-[12.5px] font-bold text-white"
+                    className="inline-flex h-8 shrink-0 items-center rounded-[10px] bg-[#0CC1E0] px-2.5 font-heading text-[18px] font-bold text-white"
                     onClick={() => setStep({ name: "service", serviceId: service.serviceId })}
                   >
                     Calculate the cost
@@ -434,7 +435,7 @@ export function KnowYourCostFlow({
               </article>
             ))}
           </div>
-          {!allDone && <p className="mt-4 text-[12.5px] leading-snug text-[#9AA3B5]">Done stays off until every service has a cost.</p>}
+          {!allDone && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">Done stays off until every service has a cost.</p>}
         </div>
         <Footer>
           <button
@@ -458,18 +459,18 @@ export function KnowYourCostFlow({
         {crumb}
         <div className={`mx-5 mt-6 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className="mt-0.5 font-heading text-[21px] font-bold leading-7 text-[#19347D]">Your costs</h1>
-          <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
+          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>Your costs</h1>
+          <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
           <div className="mt-5 flex flex-col gap-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-[15px] font-medium text-[#19347D]">Start-up total</span>
+              <span className="font-sans text-[18px] font-medium leading-[26px] text-[#19347D]">Start-up total</span>
               <span className="font-heading text-lg font-bold tabular-nums text-[#19347D]">{formatStartupMoney(startupTotal(view), currency)}</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-[#6B7280]">Ongoing · per job</p>
+              <p className="font-sans text-[16px] font-medium leading-[23px] text-[#4A5568]">Ongoing · per job</p>
               <div className="mt-1.5 flex flex-col gap-1.5">
                 {view.ongoing.map((service) => (
-                  <div key={service.serviceId} className="flex justify-between text-sm font-medium text-[#19347D]">
+                  <div key={service.serviceId} className="flex justify-between font-sans text-[18px] font-medium leading-[26px] text-[#19347D]">
                     <span>{service.label}</span>
                     <span className="text-[#6B7280]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</span>
                   </div>
@@ -480,11 +481,11 @@ export function KnowYourCostFlow({
               <path d="M2 6C30 2.5 52 8.5 84 5.2S140 2.8 170 6.4S226 8 252 4.6" fill="none" stroke="#D9D1C3" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
             <div className="flex flex-col gap-1 rounded-[14px] bg-[#F0FBFE] px-4 py-3.5">
-              <span className="text-[13px] font-semibold uppercase tracking-[0.04em] text-[#0CC1E0]">Grand total to start</span>
+              <span className="font-sans text-[16px] font-semibold leading-[23px] text-[#0CC1E0]">Grand total to start</span>
               <span className="font-heading text-[28px] font-extrabold leading-none tabular-nums text-[#19347D]" data-grand-total="">
                 {formatStartupMoney(startupTotal(view), currency)}
               </span>
-              <span className="text-[12.5px] leading-snug text-[#6B7280]">{screen.copy.grandNote}</span>
+              <span className="text-[16px] leading-snug text-[#6B7280]">{screen.copy.grandNote}</span>
             </div>
           </div>
         </div>
@@ -506,7 +507,7 @@ export function KnowYourCostFlow({
           </button>
           <div className="min-w-0">
             <h1 className="font-heading text-base font-semibold text-[#19347D]">My handbook</h1>
-            {businessLabel && <p className="truncate text-[12.5px] text-[#9AA3B5]">{businessLabel}</p>}
+            {businessLabel && <p className="truncate text-[16px] text-[#9AA3B5]">{businessLabel}</p>}
           </div>
         </header>
         <div className={`mb-2 ${SCROLL}`}>
@@ -529,7 +530,7 @@ export function KnowYourCostFlow({
               onEditStartup={() => setStep({ name: "startup" })}
               onEditService={(serviceId) => setStep({ name: "service", serviceId })}
             />
-            <p className="mt-4 text-right text-[11px] text-[#9CA3AF]">Page 3</p>
+            <p className="mt-4 text-right font-sans text-[16px] leading-[23px] text-[#4A5568]">Page 3</p>
           </BinderCard>
         </div>
         <Footer>
@@ -547,14 +548,14 @@ export function KnowYourCostFlow({
       <>
         {crumb}
         <div className="mx-5 mt-1 flex justify-end">
-          <button type="button" onClick={() => onExit(ref.current)} className="font-heading text-[13px] font-semibold text-[#6B7280]">
+          <button type="button" onClick={() => onExit(ref.current)} className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">
             ✕ Exit
           </button>
         </div>
         <div className={`mx-5 mt-4 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className="mt-0.5 font-heading text-[21px] font-bold leading-7 text-[#19347D]">Know your cost</h1>
-          <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
+          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>Know your cost</h1>
+          <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
           <div className="mt-4 flex flex-col gap-3.5">
             <HubCard
               title="Start-up costs"
@@ -579,7 +580,7 @@ export function KnowYourCostFlow({
               onOpen={() => setStep({ name: "ongoing" })}
             />
           </div>
-          {!ready && <p className="mt-4 text-[12.5px] leading-snug text-[#9AA3B5]">{screen.copy.hubWait}</p>}
+          {!ready && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">{screen.copy.hubWait}</p>}
         </div>
         <Footer>
           <button
@@ -628,8 +629,8 @@ function HubCard({
         <h2 className="flex-1 font-heading text-[17px] font-bold text-[#19347D]">{title}</h2>
         {done && <TickBadge size={26} />}
       </div>
-      <p className="text-[13.5px] leading-snug text-[#6B7280]">{body}</p>
-      <p className="text-[13.5px] font-medium text-[#6B7280]">
+      <p className="text-[16px] leading-snug text-[#6B7280]">{body}</p>
+      <p className="text-[16px] font-medium text-[#6B7280]">
         {rich ? (
           <>
             <b className="font-bold text-[#19347D]">{meta.replace(" total", "")}</b> total

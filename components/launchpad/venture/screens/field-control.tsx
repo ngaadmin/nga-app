@@ -4,7 +4,7 @@ import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { sanitizeFieldInput } from "@/lib/launchpad/content/fields";
 
 const BOX =
-  "rounded-xl bg-white text-[16px] font-medium text-nga-ink shadow-[inset_0_0_0_1.5px_#C5D4EA] outline-none placeholder:font-normal placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_2px_#3FB7DA] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF] disabled:shadow-[inset_0_0_0_1.5px_#E5E7EB]";
+  "rounded-xl bg-white font-sans text-[18px] font-medium leading-[26px] text-nga-ink shadow-[inset_0_0_0_1.5px_#C5D4EA] outline-none placeholder:font-normal placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_2px_#3FB7DA] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF] disabled:shadow-[inset_0_0_0_1.5px_#E5E7EB]";
 
 /** A dropdown whose options are phrases (row 7 benefits, row 8 skills) takes the full line so the pick is readable. */
 export function wideChoice(field: LaunchpadTextField): boolean {
@@ -52,7 +52,7 @@ export function FieldControl({
         <span
           id={id}
           aria-label={`${field.label}: ${shown || "not set"}`}
-          className="mx-0.5 inline-flex h-[34px] items-center rounded-lg bg-[#EEF7FB] px-2.5 align-middle text-[15px] font-bold tracking-wide text-nga-ink"
+          className="mx-0.5 inline-flex h-9 items-center rounded-lg bg-[#EEF7FB] px-2.5 align-middle font-sans text-[18px] font-bold leading-[26px] tracking-wide text-nga-ink"
           data-currency-chip=""
         >
           {shown || "—"}
@@ -62,9 +62,9 @@ export function FieldControl({
       const inline = appearance === "inline";
       const underline = appearance === "underline";
       const choiceClass = underline
-        ? "mx-0.5 appearance-none border-b-[1.5px] border-[#0CC1E0] bg-transparent pr-4 font-sans text-[16px] font-semibold text-[#19347D] outline-none"
+        ? "mx-0.5 appearance-none border-b-[1.5px] border-[#0CC1E0] bg-transparent pr-4 font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none"
         : inline
-          ? "mx-0.5 inline-flex h-[26px] appearance-none rounded-lg border-[1.5px] border-[#D5DAE3] bg-[#EEF1F5] px-2 align-middle font-sans text-[16px] text-[#19347D] outline-none"
+          ? "mx-0.5 inline-flex h-9 appearance-none rounded-lg border-[1.5px] border-[#D5DAE3] bg-[#EEF1F5] px-2 align-middle font-sans text-[18px] leading-[26px] text-[#19347D] outline-none"
           : `${BOX} ${block || wideChoice(field) ? "my-1 h-[42px] w-full px-2" : "mx-0.5 h-[38px] max-w-full px-2 align-middle"} appearance-auto`;
       return (
         <span className={underline ? "relative inline-flex items-center" : "inline"}>
@@ -109,7 +109,7 @@ export function FieldControl({
           style={block || appearance === "inline" ? undefined : { width: inlineWidth(field) }}
           className={
             appearance === "inline"
-              ? "mx-0.5 inline-block h-[26px] w-7 rounded-lg border-[1.5px] border-[#D5DAE3] text-center align-middle font-sans text-[16px] text-[#19347D] outline-none"
+              ? "mx-0.5 inline-block h-9 w-10 rounded-lg border-[1.5px] border-[#D5DAE3] text-center align-middle font-sans text-[18px] leading-[26px] text-[#19347D] outline-none"
               : `${BOX} ${block ? "h-[48px] w-full px-3" : "mx-0.5 h-[38px] px-2 text-center align-middle"}`
           }
         />

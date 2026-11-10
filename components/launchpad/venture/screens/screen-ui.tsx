@@ -1,21 +1,21 @@
 import type { ReactNode } from "react";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 
-/** Navy Inter 400, 16px, 23px line-height. Body, hints' neighbors, and sentences. */
-export const LESSON_BODY = "font-sans text-[16px] font-normal leading-[23px] text-[#19347D]";
-/** Hints, helpers, and progress text. */
+/** Navy Inter 400, 18px, line-height 1.44. Body, context, statements, and playback. */
+export const LESSON_BODY = "font-sans text-[18px] font-normal leading-[26px] text-[#19347D]";
+/** Hints, notes, links, and progress text. 16px, never smaller. */
 export const LESSON_HINT = "font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]";
-/** A picked answer: navy Inter 600, 1.5px aqua underline. */
-export const LESSON_PICK = "font-sans text-[16px] font-semibold text-[#19347D] underline decoration-[#0CC1E0] decoration-[1.5px] underline-offset-[3px]";
-/** Single-line tick and option labels. */
-export const LESSON_TICK_LABEL = "font-sans text-[16px] font-normal leading-[22px] text-[#19347D]";
+/** A picked answer: navy Inter 600, 18px, 1.5px aqua underline. */
+export const LESSON_PICK = "font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] underline decoration-[#0CC1E0] decoration-[1.5px] underline-offset-[3px]";
+/** Tick and option labels. */
+export const LESSON_TICK_LABEL = "font-sans text-[18px] font-normal leading-[26px] text-[#19347D]";
 
-const TITLE = `${FREDOKA_CLASS} text-[21px] font-semibold leading-7 tracking-[-0.4px] text-[#19347D]`;
+const TITLE = `${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] tracking-[-0.4px] text-[#19347D]`;
 
 const PROMPT = {
-  question: `${FREDOKA_CLASS} text-[19px] font-semibold leading-[26px] text-[#0CC1E0]`,
-  section: `${FREDOKA_CLASS} text-[18px] font-semibold leading-6 text-[#0CC1E0]`,
-  sub: `${FREDOKA_CLASS} text-[16px] font-semibold leading-6 text-[#0CC1E0]`,
+  question: `${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`,
+  section: `${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`,
+  sub: `${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`,
 } as const;
 
 /**
@@ -56,7 +56,7 @@ export function LessonTopBar({
             />
           ))}
           <p className={`ml-auto ${LESSON_HINT}`}>
-            {progress.index} of {progress.total}
+            Section {progress.index} of {progress.total}
           </p>
         </div>
       )}
@@ -147,7 +147,7 @@ export function LessonContinue({ disabled, onClick, children = "Continue" }: { d
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[15px] font-semibold leading-none text-white disabled:cursor-not-allowed disabled:opacity-[0.35]"
+      className="mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[16px] font-semibold leading-none text-white disabled:cursor-not-allowed disabled:opacity-[0.35]"
     >
       {children}
     </button>

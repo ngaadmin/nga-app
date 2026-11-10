@@ -85,11 +85,11 @@ export function SetPriceFlow({
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price">
       <LessonTopBar title="Set the price" onBack={() => onExit(answer)} />
       <div className={`mx-5 mt-1 ${SCROLL}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
+        <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
         <p className={`mt-1 ${LESSON_HINT}`}>{screen.copy.context}</p>
         <p className={`mt-2 ${LESSON_HINT}`}>{screen.copy.guidance}</p>
         <div className="mt-4 flex flex-col gap-2">
-          {services.length === 0 && <p className="text-[13.5px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
+          {services.length === 0 && <p className="text-[16px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
           {services.map((service) => {
             const row = rows.find((item) => item.serviceId === service.serviceId);
             const cost = serviceTotal(service.lines);
@@ -97,8 +97,8 @@ export function SetPriceFlow({
             return (
               <article key={service.serviceId} className="rounded-[14px] bg-white px-3 py-2.5 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={service.serviceId}>
                 <div className="flex flex-row items-center gap-2" data-service-tile-layout="row">
-                  <h2 className="shrink-0 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{service.label}</h2>
-                  <p className="min-w-0 flex-1 text-right text-[12px] leading-tight text-[#6B7280]">
+                  <h2 className="shrink-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
+                  <p className="min-w-0 flex-1 text-right font-sans text-[16px] leading-[23px] text-[#4A5568]">
                     {screen.copy.costLabel} {formatOngoingMoney(cost, currency)}
                     <span className="mx-1 text-[#D9DEE8]" aria-hidden="true">
                       ·
@@ -108,7 +108,7 @@ export function SetPriceFlow({
                     </span>
                   </p>
                   <label className="flex h-9 w-[88px] shrink-0 items-center gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8]">
-                    <span className="text-[14px] text-[#9AA3B5]" aria-hidden="true">
+                    <span className="font-sans text-[16px] leading-[23px] text-[#4A5568]" aria-hidden="true">
                       {symbol}
                     </span>
                     <input
@@ -119,12 +119,12 @@ export function SetPriceFlow({
                         const next = event.target.value.replace(/\D/g, "").slice(0, 4);
                         commit({ ...drafts, [service.serviceId]: next });
                       }}
-                      className="w-full bg-transparent text-right font-heading text-[15px] font-bold tabular-nums text-[#19347D] outline-none"
+                      className="w-full bg-transparent text-right font-sans text-[18px] font-bold leading-[26px] tabular-nums text-[#19347D] outline-none"
                     />
                   </label>
                 </div>
                 {rangedService === service.serviceId && competitor ? (
-                  <p className="mt-1 text-[12.5px] text-[#19347D]">
+                  <p className="mt-1 text-[18px] text-[#19347D]">
                     Others charge ${competitor.priceLow} to ${competitor.priceHigh}. Mine is{" "}
                     <select
                       aria-label={`Compared with others for ${service.label}`}
@@ -142,9 +142,9 @@ export function SetPriceFlow({
                     </select>
                   </p>
                 ) : (
-                  <p className="mt-1 text-[12px] text-[#9AA3B5]">Others range: not checked yet</p>
+                  <p className="mt-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">Others range: not checked yet</p>
                 )}
-                {low && <p className="mt-1 text-[12.5px] text-[#B45309]">{screen.copy.lowKeep}</p>}
+                {low && <p className="mt-1 text-[18px] text-[#B45309]">{screen.copy.lowKeep}</p>}
               </article>
             );
           })}

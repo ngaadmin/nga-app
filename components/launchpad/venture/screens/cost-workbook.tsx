@@ -2,10 +2,10 @@
 
 import type { CostsAnswer } from "@/lib/launchpad/content/answers";
 import {
-  formatOngoingMoney,
   formatStartupMoney,
   workbookView,
 } from "@/lib/launchpad/content/know-your-cost/logic";
+import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_GROUP, WORKBOOK_HINT, WORKBOOK_PRICE_ROW } from "@/components/launchpad/venture/handbook/paper-art";
@@ -57,7 +57,7 @@ export function CostWorkbookBody({
 }) {
   const view = workbookView(answer);
   const money = (amount: number) => formatStartupMoney(amount, currency);
-  const job = (amount: number) => formatOngoingMoney(amount, currency);
+  const job = (amount: number) => formatWorkbookMoney(amount, currency);
   const startupHead = (
     <div className="mb-1.5 flex items-center justify-between gap-2">
       <h3 className="font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">Start-up costs</h3>

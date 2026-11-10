@@ -8,6 +8,7 @@ import { findKnowYourCost, formatOngoingMoney, formatStartupMoney, startupTotal 
 import { jobsNeeded, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -25,7 +26,7 @@ function Stepper({ label, value, onChange }: { label: string; value: number; onC
       >
         −
       </button>
-      <span className="w-5 text-center font-heading text-[15px] font-bold tabular-nums text-[#19347D]" data-jobs-count="">
+      <span className="w-6 text-center font-sans text-[18px] font-bold leading-[26px] tabular-nums text-[#19347D]" data-jobs-count="">
         {value}
       </span>
       <button
@@ -120,9 +121,9 @@ export function JobsCoverFlow({
       <LessonTopBar title="Jobs to cover your costs" onBack={page === 1 ? onExit : () => setPage(1)} />
       {page === 1 ? (
         <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
+          <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
           <p className={`mt-3 ${LESSON_HINT}`}>{screen.copy.context}</p>
-          <ul className="mt-4 flex flex-col gap-3 pr-8 text-[15px] leading-snug text-[#19347D]">
+          <ul className="mt-4 flex flex-col gap-3 pr-8 font-sans text-[18px] leading-[26px] text-[#19347D]">
             {bullets.map((line) => (
               <li key={line} className="flex gap-2">
                 <span aria-hidden="true" className="mt-2 size-1.5 flex-none rounded-full bg-[#19347D]" />
@@ -138,15 +139,15 @@ export function JobsCoverFlow({
         </div>
       ) : (
       <div className={`mx-5 mt-4 ${SCROLL}`}>
-        {!pricesReady && <p className="mt-4 text-[14px] text-[#19347D]">{screen.copy.needPrice}</p>}
-        {pricesReady && startup <= 0 && <p className="mt-4 text-[14px] font-semibold text-[#19347D]">{screen.copy.covered}</p>}
+        {!pricesReady && <p className="mt-4 font-sans text-[18px] leading-[26px] text-[#19347D]">{screen.copy.needPrice}</p>}
+        {pricesReady && startup <= 0 && <p className="mt-4 font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.covered}</p>}
         {pricesReady && mode === "single" && single && needed !== null && (
           <div className="mt-4">
-            <p className="text-[15px] leading-snug text-[#19347D]">
+            <p className="font-sans text-[18px] leading-[26px] text-[#19347D]">
               You need <b data-jobs-needed="">{needed}</b> {needed === 1 ? "job" : "jobs"} to cover {formatStartupMoney(startup, currency)} of start-up costs. You keep{" "}
               {formatOngoingMoney(single.keptPerJob, currency)} on each one.
             </p>
-            <h2 className="mb-2 mt-4 font-heading text-[20px] font-bold leading-tight text-[#19347D]">{screen.copy.singlePrompt}</h2>
+            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{screen.copy.singlePrompt}</h2>
             <div className="flex flex-col gap-2" role="radiogroup" aria-label={screen.copy.singlePrompt}>
               {screen.weekOptions.map((option) => {
                 const on = weekId === option.id;
@@ -172,7 +173,7 @@ export function JobsCoverFlow({
                         weeksNeeded: weeks,
                       });
                     }}
-                    className={`flex h-11 items-center justify-between rounded-xl px-3 text-left text-[14px] font-medium text-[#19347D] ${on ? "bg-[#F0FBFE] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
+                    className={`flex h-11 items-center justify-between rounded-xl px-3 text-left font-sans text-[18px] font-medium leading-[26px] text-[#19347D] ${on ? "bg-[#F0FBFE] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
                   >
                     {option.label}
                   </button>
@@ -180,7 +181,7 @@ export function JobsCoverFlow({
               })}
             </div>
             {singleWeeks !== null && (
-              <p className="mt-3 text-[14px] text-[#19347D]">
+              <p className="mt-3 font-sans text-[18px] leading-[26px] text-[#19347D]">
                 About <b data-weeks-needed="">{singleWeeks}</b> {singleWeeks === 1 ? "week" : "weeks"}.
               </p>
             )}
@@ -188,15 +189,15 @@ export function JobsCoverFlow({
         )}
         {pricesReady && mode === "multi" && (
           <div>
-            <h2 className="mb-3 font-heading text-[20px] font-bold leading-tight text-[#19347D]">{screen.copy.multiPrompt}</h2>
+            <h2 className={`mb-3 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{screen.copy.multiPrompt}</h2>
             <div className="flex flex-col gap-2">
               {priced.map((row) => {
                 const jobs = counts[row.serviceId] ?? 0;
                 const subtotal = (jobs * Math.round(row.keptPerJob * 100)) / 100;
                 return (
                 <div key={row.serviceId} className="flex flex-row items-center gap-2 rounded-[14px] bg-white px-3 py-2 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={row.serviceId} data-service-tile-layout="row">
-                  <span className="min-w-0 flex-1 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{labels.get(row.serviceId)}</span>
-                  <span className="shrink-0 text-right text-[12.5px] leading-tight text-[#6B7280]">
+                  <span className="min-w-0 flex-1 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{labels.get(row.serviceId)}</span>
+                  <span className="shrink-0 text-right text-[16px] leading-tight text-[#6B7280]">
                     {formatOngoingMoney(row.keptPerJob, currency)} kept
                     {jobs > 0 && (
                       <>
@@ -225,19 +226,19 @@ export function JobsCoverFlow({
                 );
               })}
             </div>
-            <div className="mt-4 flex items-baseline justify-between text-[15px] text-[#19347D]">
+            <div className="mt-4 flex items-baseline justify-between font-sans text-[18px] leading-[26px] text-[#19347D]">
               <span>{screen.copy.weeklyLabel}</span>
               <b className="font-heading text-lg tabular-nums" data-weekly-keep="">
                 {formatOngoingMoney(weekly, currency)}
               </b>
             </div>
-            <div className="mt-1 flex items-baseline justify-between text-[15px] text-[#19347D]">
+            <div className="mt-1 flex items-baseline justify-between font-sans text-[18px] leading-[26px] text-[#19347D]">
               <span>{screen.copy.startupLabel}</span>
               <b className="font-heading text-lg tabular-nums" data-startup-total="">
                 {formatStartupMoney(startup, currency)}
               </b>
             </div>
-            <p className="mt-2 text-[15px] text-[#19347D]">
+            <p className="mt-2 font-sans text-[18px] leading-[26px] text-[#19347D]">
               {screen.copy.weeksLabel}{" "}
               <b className="font-heading text-lg tabular-nums" data-weeks-needed="">
                 {multiWeeks === null ? "—" : `${multiWeeks} ${multiWeeks === 1 ? "week" : "weeks"}`}

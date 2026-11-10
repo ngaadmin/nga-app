@@ -219,11 +219,11 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
       data-struck={n === null ? "" : undefined}
     >
       {n !== null && (
-        <span className="flex size-7 flex-none items-center justify-center rounded-full bg-nga-secondary font-heading text-[14px] font-bold text-white" aria-hidden="true">
+        <span className="flex size-7 flex-none items-center justify-center rounded-full bg-nga-secondary font-heading text-[18px] font-bold text-white" aria-hidden="true">
           {n}
         </span>
       )}
-      <span className={`min-w-0 flex-1 text-[16px] font-semibold leading-tight ${n !== null ? "text-nga-ink" : "text-[#6B7280]"}`}>{label(id)}</span>
+      <span className={`min-w-0 flex-1 font-sans text-[18px] font-semibold leading-[26px] ${n !== null ? "text-nga-ink" : "text-[#6B7280]"}`}>{label(id)}</span>
       <span className="flex-none text-[#9AA3B5]">
         <Grip />
       </span>
@@ -251,13 +251,13 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
             if (el) rowRefs.current.set(RANK_LINE, el);
             else rowRefs.current.delete(RANK_LINE);
           }}
-          className="font-heading text-[13px] font-bold text-nga-slate"
+          className="font-heading text-[16px] font-bold text-nga-slate"
           data-rank-line=""
         >
           {BELOW_LINE_TITLE}
         </h3>
         {below.length === 0 ? (
-          <p className="py-2 text-center text-[13px] text-[#9CA3AF] short:py-1 short:leading-[1.35]" data-below-line-hint="">
+          <p className="py-2 text-center text-[16px] text-[#9CA3AF] short:py-1 short:leading-[1.35]" data-below-line-hint="">
             {BELOW_LINE_HINT}
           </p>
         ) : (
@@ -283,9 +283,9 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
             aria-hidden="true"
           >
             {ghostRanked !== -1 && (
-              <span className="flex size-7 flex-none items-center justify-center rounded-full bg-nga-secondary font-heading text-[14px] font-bold text-white">{ghostRanked + 1}</span>
+              <span className="flex size-7 flex-none items-center justify-center rounded-full bg-nga-secondary font-heading text-[18px] font-bold text-white">{ghostRanked + 1}</span>
             )}
-            <span className="min-w-0 flex-1 text-[16px] font-semibold leading-tight text-nga-ink">{label(ghostId)}</span>
+            <span className="min-w-0 flex-1 font-sans text-[18px] font-semibold leading-[26px] text-nga-ink">{label(ghostId)}</span>
             <span className="flex-none text-[#9AA3B5]">
               <Grip />
             </span>

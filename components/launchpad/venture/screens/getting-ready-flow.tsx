@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadGettingReadyScreen } from "@/lib/launchpad/content/types";
@@ -63,11 +64,11 @@ function Tick({ on, label, onClick }: { on: boolean; label: string; onClick: () 
 }
 
 function Aqua({ children }: { children: ReactNode }) {
-  return <h2 className="font-heading text-[22px] font-semibold leading-tight text-[#3FB7DA] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]">{children}</h2>;
+  return <h2 className={`${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]`}>{children}</h2>;
 }
 
 function Eyebrow({ children }: { children: ReactNode }) {
-  return <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">{children}</p>;
+  return <p className="mb-1 font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{children}</p>;
 }
 
 function Rule() {
@@ -128,7 +129,7 @@ function InlineMenu<T extends { id: string; label: string }>({
             <li key={row.id}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-[14px] text-[#19347D]"
+                className="flex w-full items-center justify-between px-3 py-2 text-left font-sans text-[18px] leading-[26px] text-[#19347D]"
                 onClick={() => {
                   onPick(row.id);
                   setOpen(false);

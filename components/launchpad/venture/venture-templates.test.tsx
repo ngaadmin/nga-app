@@ -13,6 +13,7 @@ import {
 } from "@/components/launchpad/venture/task-screen-renderer";
 import { VentureBuilding } from "@/components/launchpad/venture-test/venture-building";
 import { buildingFloors } from "@/components/launchpad/venture-test/venture-flow";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import { OnboardingKit, OnboardingStack } from "@/components/launchpad/venture-test/venture-onboarding-art";
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 
@@ -191,7 +192,7 @@ describe("six-floor intro art (r2)", () => {
   it("kit has six numbered cards and the stack has decorative windows (static intro art)", () => {
     const { container } = render(
       <svg>
-        <OnboardingKit />
+        <OnboardingKit label={LAUNCHPAD_SURFACE_COPY.onboarding.kitLabel} />
         <OnboardingStack />
       </svg>,
     );

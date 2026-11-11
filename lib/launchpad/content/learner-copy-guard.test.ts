@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  * Payload files are the modules that place those strings onto the payload.
  * They are listed here on purpose. A new copy file has to be added to the list.
  */
-const ROOTS = ["components/launchpad/venture", "lib/launchpad/content"];
+const ROOTS = ["components/launchpad/venture", "components/launchpad/venture-test", "lib/launchpad/content"];
 
 const PAYLOAD_FILES = new Set([
   // Seed and the objects the seed embeds.

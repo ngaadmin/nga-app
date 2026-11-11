@@ -45,6 +45,7 @@ import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
 import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
+import { BuildCompleteScreen } from "@/components/launchpad/venture-test/build-complete-screen";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
 import { handbookBusinessName, hasHandbook, workbookLandingLevel, WORKBOOK_FLOOR_LABEL, WORKBOOK_HOME_BACK_LABEL, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
@@ -65,7 +66,7 @@ import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
-import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
+import { surfaceCopyFrom } from "@/lib/launchpad/content/surface-copy";
 import type { LevelCohort } from "@/lib/launchpad/content/level-up/model";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 import { primeStoryAudioFromGesture } from "@/lib/academy/lessons/story-audio/playback";
@@ -115,7 +116,9 @@ type View =
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number; costStep?: CostEditorStep }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
-  | { screen: "rooftop" };
+  | { screen: "rooftop" }
+  /** TEST-ONLY celebration. Not part of the learner flow. */
+  | { screen: "build-complete" };
 
 /** Doors close, the indicator moves, then the next corridor opens. */
 const LIFT_MS = 2400;
@@ -297,7 +300,10 @@ export function VentureFlow({
   }, [view, go]);
 
   if (view.screen === "home") {
+    const homeVenture = ventures["dog-walking"]?.ok ? ventures["dog-walking"] : Object.values(ventures).find((item) => item.ok);
+    const homeSurface = surfaceCopyFrom(homeVenture?.ok ? homeVenture.payload.surface : undefined);
     return (
+      <SurfaceCopyProvider value={homeSurface}>
       <VentureTestShell contentSource={contentSource} contentHash={contentHash}>
         {inProgress ? (
           <LaunchpadHome
@@ -333,6 +339,7 @@ export function VentureFlow({
             })()
           : null}
       </VentureTestShell>
+      </SurfaceCopyProvider>
     );
   }
 
@@ -350,6 +357,7 @@ export function VentureFlow({
     return <VentureTestShell contentSource={contentSource} contentHash={contentHash}>{null}</VentureTestShell>;
   }
   const floors = content.payload.floors;
+  const surface = surfaceCopyFrom(content.payload.surface);
 
   const save = (next: VentureTestProgress) => {
     setProgress(next);
@@ -397,7 +405,7 @@ export function VentureFlow({
       const level = currentLevel(progress, floors);
       body = (
         <section className="flex flex-1 flex-col">
-          <BackCrumb label="Launchpad" onClick={toHome} />
+          <BackCrumb label={surface.chrome.launchpad} onClick={toHome} />
           <Heading>{ventureTitle}</Heading>
           <VentureBuilding
             floors={buildingFloors(progress, floors)}
@@ -425,6 +433,17 @@ export function VentureFlow({
     }
     case "rooftop":
       body = <VentureRooftopFinish onLaunchpadHome={toHome} />;
+      break;
+    case "build-complete":
+      body = (
+        <BuildCompleteScreen
+          copy={surface.buildComplete}
+          terraceLabel={surface.rooftop.terrace}
+          levelCount={floors.length}
+          onWorkbook={() => setHandbook({ ventureId, entry: "building" })}
+          onLaunchpad={toHome}
+        />
+      );
       break;
     case "corridor": {
       const floor = floorAt(floors, view.level);
@@ -850,10 +869,9 @@ export function VentureFlow({
     }
   }
 
-  const surface = content?.ok && content.payload.surface ? content.payload.surface : LAUNCHPAD_SURFACE_COPY;
   return (
     <SurfaceCopyProvider value={surface}>
-    <VentureTestShell focus={view.screen === "workbook"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
+    <VentureTestShell focus={view.screen === "workbook" || view.screen === "build-complete"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
       <div className="flex min-h-0 flex-1 flex-col bg-white" data-content-source={content.source === "seed" ? "seed" : "db"} data-content-hash={content.contentHash}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
         {handbook?.entry === "building" && handbook.ventureId === ventureId && (

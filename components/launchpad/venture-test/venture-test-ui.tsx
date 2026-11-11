@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 
 export const BTN_BASE =
@@ -72,8 +75,9 @@ const CRUMB = "mx-5 mt-1.5 whitespace-nowrap font-heading text-[13px] font-semib
 
 /** "‹ Back to building" style single link. */
 export function BackCrumb({ label, onClick }: { label: string; onClick: () => void }) {
+  const breadcrumb = useSurfaceCopy().chrome.breadcrumb;
   return (
-    <nav aria-label="Breadcrumb" className={CRUMB}>
+    <nav aria-label={breadcrumb} className={CRUMB}>
       <button type="button" onClick={onClick} className="text-nga-slate">
         ‹ {label}
       </button>
@@ -93,8 +97,9 @@ export function TrailCrumb({
   onBuilding: () => void;
   onCorridor: () => void;
 }) {
+  const breadcrumb = useSurfaceCopy().chrome.breadcrumb;
   return (
-    <nav aria-label="Breadcrumb" className={`${CRUMB} overflow-hidden text-ellipsis`}>
+    <nav aria-label={breadcrumb} className={`${CRUMB} overflow-hidden text-ellipsis`}>
       ‹{" "}
       <button type="button" onClick={onBuilding} className="text-nga-secondary">
         Building

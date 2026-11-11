@@ -1,3 +1,6 @@
+"use client";
+
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { VentureBuildingSmall, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
 import { OnboardingKit, OnboardingStack } from "@/components/launchpad/venture-test/venture-onboarding-art";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
@@ -20,17 +23,18 @@ export function VentureOnboarding({
   floors: readonly BuildingFloorView[];
   onStart: () => void;
 }) {
+  const copy = useSurfaceCopy().onboarding;
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="lp-onboarding-title">
       <svg
         role="img"
-        aria-label="Your business kit becomes a building, one floor at a time"
+        aria-label={copy.artLabel}
         width="390"
         height="270"
         viewBox="0 64 390 260"
         className="mx-auto mt-24 block shrink-0 overflow-visible"
       >
-        <OnboardingKit />
+        <OnboardingKit label={copy.kitLabel} />
         <OnboardingStack />
         <VentureBuildingSmall floors={onboardingFloors(floors)} />
         <path d="M382 270 V140 M375 150 l7 -10 7 10" stroke={VT.cta} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -47,12 +51,12 @@ export function VentureOnboarding({
         ))}
       </svg>
       <h1 id="lp-onboarding-title" className="mx-[30px] mt-16 text-center font-heading text-2xl font-bold leading-[1.3] text-nga-ink">
-        Build your business one floor at a time.
+        {copy.title}
       </h1>
-      <p className="mx-[34px] mt-2.5 text-center text-base text-nga-slate">Finish a floor, unlock the next.</p>
+      <p className="mx-[34px] mt-2.5 text-center text-base text-nga-slate">{copy.line}</p>
       <div className="mt-auto px-6 pb-11 pt-6">
         <button type="button" onClick={onStart} className={`${BTN_PRIMARY}`}>
-          Start building
+          {copy.start}
         </button>
       </div>
     </section>

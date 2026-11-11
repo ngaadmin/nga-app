@@ -2,7 +2,7 @@
 import { SVG_HEADING_FONT } from "@/components/launchpad/venture-test/venture-test-colors";
 
 /** Intro kit (r2): six floor cards, Budgeting (6) on top, in the 104x166 frame at x 6, y 146. */
-export function OnboardingKit() {
+export function OnboardingKit({ label }: { label: string }) {
   return (
     <g>
       <rect x={8} y={150} width={100} height={140} rx={14} fill="#e8f6fc" />
@@ -255,7 +255,7 @@ export function OnboardingKit() {
         fontSize={10}
         fill="#1e3a5f"
       >
-        Your business kit
+        {label}
       </text>
     </g>
   );

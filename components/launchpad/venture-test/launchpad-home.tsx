@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import {
   LAUNCHPAD_HOME_COPY,
   categoryPillOpacity,
@@ -254,6 +255,7 @@ export function LaunchpadHome({
   /** Opens the business's handbook read-only. */
   onOpenHandbook?: (ventureId: string, level: number) => void;
 }) {
+  const home = useSurfaceCopy().home;
   const [scrollLeft, setScrollLeft] = useState(0);
   const [lockedNote, setLockedNote] = useState<string | null>(null);
   const frame = useRef<number | null>(null);
@@ -270,11 +272,11 @@ export function LaunchpadHome({
         </span>
       </div>
 
-      <h2 className="mb-3 mt-[22px] font-heading text-lg font-bold text-nga-ink">Business Ideas</h2>
+      <h2 className="mb-3 mt-[22px] font-heading text-lg font-bold text-nga-ink">{home.businessIdeas}</h2>
       <div
         className="-mr-5 overflow-x-auto pt-[26px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="list"
-        aria-label="Business Ideas"
+        aria-label={home.businessIdeas}
         data-testid="lp-carousel"
         onScroll={(e) => {
           const el = e.currentTarget;
@@ -307,7 +309,7 @@ export function LaunchpadHome({
         {lockedNote}
       </p>
 
-      <h2 className={`mb-3 font-heading text-lg font-bold text-nga-ink ${lockedNote ? "mt-3" : "mt-[22px]"}`}>In Progress</h2>
+      <h2 className={`mb-3 font-heading text-lg font-bold text-nga-ink ${lockedNote ? "mt-3" : "mt-[22px]"}`}>{home.inProgress}</h2>
       {inProgress.length === 0 ? (
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (

@@ -253,6 +253,69 @@ export const LAUNCHPAD_SURFACE_COPY = {
     fewerJobs: "Fewer",
     moreJobs: "More",
   },
+  home: {
+    businessIdeas: "Business Ideas",
+    inProgress: "In Progress",
+  },
+  lift: {
+    goingUp: "Going up to Level",
+  },
+  onboarding: {
+    kitLabel: "Your business kit",
+    artLabel: "Your business kit becomes a building, one floor at a time",
+    title: "Build your business one floor at a time.",
+    line: "Finish a floor, unlock the next.",
+    start: "Start building",
+  },
+  shell: {
+    academy: "Academy",
+    launchpad: "Launchpad",
+    vault: "Vault",
+    community: "Community",
+    subscription: "Subscription",
+    profile: "Profile",
+    dayStreak: "day streak",
+    mainNavigation: "Main navigation",
+  },
+  /** Current rooftop finish. Words stay as they are until Storybird replaces them. */
+  rooftop: {
+    heading: "Congratulations!",
+    line: "You've built your business. You're on your way!",
+    tryAnother: "Try another one",
+    backHome: "Back to home",
+    terrace: "Rooftop terrace",
+  },
+  /**
+   * Business-build celebration. Every line is a Storybird placeholder.
+   * The screen is not in the learner flow yet.
+   */
+  buildComplete: {
+    greeting: "Congratulations!",
+    headline: "You built your business!",
+    businessLine: "Your dog walking business is ready.",
+    summary: "All 7 levels complete.",
+    workbook: "See my workbook",
+    back: "Back to Launchpad",
+  },
 } as const;
+
+/**
+ * Loaded venture surface, with bundled strings filling any section the
+ * published row does not have yet. Existing keys on the row win.
+ */
+export function surfaceCopyFrom(loaded: unknown): LaunchpadSurfaceCopy {
+  const base = LAUNCHPAD_SURFACE_COPY;
+  if (!loaded || typeof loaded !== "object") return base;
+  const source = loaded as Record<string, unknown>;
+  const merged: Record<string, unknown> = { ...base };
+  for (const key of Object.keys(base)) {
+    const fallback = (base as Record<string, unknown>)[key];
+    const incoming = source[key];
+    if (fallback && typeof fallback === "object" && incoming && typeof incoming === "object" && !Array.isArray(incoming)) {
+      merged[key] = { ...fallback, ...(incoming as Record<string, unknown>) };
+    }
+  }
+  return merged as LaunchpadSurfaceCopy;
+}
 
 export type LaunchpadSurfaceCopy = typeof LAUNCHPAD_SURFACE_COPY;

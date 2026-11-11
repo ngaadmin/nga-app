@@ -101,6 +101,15 @@ export function levelUpContent(): LaunchpadLevelUpContent {
         {
           id: "bundle",
           label: "Build service bundles",
+          layout: "stacked",
+          stacked: {
+            offerLead: "I'll start offering",
+            startLead: "starting",
+            countLead: "My experiment works if",
+            countAfter: "customers book a bundle",
+            checkInLead: "I'll check in on how it's going in",
+            emptyLabel: "choose",
+          },
           context: "Combine two or three services in one booking, with a small discount for taking the lot.",
           statement: "I'll start offering {offer} {start}. My experiment works if {count} customers book a bundle, and I'll check in on how it's going in {checkIn}.",
           successLine: "{count} customers book a bundle",

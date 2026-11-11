@@ -227,6 +227,50 @@ describe("Level Up screens", () => {
     pickListed("one month");
   }
 
+  function openBundles() {
+    fireEvent.click(screen.getByRole("button", { name: "Build service bundles" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  }
+
+  it("stacks the bundles statement and keeps the tick list off that screen", () => {
+    render(<LevelUpFlow screen={grow} today={new Date(2026, 10, 11)} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    openBundles();
+    const page = document.querySelector("[data-grow-layout='stacked']") as HTMLElement;
+    expect(page).toBeTruthy();
+    expect(within(page).getByText("I'll start offering")).toBeTruthy();
+    expect(within(page).getByText("starting")).toBeTruthy();
+    expect(within(page).getByText("My experiment works if")).toBeTruthy();
+    expect(within(page).getByText("I'll check in on how it's going in")).toBeTruthy();
+    expect(within(page).getAllByText("choose").length).toBeGreaterThanOrEqual(3);
+    expect(within(page).getByText("customers book a bundle")).toBeTruthy();
+    expect(page.querySelector("[data-grow-options]")).toBeNull();
+    expect(within(page).queryByRole("button", { name: "Walk and wash" })).toBeNull();
+    expect(within(page).queryByText("That's December 11, 2026.")).toBeNull();
+    fireEvent.change(within(page).getByRole("combobox", { name: "I'll start offering" }), { target: { value: "walk-wash" } });
+    fireEvent.change(within(page).getByRole("combobox", { name: "I'll start offering" }), { target: { value: "walk-manners" } });
+    fireEvent.change(within(page).getByRole("combobox", { name: "starting" }), { target: { value: "this-week" } });
+    fireEvent.change(within(page).getByRole("textbox", { name: "My experiment works if" }), { target: { value: "3" } });
+    fireEvent.change(within(page).getByRole("combobox", { name: "I'll check in on how it's going in" }), { target: { value: "one-month" } });
+    const answer = within(page).getByText("a walk-and-wash bundle and a walk-and-manners bundle");
+    expect(answer.className).toContain("text-left");
+    expect(answer.className).toContain("text-[#0CC1E0]");
+    expect(within(page).getAllByText("this week").length).toBeGreaterThan(0);
+    expect(within(page).getAllByText("one month").length).toBeGreaterThan(0);
+    expect(within(page).getByText("That's December 11, 2026.")).toBeTruthy();
+    expect(page.querySelector("[data-grow-options]")).toBeNull();
+  });
+
+  it("shows a payload edit of a bundles lead-in", () => {
+    const edited = structuredClone(grow);
+    const bundles = edited.content.grow.ideas.find((idea) => idea.id === "bundle");
+    if (!bundles?.stacked) throw new Error("bundles layout missing");
+    bundles.stacked = { ...bundles.stacked, offerLead: "The offer I will start" };
+    render(<LevelUpFlow screen={edited} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    openBundles();
+    expect(screen.getByText("The offer I will start")).toBeTruthy();
+    expect(screen.queryByText("I'll start offering")).toBeNull();
+  });
+
   it("shows a payload edit to the Grow question", () => {
     const edited = structuredClone(grow);
     edited.content.grow.question = "Which experiment will you run?";

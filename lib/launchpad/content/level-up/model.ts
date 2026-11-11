@@ -46,6 +46,21 @@ export type LevelUpIdea = {
   statement?: string;
   /** `{count}` is the whole-number blank. Absent on a payload published before this screen. */
   successLine?: string;
+  /**
+   * `stacked` replaces the inline sentence with one lead-in per field.
+   * Absent ideas keep the sentence. Only the bundles idea uses this.
+   */
+  layout?: "stacked";
+  stacked?: {
+    offerLead: string;
+    startLead: string;
+    countLead: string;
+    /** Sits on the same line as the number blank. */
+    countAfter: string;
+    checkInLead: string;
+    /** Shown in an empty pick, with the chevron. */
+    emptyLabel: string;
+  };
 };
 
 export type GrowChoice = { id: string; label: string; months?: number };

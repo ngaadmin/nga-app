@@ -384,6 +384,15 @@ function checkLevelUp(screen: Obj, where: string): void {
     }
     text(raw.successLine, `${iw} success line`, true);
     if (typeof raw.successLine === "string" && !raw.successLine.includes("{count}")) fail(`${iw} success line must include {count}.`);
+    if (raw.layout !== undefined && raw.layout !== "stacked") fail(`${iw} has an unknown layout.`);
+    if (raw.layout === "stacked") {
+      if (!isObj(raw.stacked)) fail(`${iw} stacked copy is missing.`);
+      else {
+        for (const field of ["offerLead", "startLead", "countLead", "countAfter", "checkInLead", "emptyLabel"] as const) {
+          text(raw.stacked[field], `${iw} stacked ${field}`);
+        }
+      }
+    }
     list(raw.options, `${iw} options`).forEach((option, oi) => {
       const ow = `${iw} option ${oi + 1}`;
       if (!isObj(option) || typeof option.id !== "string" || !NODE_ID_RE.test(option.id)) fail(`${ow} has no valid id.`);

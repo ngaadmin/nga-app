@@ -60,10 +60,10 @@ function Lined({ item, selected, muted, onClick }: { item: { id: string; label: 
   return <Chip variant="lined" label={item.label} selected={selected} muted={muted} onClick={onClick} />;
 }
 
-function PickChevron() {
+function PickChevron({ stroke = "#0CC1E0" }: { stroke?: string }) {
   return (
     <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" className="ml-1 inline-block align-middle">
-      <path d="M1 1l4 4 4-4" fill="none" stroke="#0CC1E0" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M1 1l4 4 4-4" fill="none" stroke={stroke} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -360,6 +360,117 @@ export function LevelUpFlow({
         </div>
       </>
     );
+  } else if (statementMode && currentIdea?.layout === "stacked" && currentIdea.stacked && currentPlan) {
+    const slots = currentIdea.stacked;
+    const visible = visibleOptions(currentIdea, cohort);
+    const blocked = new Set(currentIdea.id === "new-service" ? offered : []);
+    const chosen = visible.filter((option) => currentPlan.options.includes(option.id) && !blocked.has(option.id));
+    const joined = joinList(chosen.map(offerWords), content.grow.joinWord ?? "");
+    const start = (content.grow.startOptions ?? []).find((option) => option.id === currentPlan.when);
+    const period = (content.grow.checkInOptions ?? []).find((option) => option.id === currentPlan.checkIn);
+    const committed = writtenDates.current.get(currentIdea.id);
+    const experimentDate = period
+      ? committed && committed.checkIn === currentPlan.checkIn
+        ? committed.checkInDate
+        : period.months
+          ? formatCheckInDate(addMonths(today, period.months))
+          : ""
+      : "";
+    const patch = (plan: GrowPlan) => setDraft({ ...draft, growPlans: writePlan(draft.growPlans, plan) });
+    const fieldClass = (filled: boolean) =>
+      `flex w-full min-h-8 items-start justify-between gap-2 border-b-[1.5px] py-1 text-left ${filled ? "border-[#0CC1E0]" : "border-[#8A94A8]"}`;
+    const valueClass = (filled: boolean) =>
+      `min-w-0 flex-1 text-left font-sans text-[18px] font-semibold leading-[26px] ${filled ? "text-[#0CC1E0]" : "text-[#8A94A8]"}`;
+    body = (
+      <div data-grow-statement={currentIdea.id} data-grow-layout="stacked">
+        <ScreenPrompt tone="question" flush className="!mt-3">{currentIdea.label}</ScreenPrompt>
+        {currentIdea.context ? <p className={`mt-3 ${LESSON_HINT}`}>{currentIdea.context}</p> : null}
+        <div className="mt-[21px]">
+          <div className="mb-4">
+            <p className={`mb-1 ${LESSON_BODY}`}>{slots.offerLead}</p>
+            <div className="relative">
+              <div className={fieldClass(joined.length > 0)}>
+                <span className={valueClass(joined.length > 0)}>{joined || slots.emptyLabel}</span>
+                <PickChevron stroke={joined ? "#0CC1E0" : "#8A94A8"} />
+              </div>
+              <select
+                aria-label={slots.offerLead}
+                value=""
+                onChange={(event) => {
+                  const id = event.target.value;
+                  if (!id || blocked.has(id)) return;
+                  const on = currentPlan.options.includes(id);
+                  patch({ ...currentPlan, options: on ? currentPlan.options.filter((item) => item !== id) : [...currentPlan.options, id] });
+                }}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              >
+                <option value="">{slots.emptyLabel}</option>
+                {visible.map((option) => (
+                  <option key={option.id} value={option.id} disabled={blocked.has(option.id)}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mb-4">
+            <p className={`mb-1 ${LESSON_BODY}`}>{slots.startLead}</p>
+            <div className="relative">
+              <div className={fieldClass(Boolean(start))}>
+                <span className={valueClass(Boolean(start))}>{start?.label || slots.emptyLabel}</span>
+                <PickChevron stroke={start ? "#0CC1E0" : "#8A94A8"} />
+              </div>
+              <select
+                aria-label={slots.startLead}
+                value={currentPlan.when}
+                onChange={(event) => patch({ ...currentPlan, when: event.target.value })}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              >
+                <option value="">{slots.emptyLabel}</option>
+                {(content.grow.startOptions ?? []).map((option) => (
+                  <option key={option.id} value={option.id}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mb-4">
+            <p className={`mb-1 ${LESSON_BODY}`}>{slots.countLead}</p>
+            <div className="flex items-end gap-2">
+              <input
+                aria-label={slots.countLead}
+                inputMode="numeric"
+                value={currentPlan.successCount ? String(currentPlan.successCount) : ""}
+                onChange={(event) => {
+                  const digits = event.target.value.replace(/\D/g, "").slice(0, 3);
+                  patch({ ...currentPlan, successCount: digits ? Number(digits) : 0 });
+                }}
+                className={`w-[90px] border-b-[1.5px] bg-transparent py-1 text-left font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none ${currentPlan.successCount ? "border-[#0CC1E0]" : "border-[#8A94A8]"}`}
+              />
+              <span className={LESSON_BODY}>{slots.countAfter}</span>
+            </div>
+          </div>
+          <div>
+            <p className={`mb-1 ${LESSON_BODY}`}>{slots.checkInLead}</p>
+            <div className="relative">
+              <div className={fieldClass(Boolean(period))}>
+                <span className={valueClass(Boolean(period))}>{period?.label || slots.emptyLabel}</span>
+                <PickChevron stroke={period ? "#0CC1E0" : "#8A94A8"} />
+              </div>
+              <select
+                aria-label={slots.checkInLead}
+                value={currentPlan.checkIn}
+                onChange={(event) => patch({ ...currentPlan, checkIn: event.target.value })}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              >
+                <option value="">{slots.emptyLabel}</option>
+                {(content.grow.checkInOptions ?? []).map((option) => (
+                  <option key={option.id} value={option.id}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", experimentDate)}</p> : null}
+      </div>
+    );
   } else if (statementMode && currentIdea && currentPlan && currentIdea.statement) {
     const visible = visibleOptions(currentIdea, cohort);
     const blocked = new Set(currentIdea.id === "new-service" ? offered : []);
@@ -547,6 +658,8 @@ export function LevelUpFlow({
       footer={<LessonContinue disabled={!ready} onClick={go} />}
       decoration={screen.step === "grow" && page === 0 ? (
         <img src={SCRIBBLE_SRC.bulb} alt="" width={64} height={64} draggable={false} data-scribble="bulb" className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-16 mix-blend-multiply" />
+      ) : screen.step === "grow" && currentIdea?.layout === "stacked" ? (
+        <img src={SCRIBBLE_SRC.growth} alt="" width={80} height={80} draggable={false} data-scribble-large="growth" className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-20 mix-blend-multiply" />
       ) : screen.step === "grow" && !currentIdea ? (
         <img src={SCRIBBLE_SRC.calendar} alt="" width={80} height={80} draggable={false} data-scribble-large="calendar" className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-20 mix-blend-multiply" />
       ) : null}

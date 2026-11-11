@@ -54,7 +54,11 @@ describe("Level Up check-in date", () => {
     expect(improve.planHeader).toBe("You've selected your focus areas.");
     expect(improve.planContext).toBe("You can't give all your focus areas equal attention at once, so we suggest one focus per week. Choose the order you want to tackle them.");
     expect(improve.weekLabels).toEqual(["Week 1", "Week 2", "Week 3", "Week 4"]);
-    expect(levelUpContent().workbookPages).toEqual([{ id: "weekly-focus", title: "My weekly focus areas" }]);
+    expect(levelUpContent().workbookPages).toEqual([
+      { id: "what-went-well", title: "What went well" },
+      { id: "weekly-focus", title: "My weekly focus areas" },
+      { id: "growth-plan", title: "My growth plan" },
+    ]);
     const rows = weeklyFocusRows(levelUpContent(), [
       { statementId: "brought-everything", week: 4 },
       { statementId: "confirmed", week: 1 },

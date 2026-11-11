@@ -236,6 +236,22 @@ export function PricingSummarySheet() {
         )}
       </p>
       <p className={`mt-2 ${WORKBOOK_BODY}`}>{idea ? <>{s.competitor.couldDifferently} <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
+      {(competitor?.jobComparedId || competitor?.jobComparedExtra?.trim()) && (
+        <p className={`mt-1 ${WORKBOOK_BODY}`} data-job-compared="">
+          {s.competitor.jobCompared}: {competitor.jobComparedId ? <span>{nameFor(competitor.jobComparedId, chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer"))}</span> : null}
+          {competitor.jobComparedExtra?.trim() ? <> {competitor.jobComparedId ? " " : null}<ChosenValue>{competitor.jobComparedExtra}</ChosenValue></> : null}
+        </p>
+      )}
+      {competitor?.addonsExtra?.trim() ? (
+        <p className={`mt-1 ${WORKBOOK_BODY}`} data-competitor-extras="">
+          {s.competitor.ownExtras}: <ChosenValue>{competitor.addonsExtra}</ChosenValue>
+        </p>
+      ) : null}
+      {competitor?.doDifferentlyExtra?.trim() ? (
+        <p className={`mt-1 ${WORKBOOK_BODY}`} data-differently-extra="">
+          {s.competitor.ownIdea}: <ChosenValue>{competitor.doDifferentlyExtra}</ChosenValue>
+        </p>
+      ) : null}
       <LargeScribble name="coins" />
     </div>
   );

@@ -187,6 +187,10 @@ export function levelUpContent(): LaunchpadLevelUpContent {
         },
       ],
     },
-    workbookPages: [{ id: "weekly-focus", title: "My weekly focus areas" }],
+    workbookPages: [
+      { id: "what-went-well", title: "What went well" },
+      { id: "weekly-focus", title: "My weekly focus areas" },
+      { id: "growth-plan", title: "My growth plan" },
+    ],
   };
 }

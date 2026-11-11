@@ -91,6 +91,16 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
               ) : null}
               .
             </p>
+            {row.packagesExtra?.trim() ? (
+              <p className={WORKBOOK_BODY} data-packages-extra="">
+                {s.offer.packagesExtraLine}: <ChosenValue>{row.packagesExtra}</ChosenValue>
+              </p>
+            ) : null}
+            {row.addonsExtra?.trim() ? (
+              <p className={WORKBOOK_BODY} data-addons-extra="">
+                {s.offer.addonsExtraLine}: <ChosenValue>{row.addonsExtra}</ChosenValue>
+              </p>
+            ) : null}
             {open && catalog && (
               <div className="mt-2" data-inline-editor={row.serviceId}>
                 <p className="font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Packages</p>
@@ -140,6 +150,11 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
             {s.sheets.iAsked} <ChosenValue>{customer.numberAsked}</ChosenValue> {s.sheets.peopleSaid} <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>{s.sheets.interestedIn} <ChosenValue>{joinLabels(customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)))}</ChosenValue>.
             {customer.times && customer.times.length > 0 ? <> {s.sheets.wantedWalks} <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
           </p>
+          {customer.timesExtra?.trim() ? (
+            <p className={`mt-1 ${WORKBOOK_BODY}`} data-times-extra="">
+              {s.offer.timesExtraLine}: <ChosenValue>{customer.timesExtra}</ChosenValue>
+            </p>
+          ) : null}
         </>
       )}
       <LargeScribble name="pawtrail" />

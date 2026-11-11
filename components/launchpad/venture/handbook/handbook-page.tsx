@@ -1,7 +1,7 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
@@ -24,7 +24,7 @@ import { LargeScribble, SCRIBBLE_SRC, type ScribbleName } from "@/components/lau
 import { orderSystemOf } from "@/lib/launchpad/content/answers";
 import { DeliveryWorkbook } from "@/components/launchpad/venture/handbook/delivery-workbook";
 import type { OrderSystemCopy } from "@/lib/launchpad/content/types";
-import { WeeklyFocusSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
+import { GrowthPlanSheet, WeeklyFocusSheet, WhatWentWellSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
@@ -351,7 +351,7 @@ function TemplateWriteIn({
   );
 }
 
-/** Draft poster on the Templates tab. Copy and file URLs come from the payload. */
+/** Draft poster on the Templates tab. The blank PDF opens in this page, not a new tab. */
 export function PosterTemplatePage({
   poster,
 }: {
@@ -362,6 +362,8 @@ export function PosterTemplatePage({
     downloadA4: string;
     openLetter: string;
     downloadLetter: string;
+    viewerClose: string;
+    viewerPrint: string;
     draftSrc: string;
     a4Url: string;
     letterUrl: string;
@@ -369,19 +371,35 @@ export function PosterTemplatePage({
     letterDownload: string;
   };
 }) {
-  const link = "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0] underline decoration-[#0CC1E0] underline-offset-[3px]";
+  const [file, setFile] = useState<"a4" | "letter" | null>(null);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const src = file === "letter" ? poster.letterUrl : poster.a4Url;
+  const link = "inline-flex items-start gap-1.5 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0] underline decoration-[#0CC1E0] underline-offset-[3px]";
   return (
     <article data-handbook-page="templates" data-workbook-templates="" data-template-page="poster" aria-label={poster.heading}>
       <MiniIdentity />
       <AccentLabel as="h2">{poster.heading}</AccentLabel>
       <img src={poster.draftSrc} alt="" width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
-      <p className="mt-3 font-sans text-[16px] font-normal leading-6 text-[#19347D]">{poster.blankLink}</p>
-      <div className="mt-2 flex flex-col items-start gap-2" data-poster-links="">
-        <a href={poster.a4Url} target="_blank" rel="noopener noreferrer" className={link}>{poster.openA4}</a>
-        <a href={poster.a4Download} className={link}>{poster.downloadA4}</a>
-        <a href={poster.letterUrl} target="_blank" rel="noopener noreferrer" className={link}>{poster.openLetter}</a>
-        <a href={poster.letterDownload} className={link}>{poster.downloadLetter}</a>
-      </div>
+      <button type="button" className={`mt-3 text-left ${link}`} data-poster-open="" onClick={() => setFile("a4")}>
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-1 shrink-0">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+          <path d="M14 3v5h5" />
+        </svg>
+        {poster.blankLink}
+      </button>
+      {file && (
+        <div className="fixed inset-0 z-modal flex flex-col bg-white" data-poster-viewer="" role="dialog" aria-label={poster.heading}>
+          <div className="flex h-14 flex-none items-center justify-between gap-2 px-3">
+            <button type="button" className="h-10 rounded-full px-3 font-sans text-[16px] font-semibold text-[#19347D]" onClick={() => setFile(null)}>{poster.viewerClose}</button>
+            <div className="flex gap-2">
+              <button type="button" className="h-10 rounded-full px-3 font-sans text-[16px] font-semibold text-[#19347D]" onClick={() => setFile("a4")}>{poster.openA4}</button>
+              <button type="button" className="h-10 rounded-full px-3 font-sans text-[16px] font-semibold text-[#19347D]" onClick={() => setFile("letter")}>{poster.openLetter}</button>
+            </div>
+            <button type="button" className="h-10 rounded-full bg-[#19347D] px-4 font-sans text-[16px] font-semibold text-white" onClick={() => frame.current?.contentWindow?.print()}>{poster.viewerPrint}</button>
+          </div>
+          <iframe ref={frame} title={poster.heading} src={src} className="min-h-0 w-full flex-1 border-0" data-poster-frame="" />
+        </div>
+      )}
     </article>
   );
 }
@@ -561,13 +579,16 @@ function SummaryPageBody({
 }
 
 /** Growing workbook page declared on the Level Up payload. */
-function WeeklyFocusPage({ silver }: { silver: HandbookPageView["silver"] }) {
+function LevelUpWorkbookPage({ silver, sheet }: { silver: HandbookPageView["silver"]; sheet: string }) {
   for (const bronze of silver.bronzes)
     for (const task of bronze.tasks)
       for (const screen of task.screens)
         if (screen.type === "level-up") {
-          const title = screen.content.workbookPages?.find((item) => item.id === "weekly-focus")?.title;
-          if (title) return <WeeklyFocusSheet content={screen.content} title={title} />;
+          const title = screen.content.workbookPages?.find((item) => item.id === sheet)?.title;
+          if (!title) return null;
+          if (sheet === "what-went-well") return <WhatWentWellSheet content={screen.content} title={title} />;
+          if (sheet === "growth-plan") return <GrowthPlanSheet content={screen.content} title={title} />;
+          if (sheet === "weekly-focus") return <WeeklyFocusSheet content={screen.content} title={title} />;
         }
   return null;
 }
@@ -646,8 +667,8 @@ export function HandbookPage({
         <SalesWorkbookPage sheet={page.sheet} />
       ) : page.sheet === "budget-split" ? (
         <ScriptedSheetPage sheet={budgetSplitSheet()} />
-      ) : page.sheet === "weekly-focus" ? (
-        <WeeklyFocusPage silver={page.silver} />
+      ) : page.sheet === "what-went-well" || page.sheet === "weekly-focus" || page.sheet === "growth-plan" ? (
+        <LevelUpWorkbookPage silver={page.silver} sheet={page.sheet} />
       ) : page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (

@@ -26,6 +26,9 @@ import {
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { Handbook } from "@/components/launchpad/venture/handbook/handbook";
+import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
+import { PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
+import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
 import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
@@ -681,13 +684,15 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
     expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
-    const openA4 = screen.getByRole("link", { name: "Open the A4 file" });
-    const saveA4 = screen.getByRole("link", { name: "Save the A4 file" });
-    expect(openA4.getAttribute("href")).toBe(poster.a4Url);
-    expect(openA4.getAttribute("target")).toBe("_blank");
-    expect(saveA4.getAttribute("href")).toBe(poster.a4Download);
-    expect(screen.getByRole("link", { name: poster.openLetter }).getAttribute("href")).toBe(poster.letterUrl);
-    expect(screen.getByRole("link", { name: poster.downloadLetter }).getAttribute("href")).toBe(poster.letterDownload);
+    expect(screen.queryByRole("link")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: poster.blankLink }));
+    const frame = document.querySelector("[data-poster-frame]") as HTMLIFrameElement;
+    expect(frame.getAttribute("src")).toBe(poster.a4Url);
+    fireEvent.click(screen.getByRole("button", { name: poster.openLetter }));
+    expect(frame.getAttribute("src")).toBe(poster.letterUrl);
+    fireEvent.click(screen.getByRole("button", { name: poster.viewerClose }));
+    expect(document.querySelector("[data-poster-viewer]")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Url).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.letterUrl).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Download).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf");
@@ -759,6 +764,93 @@ describe("L5 delivery workbook", () => {
     expect(screen.queryByRole("heading", { name: original })).toBeNull();
     expect(screen.getByText("text").className).toContain("text-[#0CC1E0]");
     expect(screen.getByText(/Water bottle and fold-up bowl/)).toBeTruthy();
+  });
+});
+
+describe("L2 playback extras and L7 workbook pages", () => {
+  it("shows typed extras only when they are filled, and a payload label edit", () => {
+    const answers = {
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      "l2-offer": {
+        kind: "offer" as const,
+        version: 1 as const,
+        offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], packagesExtra: "Puppy visits", addons: ["photo-updates"], addonsExtra: "Rain coat" }],
+        availability: ["weekday_morning"],
+      },
+      "l2-customers": { kind: "customer" as const, version: 1 as const, numberAsked: 3, yesNo: "yes" as const, interests: ["30-minute-walk"], timesExtra: "After dinner" },
+      "l2-competitors": {
+        kind: "competitor" as const,
+        version: 1 as const,
+        walkersChecked: 2,
+        jobComparedId: "dog-walking",
+        jobComparedExtra: "Park walks",
+        priceLow: 10,
+        priceHigh: 20,
+        addons: ["photo-updates"],
+        addonsExtra: "Water bowl",
+        doDifferently: "walk-one-dog-at-a-time",
+        doDifferentlyExtra: "Send a photo",
+      },
+    };
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      offer: { ...LAUNCHPAD_SURFACE_COPY.offer, packagesExtraLine: "Package I typed" },
+    };
+    render(
+      <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
+        <LaunchpadAnswersProvider value={{ iconVentureId: "dog-walking", answers, setAnswer: () => {}, floors: FLOORS }}>
+          <ProductHandbook editable={false} />
+          <PricingSummarySheet />
+        </LaunchpadAnswersProvider>
+      </SurfaceCopyProvider>,
+    );
+    expect(screen.getByText(/Package I typed/)).toBeTruthy();
+    expect(screen.queryByText(LAUNCHPAD_SURFACE_COPY.offer.packagesExtraLine)).toBeNull();
+    expect(screen.getByText("Puppy visits").className).toContain("font-semibold");
+    expect(screen.getByText("Rain coat").className).toContain("font-semibold");
+    expect(screen.getByText("After dinner").className).toContain("font-semibold");
+    expect(screen.getByText("Park walks").className).toContain("font-semibold");
+    expect(screen.getByText("Water bowl").className).toContain("font-semibold");
+    expect(screen.getByText("Send a photo").className).toContain("font-semibold");
+    const compared = document.querySelector("[data-job-compared]");
+    expect(compared?.textContent).toContain("Dog walking");
+    expect(compared?.querySelector("[data-chosen-value]")?.textContent).toBe("Park walks");
+  });
+
+  it("plays Reflect before the weekly focus and Grow after it, and a payload title edit shows", () => {
+    const floors = structuredClone(FLOORS);
+    for (const bronze of floors[6]!.silvers[0]!.bronzes) {
+      const spec = bronze.tasks[0]!.screens[0]!;
+      if (spec.type !== "level-up") continue;
+      const growth = spec.content.workbookPages?.find((page) => page.id === "growth-plan");
+      if (growth) growth.title = "How I will grow";
+    }
+    const progress = withShortcutSampleAnswers(through("l7-s1"), floors, "dog-walking", "Happy Paws");
+    const sheets = handbookPages(progress, floors).filter((page) => page.level === 7).map((page) => page.sheet);
+    expect(sheets).toEqual(["what-went-well", "weekly-focus", "growth-plan"]);
+    render(
+      <Handbook
+        entry="building"
+        businessName="Happy Paws"
+        floors={floors}
+        progress={progress}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+        initialSheet="what-went-well"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "What went well" })).toBeTruthy();
+    expect(screen.getByText("Using more than one way to get my name out")).toBeTruthy();
+    expect(document.querySelector("[data-heart-doodle]")?.className).toContain("left-0");
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "My weekly focus areas" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "How I will grow" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "My growth plan" })).toBeNull();
+    expect(screen.getByText("Start a referral program")).toBeTruthy();
+    expect(screen.getByText("2").className).toContain("font-semibold");
+    expect(screen.getByText("this week")).toBeTruthy();
   });
 });
 

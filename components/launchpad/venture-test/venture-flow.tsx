@@ -48,7 +48,7 @@ import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { BuildCompleteScreen } from "@/components/launchpad/venture-test/build-complete-screen";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
-import { handbookBusinessName, hasHandbook, workbookLandingLevel, WORKBOOK_FLOOR_LABEL, WORKBOOK_HOME_BACK_LABEL, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
+import { handbookBusinessName, hasHandbook, workbookLandingLevel, WORKBOOK_FLOOR_LABEL, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_PRIMARY, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 import { isIdentityPicker } from "@/lib/launchpad/content/identity-content";
@@ -401,7 +401,7 @@ export function VentureFlow({
                   iconVentureId={iconSetOverride ?? id}
                   scopeLevel={handbook.openLevel}
                   onBackToLift={closeHandbook}
-                  backLabel={WORKBOOK_HOME_BACK_LABEL}
+                  backLabel={homeSurface.workbook.backToLaunchpad}
                   onClose={closeHandbook}
                 />
               );
@@ -639,8 +639,15 @@ export function VentureFlow({
         }
         const justSilver = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
         if (justSilver) {
+          const grow = bronze.tasks.some((task) => task.screens.some((item) => item.type === "level-up" && item.step === "grow"));
           go({ screen: "corridor", level: floor.level, entering: false });
-          setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: silver.id });
+          setHandbook({
+            ventureId,
+            entry: "building",
+            level: floor.level,
+            openSilverId: silver.id,
+            ...(grow ? { openSheet: "growth-plan" } : {}),
+          });
           return;
         }
         if (adv.kind === "bronze-done") {

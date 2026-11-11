@@ -84,7 +84,7 @@ export function Handbook({
   initialLevel,
   initialTemplates = false,
   scopeLevel,
-  backLabel = "‹ Back to the lift",
+  backLabel,
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -212,7 +212,7 @@ export function Handbook({
           className="-mt-2 mb-1 ml-4 flex h-8 items-center self-start text-[14px] font-semibold text-nga-ink"
           data-back-to-lift=""
         >
-          {backLabel}
+          {backLabel ?? s.workbook.backToCorridor}
         </button>
       )}
 
@@ -250,7 +250,7 @@ export function Handbook({
             }}
           >
             <SpiralBinding />
-            {(pagingTemplates || (!templatesOpen && page && (page.number === 2 || page.number === 6))) && <Washi page={!templatesOpen && page?.number === 6 ? 6 : 2} />}
+            {((pagingTemplates && templatePages[templateAt]?.kind !== "poster") || (!templatesOpen && page && (page.number === 2 || page.number === 6))) && <Washi page={!templatesOpen && page?.number === 6 ? 6 : 2} />}
             <div ref={paperRef} className={`h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6 ${WORKBOOK_BODY}`} data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}

@@ -317,7 +317,7 @@ describe("floor workbook shortcut", () => {
     expect(page).toBeTruthy();
     expect(page?.getAttribute("data-editable")).toBe("false");
     expect(page?.textContent).toContain("Learn the customer journey");
-    fireEvent.click(screen.getByRole("button", { name: /Back to the lift/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Back to the corridor/ }));
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
     expect(screen.getByRole("button", { name: "Open your workbook" })).toBeTruthy();
   });

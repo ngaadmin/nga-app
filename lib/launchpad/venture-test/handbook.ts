@@ -427,6 +427,35 @@ export function withShortcutSampleAnswers(
       for (const b of silver.bronzes)
         for (const t of b.tasks)
           for (const screen of t.screens) {
+            if (screen.type === "level-up" && !next.answers?.[screen.answerKey]) {
+              const content = screen.content;
+              if (screen.step === "reflect") {
+                const selected = content.sections.flatMap((section) => content.statements.filter((item) => item.section === section.id).slice(0, 1).map((item) => item.id));
+                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected, picks: {}, pace: {}, improvePlan: [], ideas: [], growPlans: [] });
+              } else if (screen.step === "improve") {
+                const improvePlan = content.sections.slice(0, 4).map((section, index) => {
+                  const statement = content.statements.find((item) => item.section === section.id);
+                  return statement ? { statementId: statement.id, week: index + 1 } : null;
+                }).filter((row): row is { statementId: string; week: number } => row !== null);
+                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan, ideas: [], growPlans: [] });
+              } else if (screen.step === "grow") {
+                const idea = content.grow.ideas[0];
+                const when = content.grow.startOptions?.[0]?.id ?? "";
+                const checkIn = content.grow.checkInOptions?.[0]?.id ?? "";
+                if (idea && when && checkIn) {
+                  next = setProgressAnswer(next, screen.answerKey, {
+                    kind: "level-up",
+                    version: 1,
+                    selected: [],
+                    picks: {},
+                    pace: {},
+                    improvePlan: [],
+                    ideas: [idea.id],
+                    growPlans: [{ idea: idea.id, options: [idea.options[0]!.id], when, successCount: 2, checkIn, checkInDate: "2027-02-11" }],
+                  });
+                }
+              }
+            }
             if (screen.type === "delivery" && !next.answers?.[screen.answerKey]) {
               const sample = deliverySample(screen);
               if (sample) next = setProgressAnswer(next, screen.answerKey, sample);
@@ -516,7 +545,9 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
       offerings: selected.map((id) => ({
         serviceId: id,
         packages: id === "grooming" ? ["bath"] : id === "dog-training" ? ["basic-manners-session"] : ["30-minute-walk"],
+        packagesExtra: id === "dog-walking" ? "Puppy visits" : undefined,
         addons: id === "dog-walking" ? ["photo-updates"] : [],
+        addonsExtra: id === "dog-walking" ? "Rain coat" : undefined,
       })),
       availability: ["weekday_morning", "weekday_afternoon", "weekend_morning"],
     });
@@ -528,6 +559,7 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
       numberAsked: 3,
       yesNo: "yes",
       interests: ["30-minute-walk", "photo-updates", "after-school"],
+      timesExtra: "After dinner",
     });
   }
   if (isTaskDone(next, "l2-s2-b2-t1") && !next.answers?.["l2-competitors"]) {
@@ -540,6 +572,8 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
       priceHigh: 20,
       addons: ["photo-updates", "treats"],
       doDifferently: "walk-one-dog-at-a-time",
+      addonsExtra: "Water bowl",
+      doDifferentlyExtra: "Send a photo after every walk",
     });
   }
   if (isTaskDone(next, "l3-s1-b1-t1") && !next.answers?.[FIND_CUSTOMERS_KEY]) {

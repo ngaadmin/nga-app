@@ -21,7 +21,6 @@ import { LAUNCHPAD_READABLE_SCHEMA_VERSIONS } from "@/lib/launchpad/content/sche
 import {
   GROW_IDEA_IDS,
   GROW_START_IDS,
-  IMPROVE_START_IDS,
   LEVEL_COHORTS,
   LEVEL_SECTION_IDS,
 } from "@/lib/launchpad/content/level-up/model";
@@ -290,12 +289,14 @@ function checkLevelUp(screen: Obj, where: string): void {
   const grow = content.grow;
   if (!isObj(reflect) || !isObj(improve) || !isObj(grow)) fail(`${where} is missing Reflect, Improve, or Grow copy.`);
   for (const field of ["context", "guidance", "question"] as const) text(reflect[field], `${where} reflect ${field}`);
-  for (const field of ["context", "guidance", "question", "nailedTitle", "nailedLine", "planContext", "planGuidance", "starting", "period", "startFieldLabel"] as const) {
+  for (const field of ["context", "guidance", "question", "nailedTitle", "nailedLine", "planContext"] as const) {
     text(improve[field], `${where} improve ${field}`);
   }
   if (!String(improve.nailedLine).includes("{section}")) fail(`${where} improve nailedLine must include {section}.`);
-  if (!String(improve.starting).includes("{label}")) fail(`${where} improve starting must include {label}.`);
-  sameIds(improve.startOptions, `${where} improve starts`, IMPROVE_START_IDS);
+  text(improve.planHeader, `${where} improve planHeader`, true);
+  if (improve.weekLabels !== undefined) {
+    list(improve.weekLabels, `${where} week labels`, 1).forEach((label, i) => text(label, `${where} week label ${i + 1}`));
+  }
   for (const field of [
     "context",
     "guidance",

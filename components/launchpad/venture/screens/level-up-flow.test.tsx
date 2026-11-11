@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { levelUpOf, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import { levelUpOf, parseLevelUpAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import { checkLaunchpadVenturePayload } from "@/lib/launchpad/content/check-payload";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
@@ -70,7 +71,7 @@ describe("Level Up screens", () => {
         selected: ["kept-track", "confirmed", "slipped", "more-than-one-way"],
         picks: {},
         pace: {},
-        starts: {},
+        improvePlan: [],
         ideas: [],
         idea: "",
         option: "",
@@ -95,29 +96,28 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Asking every customer for feedback" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 5 of 5")).toBeTruthy();
-    expect(screen.getByText("A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.")).toBeTruthy();
-    expect(screen.getByText("Check your plan. Tap a start date if you want to change it.")).toBeTruthy();
-    expect(screen.queryByText("Pick one to start now and one to start in three months.")).toBeNull();
-    expect(screen.queryByText("Getting ready")).toBeNull();
-    const options = screen.getAllByRole("option").map((option) => option.textContent);
-    expect(options.filter((label) => label === "this week")).toHaveLength(3);
-    expect(options).toContain("this month");
-    expect(options).toContain("in the next three months");
-    expect(options).not.toContain("by my next job");
-    expect(options).not.toContain("by next quarter");
-    expect(options).not.toContain("in a month");
-    expect(options).not.toContain("in three months");
+    expect(screen.getByText("You've selected your focus areas.")).toBeTruthy();
+    expect(screen.getByText("You can't give all your focus areas equal attention at once, so we suggest one focus per week. Choose the order you want to tackle them.")).toBeTruthy();
+    expect(screen.getByText("Week 1")).toBeTruthy();
+    expect(screen.getByText("Week 2")).toBeTruthy();
+    expect(screen.getByText("Week 3")).toBeTruthy();
+    expect(screen.queryByText("Week 4")).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish).toHaveBeenCalled();
     const saved = onFinish.mock.calls[0]?.[0];
-    expect(saved.starts["followed-up"]).toBe("this-week");
-    expect(saved.starts["on-time"]).toBe("this-week");
+    expect(saved.improvePlan).toEqual([
+      { statementId: "followed-up", week: 1 },
+      { statementId: "on-time", week: 2 },
+      { statementId: "feedback", week: 3 },
+    ]);
     expect(saved.pace["followed-up"]).toBe("quick");
     expect(saved.picks.ready).toBeUndefined();
+    expect(saved.starts).toBeUndefined();
     expect(screen.queryByText("quick")).toBeNull();
   });
 
-  it("maps a saved in-a-month start to this month and skips the timeline when every section was nailed", () => {
+  it("ignores a saved start date and skips the week order when every section was nailed", () => {
     const mapped: LaunchpadAnswers = {
       "l7-reflect": {
         kind: "level-up",
@@ -125,7 +125,7 @@ describe("Level Up screens", () => {
         selected: ["more-than-one-way"],
         picks: {},
         pace: {},
-        starts: {},
+        improvePlan: [],
         ideas: [],
         idea: "",
         option: "",
@@ -138,7 +138,7 @@ describe("Level Up screens", () => {
         selected: [],
         picks: { customers: "followed-up" },
         pace: {},
-        starts: { "followed-up": "in-a-month" },
+        improvePlan: [],
         ideas: [],
         idea: "",
         option: "",
@@ -154,7 +154,8 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Asking every customer for feedback" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect((screen.getAllByRole("combobox")[0] as HTMLSelectElement).value).toBe("this-month");
+    expect(screen.getByText("You've selected your focus areas.")).toBeTruthy();
+    expect(screen.queryByRole("combobox")).toBeNull();
     unmount();
 
     const all = reflect.content.statements.map((item) => item.id);
@@ -169,7 +170,7 @@ describe("Level Up screens", () => {
             selected: all,
             picks: {},
             pace: {},
-            starts: {},
+            improvePlan: [],
             ideas: [],
             idea: "",
             option: "",
@@ -184,7 +185,38 @@ describe("Level Up screens", () => {
     );
     for (let i = 0; i < 4; i += 1) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish).toHaveBeenCalled();
-    expect(screen.queryByText("A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.")).toBeNull();
+    expect(screen.queryByText("You've selected your focus areas.")).toBeNull();
+  });
+
+  it("keeps an older published payload valid and skips the week order until the new copy is there", () => {
+    const payload = structuredClone(launchpadTestVentureSeed());
+    const improveScreen = payload.floors.find((floor) => floor.level === 7)!.silvers[0]!.bronzes[1]!.tasks[0]!.screens[0]!;
+    if (improveScreen.type !== "level-up") throw new Error("missing");
+    const improveCopy = improveScreen.content.improve as { planHeader?: string; weekLabels?: string[]; planContext: string };
+    delete improveCopy.planHeader;
+    delete improveCopy.weekLabels;
+    improveCopy.planContext = "A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.";
+    expect(checkLaunchpadVenturePayload(payload, "dog-walking").ok).toBe(true);
+    const onFinish = vi.fn();
+    render(<LevelUpFlow screen={improveScreen} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
+    fireEvent.click(screen.getByRole("button", { name: "Following up with everyone who shows interest" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keeping track of every job that comes in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Always showing up on time at each job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Asking every customer for feedback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onFinish).toHaveBeenCalled();
+    expect(screen.queryByText("You've selected your focus areas.")).toBeNull();
+    const kept = parseLevelUpAnswer({
+      kind: "level-up",
+      version: 1,
+      picks: { customers: "followed-up" },
+      starts: { "followed-up": "in-a-month" },
+    });
+    expect(kept?.improvePlan).toEqual([]);
+    expect(kept && "starts" in kept).toBe(false);
   });
 
   it("sets the Grow check-in to today plus three months and copies that date", async () => {

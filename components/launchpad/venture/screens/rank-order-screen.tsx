@@ -297,3 +297,149 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
     </div>
   );
 }
+
+/**
+ * The same drag rows as rank order, one item per labeled slot. No "doesn't
+ * apply" line. Level Up Improve uses it for Week 1..N.
+ */
+export function OrderedSlots({
+  items,
+  order,
+  slotLabels,
+  onOrder,
+}: {
+  items: readonly { id: string; label: string }[];
+  order: readonly string[];
+  slotLabels: readonly string[];
+  onOrder: (next: string[]) => void;
+}) {
+  const rowRefs = useRef(new Map<string, HTMLElement>());
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const [announce, setAnnounce] = useState("");
+  const focusId = useRef<string | null>(null);
+  const seq = drag?.moved ? drag.seq : [...order];
+  const label = (id: string) => items.find((item) => item.id === id)?.label ?? id;
+
+  useEffect(() => {
+    if (!focusId.current) return;
+    rowRefs.current.get(focusId.current)?.focus();
+    focusId.current = null;
+  });
+
+  const slotAt = (cur: readonly string[], id: string, y: number) => {
+    let n = 0;
+    for (const key of cur) {
+      if (key === id) continue;
+      const el = rowRefs.current.get(key);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (y > r.top + r.height / 2) n += 1;
+    }
+    return n;
+  };
+
+  const latest = useRef({ drag, order, onOrder, slotAt, label, slotLabels });
+  latest.current = { drag, order, onOrder, slotAt, label, slotLabels };
+  const pressed = drag ? `${drag.id}:${drag.pointerId}` : null;
+  useEffect(() => {
+    if (!pressed) return;
+    const move = (e: PointerEvent) => {
+      const { drag: d, slotAt: slot } = latest.current;
+      if (!d || e.pointerId !== d.pointerId) return;
+      const moved = d.moved || Math.abs(e.clientY - d.startY) > DRAG_SLOP;
+      if (!moved) return;
+      e.preventDefault();
+      setDrag({ ...d, moved: true, y: e.clientY, seq: dropAt(d.seq, d.id, slot(d.seq, d.id, e.clientY)) });
+    };
+    const end = (e: PointerEvent) => {
+      const { drag: d, order: before, onOrder: save, label: name, slotLabels: slots } = latest.current;
+      if (!d || e.pointerId !== d.pointerId) return;
+      if (d.moved && d.seq.join() !== before.join()) {
+        save(d.seq);
+        const at = d.seq.indexOf(d.id);
+        setAnnounce(`${slots[at] ?? ""} ${name(d.id)}`);
+      }
+      setDrag(null);
+    };
+    window.addEventListener("pointermove", move, { passive: false });
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+  }, [pressed]);
+
+  const ghostId = drag?.moved ? drag.id : null;
+  return (
+    <div data-week-order="">
+      <ol className="mt-4 flex flex-col gap-2">
+        {seq.map((id, index) => {
+          const dragging = ghostId === id;
+          return (
+            <li
+              key={id}
+              ref={(el) => {
+                if (el) rowRefs.current.set(id, el);
+                else rowRefs.current.delete(id);
+              }}
+              tabIndex={0}
+              aria-roledescription="draggable"
+              aria-label={`${slotLabels[index] ?? ""} ${label(id)}`}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+                event.preventDefault();
+                const next = moveRankItem(seq, id, event.key === "ArrowUp" ? -1 : 1);
+                if (next.join() === seq.join()) return;
+                focusId.current = id;
+                onOrder(next);
+              }}
+              onPointerDown={(event) => {
+                if (event.button !== 0) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                setDrag({
+                  id,
+                  pointerId: event.pointerId,
+                  startY: event.clientY,
+                  dy: event.clientY - rect.top,
+                  left: rect.left,
+                  width: rect.width,
+                  height: rect.height,
+                  y: event.clientY,
+                  moved: false,
+                  seq: [...order],
+                });
+              }}
+              style={{ touchAction: "none" }}
+              className={`flex min-h-11 cursor-grab select-none items-center gap-2 rounded-2xl border-2 border-[#C5D4EA] bg-white py-1.5 pl-2.5 pr-3 outline-none focus-visible:ring-2 focus-visible:ring-nga-ink ${dragging ? "border-dashed [&>*]:opacity-0" : ""}`}
+              data-week-slot={index + 1}
+            >
+              <span className="w-[4.5rem] flex-none font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{slotLabels[index]}</span>
+              <span className="min-w-0 flex-1 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{label(id)}</span>
+              <span className="flex-none text-[#9AA3B5]">
+                <Grip />
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="sr-only" aria-live="polite">{announce}</p>
+      {ghostId && drag ? (
+        <OverlayPortal className="overflow-visible">
+          <div
+            className="pointer-events-none fixed z-overlay flex items-center gap-2 rounded-2xl border-2 border-nga-secondary bg-white py-1.5 pl-2.5 pr-3 shadow-[0_10px_24px_rgba(3,31,130,0.18)]"
+            style={{ left: drag.left, width: drag.width, height: drag.height, top: drag.y - drag.dy }}
+            data-rank-ghost=""
+            aria-hidden="true"
+          >
+            <span className="min-w-0 flex-1 font-sans text-[18px] font-normal leading-[26px] text-nga-ink">{label(ghostId)}</span>
+            <span className="flex-none text-[#9AA3B5]">
+              <Grip />
+            </span>
+          </div>
+        </OverlayPortal>
+      ) : null}
+    </div>
+  );
+}

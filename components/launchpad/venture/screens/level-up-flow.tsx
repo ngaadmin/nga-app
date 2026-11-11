@@ -12,12 +12,10 @@ import {
   fillToken,
   formatCheckInDate,
   growIdea,
-  mapImproveStart,
   paceFor,
   pickedStatements,
   sectionLabel,
   statementsIn,
-  type ImproveStartId,
   type LevelCohort,
   type LevelSectionId,
   type LevelUpIdea,
@@ -25,10 +23,15 @@ import {
 } from "@/lib/launchpad/content/level-up/model";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
+import { OrderedSlots } from "@/components/launchpad/venture/screens/rank-order-screen";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 function blankAnswer(): LevelUpAnswer {
-  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, starts: {}, ideas: [], idea: "", option: "", success: "", start: "" };
+  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan: [], ideas: [], idea: "", option: "", success: "", start: "" };
+}
+
+function planFor(ids: readonly string[]): { statementId: string; week: number }[] {
+  return ids.map((statementId, index) => ({ statementId, week: index + 1 }));
 }
 
 function orderedIdeas(ideas: readonly { id: string }[], ids: readonly string[]): string[] {
@@ -88,7 +91,9 @@ export function LevelUpFlow({
   const [page, setPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
   const pickPages = sections.length;
-  const total = screen.step === "improve" ? pickPages + 1 : screen.step === "reflect" ? pickPages : 3;
+  const weekLabels = content.improve.weekLabels ?? [];
+  const planAvailable = Boolean(content.improve.planHeader && weekLabels.length > 0);
+  const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : 3;
   const checkIn = addMonths(today, 3);
   const checkInLabel = formatCheckInDate(checkIn);
   const checkInLine = fillToken(content.grow.checkIn, "date", checkInLabel);
@@ -110,6 +115,7 @@ export function LevelUpFlow({
 
   let ready = true;
   if (screen.step === "improve" && page < pickPages) ready = improvePicksReady([sections[page]!.id]);
+  if (screen.step === "improve" && page === pickPages) ready = chosenItems.length > 0 && chosenItems.every((item) => draft.improvePlan.some((row) => row.statementId === item.id)) && draft.improvePlan.length === chosenItems.length;
   if (screen.step === "grow" && page === 0) ready = orderedIdeas(content.grow.ideas, draft.ideas).length > 0;
   if (screen.step === "grow" && page === 1) ready = growReady;
 
@@ -119,11 +125,12 @@ export function LevelUpFlow({
     if (screen.step === "improve" && page === pickPages - 1) {
       const rows = pickedStatements(content, next.picks);
       next.pace = paceFor(content, next.picks);
-      if (rows.length === 0) {
+      const covered = rows.every((item) => next.improvePlan.some((row) => row.statementId === item.id)) && next.improvePlan.length === rows.length;
+      if (rows.length === 0 || !planAvailable) {
         save(next, true);
         return;
       }
-      next.starts = Object.fromEntries(rows.map((item) => [item.id, mapImproveStart(next.starts[item.id])]));
+      if (!covered) next.improvePlan = planFor(rows.map((item) => item.id));
     }
     if (screen.step === "grow" && page === 0) {
       const ideas = orderedIdeas(content.grow.ideas, next.ideas);
@@ -203,22 +210,17 @@ export function LevelUpFlow({
       </>
     );
   } else if (screen.step === "improve") {
+    const slots = weekLabels.slice(0, chosenItems.length);
     body = (
       <>
-        <p className={`mt-3 ${LESSON_BODY}`}>{content.improve.planContext}</p>
-        <ScreenGuidance flush>{content.improve.planGuidance}</ScreenGuidance>
-        {chosenItems.map((item) => (
-          <p key={item.id} className={`mt-4 ${LESSON_BODY}`} data-level-section={item.section}>
-            {fillToken(content.improve.starting, "label", item.label)}{" "}
-            <StartPick
-              value={mapImproveStart(draft.starts[item.id])}
-              label={content.improve.startFieldLabel}
-              options={content.improve.startOptions}
-              onChange={(id) => setDraft({ ...draft, starts: { ...draft.starts, [item.id]: id as ImproveStartId } })}
-            />
-            {content.improve.period}
-          </p>
-        ))}
+        <ScreenPrompt tone="question" flush className="!mt-3">{content.improve.planHeader}</ScreenPrompt>
+        <p className={`mt-[21px] ${LESSON_BODY}`}>{content.improve.planContext}</p>
+        <OrderedSlots
+          items={chosenItems}
+          order={draft.improvePlan.map((row) => row.statementId)}
+          slotLabels={slots}
+          onOrder={(next) => setDraft({ ...draft, improvePlan: planFor(next) })}
+        />
       </>
     );
   } else if (page === 0) {

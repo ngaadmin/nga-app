@@ -264,7 +264,8 @@ export type LevelUpAnswer = {
   picks: Readonly<Record<string, string>>;
   /** Silent quick / longer mark for each picked statement. Never shown. */
   pace: Readonly<Record<string, "quick" | "longer">>;
-  starts: Readonly<Record<string, string>>;
+  /** Improve week order. Old saves used `starts` instead; that field is ignored. */
+  improvePlan: readonly { statementId: string; week: number }[];
   /** Grow ideas in the order shown on screen 1. `idea` is the first of these. */
   ideas: readonly string[];
   idea: string;
@@ -549,6 +550,18 @@ function paceMap(value: unknown): Record<string, "quick" | "longer"> {
   return out;
 }
 
+function improvePlanOf(value: unknown): { statementId: string; week: number }[] {
+  if (!Array.isArray(value)) return [];
+  const out: { statementId: string; week: number }[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.statementId !== "string" || !ID_RE.test(item.statementId)) continue;
+    if (typeof item.week !== "number" || !Number.isInteger(item.week) || item.week < 1 || item.week > 4) continue;
+    if (out.some((row) => row.statementId === item.statementId || row.week === item.week)) continue;
+    out.push({ statementId: item.statementId, week: item.week });
+  }
+  return out.sort((a, b) => a.week - b.week);
+}
+
 function stringIdMap(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {};
   const out: Record<string, string> = {};
@@ -567,7 +580,7 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     selected: idList(value.selected),
     picks: stringIdMap(value.picks),
     pace: paceMap(value.pace),
-    starts: stringIdMap(value.starts),
+    improvePlan: improvePlanOf(value.improvePlan),
     ideas: idList(value.ideas).length ? idList(value.ideas) : text(value.idea) ? [text(value.idea)] : [],
     idea: text(value.idea),
     option: text(value.option),

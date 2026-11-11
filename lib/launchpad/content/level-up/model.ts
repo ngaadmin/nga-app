@@ -11,13 +11,11 @@ export type LevelPace = "quick" | "longer";
 export type GrowIdeaId = "referral" | "prepaid" | "bundle" | "new-service" | "expand";
 export type LevelCohort = "explorer" | "pathfinder" | "maverick";
 export type StartId = "next-job" | "this-week" | "in-a-month" | "next-quarter";
-export type ImproveStartId = "this-week" | "this-month" | "next-three-months";
 
 export const LEVEL_SECTION_IDS: readonly LevelSectionId[] = ["customers", "ready", "job", "happy"];
 export const GROW_IDEA_IDS: readonly GrowIdeaId[] = ["referral", "prepaid", "bundle", "new-service", "expand"];
 export const LEVEL_COHORTS: readonly LevelCohort[] = ["explorer", "pathfinder", "maverick"];
 export const GROW_START_IDS: readonly StartId[] = ["next-job", "this-week", "in-a-month", "next-quarter"];
-export const IMPROVE_START_IDS: readonly ImproveStartId[] = ["this-week", "this-month", "next-three-months"];
 
 export type LevelStatement = {
   id: string;
@@ -57,14 +55,11 @@ export type LaunchpadLevelUpContent = {
     nailedTitle: string;
     /** `{section}` is the section label. */
     nailedLine: string;
+    /** Section 5. Absent on a payload published before this screen. */
+    planHeader?: string;
     planContext: string;
-    planGuidance: string;
-    /** `{label}` is the statement. The start menu follows this phrase. */
-    starting: string;
-    /** Closes the start sentence after the menu. */
-    period: string;
-    startFieldLabel: string;
-    startOptions: readonly { id: ImproveStartId; label: string }[];
+    /** Week 1..4. The screen uses the first N, one per Improve pick. */
+    weekLabels?: readonly string[];
   };
   grow: {
     context: string;
@@ -114,13 +109,6 @@ export function pickedStatements(
 
 export function paceFor(content: LaunchpadLevelUpContent, picks: Readonly<Record<string, string>>): Record<string, LevelPace> {
   return Object.fromEntries(pickedStatements(content, picks).map((item) => [item.id, item.pace]));
-}
-
-/** Maps a stored Improve start onto the three current choices. Removed options fall back to this week. */
-export function mapImproveStart(saved: string | undefined): ImproveStartId {
-  if (saved === "this-month" || saved === "in-a-month") return "this-month";
-  if (saved === "next-three-months" || saved === "in-three-months") return "next-three-months";
-  return "this-week";
 }
 
 /** Today plus three calendar months. 10 Nov 2026 becomes 10 Feb 2027. */

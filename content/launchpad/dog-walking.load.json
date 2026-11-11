@@ -248,10 +248,10 @@
                         "belowHint": "Drag any reason that doesn't apply to you here. This is optional.",
                         "handbookLabel": "My why",
                         "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                        "guidance": "Drag the reasons into order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
+                        "guidance": "Drag the reasons into order, most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to."
                       },
                       "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                      "guidance": "Drag the reasons into order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
+                      "guidance": "Drag the reasons into order, most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to."
                     }
                   ]
                 }

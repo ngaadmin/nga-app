@@ -4,7 +4,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { IDENTITY_ANSWER_KEY, launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
-import { fieldsAnswer, identityAnswerOf, selectionAnswer, selectionOf } from "@/lib/launchpad/content/answers";
+import { fieldsAnswer, identityAnswerOf, selectionAnswer, selectionOf, type CompetitorAnswer, type CustomerAnswer, type OfferAnswer } from "@/lib/launchpad/content/answers";
 import {
   handbookBusinessName,
   handbookGhost,
@@ -778,10 +778,13 @@ describe("L2 playback extras and L7 workbook pages", () => {
     doDifferentlyExtra: "Send a photo",
   };
 
-  function renderPlayback(andWord = LAUNCHPAD_SURFACE_COPY.list.and, answers = { offer, customer, competitor }) {
+  function renderPlayback(
+    andWord: string = LAUNCHPAD_SURFACE_COPY.list.and,
+    answers: { offer: OfferAnswer; customer: CustomerAnswer; competitor: CompetitorAnswer } = { offer, customer, competitor },
+  ) {
     const copy = { ...LAUNCHPAD_SURFACE_COPY, list: { ...LAUNCHPAD_SURFACE_COPY.list, and: andWord } };
     render(
-      <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
         <LaunchpadAnswersProvider value={{
           iconVentureId: "dog-walking",
           answers: { "l1-offer": selectionAnswer(["dog-walking"]), "l2-offer": answers.offer, "l2-customers": answers.customer, "l2-competitors": answers.competitor },
@@ -799,18 +802,18 @@ describe("L2 playback extras and L7 workbook pages", () => {
     renderPlayback("plus");
     const selling = document.querySelector("[data-selling-line]")!;
     expect(selling.textContent).toContain("30-minute walk plus Puppy visits");
-    expect(selling.textContent).toContain("Photo updates plus Rain coat");
+    expect(selling.textContent).toContain("photo updates plus rain coat");
     expect(selling.textContent).not.toContain(LAUNCHPAD_SURFACE_COPY.offer.packagesExtraLine);
-    expect(document.querySelector("[data-when-line]")?.textContent).toBe("weekday mornings and afternoons, weekend mornings, plus Saturdays 3 to 5pm.");
+    expect(document.querySelector("[data-when-line]")?.textContent).toBe("weekday mornings and afternoons, weekend mornings, plus saturdays 3 to 5pm.");
     const who = document.querySelector("[data-who-line]")!;
     expect(who.textContent).toContain("30-minute walk plus puppies");
-    expect(who.textContent).toContain("weekday afternoons plus After dinner");
+    expect(who.textContent).toContain("weekday afternoons plus after dinner");
     expect(who.textContent).not.toContain(LAUNCHPAD_SURFACE_COPY.offer.timesExtraLine);
-    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates plus Water bowl");
-    expect(document.querySelector("[data-could-differently]")?.textContent).toContain("walk one dog at a time plus Send a photo");
+    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates plus water bowl");
+    expect(document.querySelector("[data-could-differently]")?.textContent).toContain("walk one dog at a time plus send a photo");
     const compared = document.querySelector("[data-job-compared]")!;
-    expect(compared.textContent).toContain("Dog walking plus Park walks");
-    expect(compared.querySelector("[data-chosen-value]")?.textContent).toBe("Park walks");
+    expect(compared.textContent).toContain("Dog walking plus park walks");
+    expect(compared.querySelector("[data-chosen-value]")?.textContent).toBe("park walks");
     expect(document.querySelector("[data-packages-extra], [data-times-extra], [data-availability-extra], [data-competitor-extras]")).toBeNull();
     expect(document.querySelector("[data-module2-handbook] input, [data-module2-handbook] textarea, [data-module2-handbook] button")).toBeNull();
   });
@@ -826,7 +829,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
       competitor: { ...competitor, jobComparedExtra: undefined, addonsExtra: undefined, doDifferentlyExtra: undefined },
     });
     expect(document.querySelector("[data-when-line]")?.textContent).toBe("weekday mornings and afternoons, and weekend mornings.");
-    expect(document.querySelector("[data-selling-line]")?.textContent).toBe("30-minute walk with Photo updates.");
+    expect(document.querySelector("[data-selling-line]")?.textContent).toBe("30-minute walk with photo updates.");
     expect(document.querySelector("[data-who-line]")?.textContent).toContain("30-minute walk.");
     expect(document.querySelector("[data-who-line]")?.textContent).toContain("weekday afternoons.");
     expect(document.querySelector("[data-who-line]")?.textContent).not.toContain("After dinner");

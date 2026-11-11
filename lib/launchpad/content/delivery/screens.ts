@@ -111,6 +111,7 @@ function recordScreen(id: string): LaunchpadDeliveryScreen {
       priceBefore: RECORD_JOB.priceBefore,
       priceAfter: RECORD_JOB.priceAfter,
       paidBefore: RECORD_JOB.paidBefore,
+      paidPrefix: RECORD_JOB.paidPrefix,
       paidAfter: RECORD_JOB.paidAfter,
       paidHint: RECORD_JOB.paidHint,
       paidMax: RECORD_JOB.paidMax,

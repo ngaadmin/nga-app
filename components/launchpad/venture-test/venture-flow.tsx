@@ -355,8 +355,12 @@ export function VentureFlow({
     if (view.screen !== "lift") return;
     const t = window.setTimeout(() => {
       if (view.rooftop) {
-        if (ventureId) {
-          const next = { ...progress, complete: true as const };
+        if (ventureId && progress) {
+          const next: VentureTestProgress = {
+            ...progress,
+            completedTaskIds: progress.completedTaskIds ?? [],
+            complete: true,
+          };
           saveVentureTestProgress(ventureId, next);
           setProgress(next);
         }
@@ -662,7 +666,7 @@ export function VentureFlow({
         if (!task) return;
         // A rank order left as shown is saved as the learner's order.
         const fill = withDefaults && page ? pageDefaultAnswer(page.screen, answers) : null;
-        let base = fill ? setProgressAnswer(from, fill.answerKey, fill.answer) : from;
+        const base = fill ? setProgressAnswer(from, fill.answerKey, fill.answer) : from;
         if (pages && pageIndex < pages.length - 1) {
           if (fill) save(base);
           go({ screen: "workbook", ...where, index, page: pageIndex + 1 });

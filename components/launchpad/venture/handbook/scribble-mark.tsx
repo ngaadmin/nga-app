@@ -45,10 +45,10 @@ export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
     img.dataset.rhythmDoodle = name;
     img.className = "pointer-events-none absolute top-1/2 z-raised h-auto w-8 -translate-y-1/2 mix-blend-multiply";
     const turn = Math.floor(index / 2);
-    img.style.right = `${turn % 2 ? 18 : 0}px`;
-    img.style.transform = `translateY(-50%) rotate(${RHYTHM_ROT[turn % RHYTHM_ROT.length]}deg)`;
+    img.style.right = `${(turn % 2 ? 18 : 0) + 48}px`;
+    img.style.transform = `translateY(-70%) rotate(${RHYTHM_ROT[turn % RHYTHM_ROT.length]}deg)`;
     const node = el as HTMLElement;
-    node.classList.add("relative", "pr-[54px]");
+    node.classList.add("relative", "pr-[96px]");
     node.appendChild(img);
   });
 }
@@ -56,7 +56,7 @@ export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
 /** End-of-page scribble, about 80px, right aligned. */
 export function LargeScribble({ name }: { name: ScribbleName }) {
   return (
-    <div className="mt-11 flex justify-end pr-[18px]" data-scribble-large={name}>
+    <div className="mt-8 flex justify-end pr-16" data-scribble-large={name}>
       <img src={SCRIBBLE_SRC[name]} alt="" width={80} height={80} draggable={false} className="h-auto w-20 mix-blend-multiply" />
     </div>
   );

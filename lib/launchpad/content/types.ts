@@ -649,6 +649,7 @@ export type LaunchpadDeliveryScreen = TaskScreenBase & {
     priceBefore: string;
     priceAfter: string;
     paidBefore: string;
+    paidPrefix: string;
     paidAfter: string;
     paidHint: string;
     paidMax: number;

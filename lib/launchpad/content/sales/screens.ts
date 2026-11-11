@@ -74,7 +74,7 @@ export function salesDoors(): LaunchpadBronze[] {
   return [
     door("l4-s1-b1", "Pick the sales channel(s)", "channels", SALES_CHANNELS_KEY),
     door("l4-s1-b2", "Develop your marketing materials", "materials", MARKETING_MATERIALS_KEY),
-    door("l4-s1-b3", "Tell people about it", "targets", TELL_PEOPLE_KEY),
+    door("l4-s1-b4", "Tell people about it", "targets", TELL_PEOPLE_KEY),
   ];
 }
 
@@ -129,6 +129,16 @@ export function orderSystemSilver(): LaunchpadSilver {
 }
 
 export function applySalesDoors(silver: LaunchpadSilver): LaunchpadSilver {
-  const built = new Map(salesDoors().map((item) => [item.id, item]));
-  return { ...silver, placeholder: false, bronzes: silver.bronzes.map((item) => built.get(item.id) ?? item) };
+  const built = salesDoors();
+  const used = new Set<string>();
+  return {
+    ...silver,
+    placeholder: false,
+    bronzes: silver.bronzes.map((item) => {
+      const match = built.find((door) => !used.has(door.id) && (door.id === item.id || door.title === item.title));
+      if (!match) return item;
+      used.add(match.id);
+      return match;
+    }),
+  };
 }

@@ -565,7 +565,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     }),
   );
   bronzes.push(
-    simpleBronze(b2, whyRow, {
+    simpleBronze(b2, { ...whyRow, guidance: "Drag the reasons into order, most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to." }, {
       ...meta(rWhy, {
         screenId: whyScreen.id,
         index: "2",

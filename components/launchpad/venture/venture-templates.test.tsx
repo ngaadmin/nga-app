@@ -114,7 +114,7 @@ describe("Level 7 lift rooftop button", () => {
     const onRooftop = vi.fn();
     const copy = { ...LAUNCHPAD_SURFACE_COPY, lift: { ...LAUNCHPAD_SURFACE_COPY.lift, rooftopLabel: "Head up to the roof" } };
     render(
-      <SurfaceCopyProvider value={copy}>
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
         <FloorTemplate {...floor} complete={{ nextLevel: null, onLift: null, onRooftop }} />
       </SurfaceCopyProvider>,
     );

@@ -110,15 +110,18 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const { above, below } = splitOf(seq);
   const total = ids.length;
   const label = (id: string) => screen.items.find((x) => x.id === id)?.label ?? id;
+  const fillRank = (template: string, values: Record<string, string>) => template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? "");
 
   const commit = (next: readonly string[]) => {
-    const s = splitOf(next);
-    save(rankingAnswer([...s.above, ...s.below], s.below));
+    const split = splitOf(next);
+    save(rankingAnswer([...split.above, ...split.below], split.below));
   };
   const describe = (next: readonly string[], id: string) => {
-    const s = splitOf(next);
-    const a = s.above.indexOf(id);
-    return a !== -1 ? `${label(id)} is now number ${a + 1}.` : `${label(id)} moved below the line: ${(screen.belowTitle ?? "").toLowerCase()}.`;
+    const split = splitOf(next);
+    const at = split.above.indexOf(id);
+    return at !== -1
+      ? fillRank(s.rank.nowNumber, { item: label(id), n: String(at + 1) })
+      : fillRank(s.rank.movedBelow, { item: label(id), zone: (screen.belowTitle ?? "").toLowerCase() });
   };
 
   useEffect(() => {

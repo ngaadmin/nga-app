@@ -71,6 +71,18 @@ export function availabilityPhrase(ids: readonly string[]): string {
  * A, then A and B, then A, B, and C. The comma and the joining word come from
  * the caller, which reads them from the payload.
  */
+/** First letter only. Use when a chip or typed value is placed after words that already started the sentence. */
+export function lowerFirst(value: string): string {
+  const text = value.trim();
+  if (!text) return "";
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+/** Same list as joinPhrase, with each value's first letter lowered because the list sits mid-sentence. */
+export function joinMid(items: readonly string[], comma: string, andWord: string): string {
+  return joinPhrase(items.map(lowerFirst), comma, andWord);
+}
+
 export function joinPhrase(items: readonly string[], comma: string, andWord: string): string {
   const rows = items.map((item) => item.trim()).filter((item) => item.length > 0);
   if (rows.length === 0) return "";
@@ -80,18 +92,18 @@ export function joinPhrase(items: readonly string[], comma: string, andWord: str
 }
 
 /** Saved picks, with a typed extra on the end. No extra leaves an availability sentence as availabilityPhrase wrote it. */
-export function playedBackTimes(ids: readonly string[], extra: string | undefined, comma: string, andWord: string): string {
+export function playedBackTimes(ids: readonly string[], extra: string | undefined, comma: string, andWord: string, mid = false): string {
   const typed = extra?.trim() ?? "";
-  if (!typed) {
-    if (ids.length === 0) return "";
-    if (ids.every(isAvailabilitySlot)) {
-      const phrase = availabilityPhrase(ids);
-      return phrase === "…" ? "" : phrase;
-    }
-    return joinPhrase(ids.map(chipLabel), comma, andWord);
+  if (!typed && ids.length > 0 && ids.every(isAvailabilitySlot)) {
+    const phrase = availabilityPhrase(ids);
+    if (phrase === "…") return "";
+    return mid ? lowerFirst(phrase) : phrase;
   }
   const groups = ids.length > 0 && ids.every(isAvailabilitySlot) ? availabilityGroups(ids) : ids.map(chipLabel);
-  return joinPhrase([...groups, typed], comma, andWord);
+  const shown = groups.filter((group) => group.length > 0 && group !== "…");
+  if (!typed && shown.length === 0) return "";
+  const parts = [...shown, ...(typed ? [shown.length > 0 || mid ? lowerFirst(typed) : typed] : [])];
+  return mid ? joinMid(parts, comma, andWord) : joinPhrase(parts, comma, andWord);
 }
 
 export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [

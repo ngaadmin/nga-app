@@ -70,7 +70,7 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 4 | l4-s1 | l4-s1-b1 | sales channels | sales_channels | whereExtra | sales-where | End of that channel's place list | played |
 | 4 | l4-s1 | l4-s1-b1 | sales channels | sales_channels | selected and where | sales-market-1 to sales-market-4 | Which pieces are included | played |
 | 4 | l4-s1 | l4-s1-b2 Develop your marketing materials | sales materials | marketing_materials | hook, proof, mainService, secondService, pieces | sales-market-1 to sales-market-4 | What my flyer, in person, message, online post, and business card will say | played |
-| 4 | l4-s1 | l4-s1-b3 Tell people about it | sales targets | tell_people | counts | sales-tell | How I'll tell people about it | played |
+| 4 | l4-s1 | l4-s1-b4 Tell people about it | sales targets | tell_people | counts | sales-tell | How I'll tell people about it | played |
 | 4 | l4-s2 Take the order | l4-s2-b1 Set up your order system | sales order | order_system | tracker, reminder | order-system | My order system | played |
 | 5 | l5-s2 Do the job | l5-s2-b1 Get ready for the job | delivery ready | get_ready_for_job | remindAbout, travelHow, leaveEarly, packWhen | ready-before | My plan before the job | played |
 | 5 | l5-s2 | l5-s2-b2 Wrap up the job | delivery wrap | wrap_up_job | paymentWhen, feedbackQuestion, trackerWhen | ready-after | My plan after the job | played |
@@ -120,7 +120,7 @@ Repeated chrome on every page after the cover: small logo and business name from
 | sales-where | One line per selected channel | l4-s1-b1 | sales_channels | selected, where, whereExtra | played |
 | sales-market-1 to sales-market-4 | Piece copy | l4-s1-b2, plus lookups | marketing_materials, l2-offer, l2-price, sales_channels | hook, proof, services, pieces, offer, price | played |
 | sales-market section titles | What my flyer will say, and the other piece titles | none | none | none | label only |
-| sales-tell | Target counts | l4-s1-b3 | tell_people | counts | played |
+| sales-tell | Target counts | l4-s1-b4 | tell_people | counts | played |
 | order-system | Tracker and reminder | l4-s2-b1 | order_system | tracker, reminder | played |
 | order-system | Taking a customer order, repeat line, every morning | none | none | none | label only |
 | ready-before | Remind, about, travel, leave, pack | l5-s2-b1, remind lookup from l3-s1-b3, pack list from l2-costs | get_ready_for_job, deliver_the_job, l2-costs | remindAbout, travelHow, leaveEarly, packWhen, beforeHow, gear | played |
@@ -162,7 +162,7 @@ This run's start is `8371f0503f339c849491966d740cff930b9d7e53`. The only change 
 
 Approved removals already on the branch, listed as requested:
 
-- The 8 old Level 5 placeholder bronzes, the pitch door "Develop and practice your pitch" (Cath confirmed this again; Tell people about it now uses `l4-s1-b3`), and the old Level 5 "Plan the work" silver. The in-person workbook page stays.
+- The 8 old Level 5 placeholder bronzes, the pitch door "Develop and practice your pitch" (Cath confirmed this again), and the old Level 5 "Plan the work" silver. The in-person workbook page stays. Tell people about it is `l4-s1-b4` again so older completions still count. A save made while it was briefly `l4-s1-b3` still counts when the tell-people answer is present.
 - Level 2 workbook sheets plan-1 through plan-4, the plan costs summary, the workbook title "The product and its buyers", the separate Pricing and My price pages, the Jobs to cover stepper page, and the single-select practice-run pick. Cath approved these. The silver door is still named The product and its buyers.
 - The practice-run line "The other N questions: was good, nothing to change." Cath approved replacing it with "The customer was happy with:" and the joined topics.
 - The one-off Jobs and Funding workbook auto-opens, replaced by the per-silver auto-open.

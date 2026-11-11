@@ -106,6 +106,7 @@ export const RECORD_JOB = {
   priceBefore: "My price for this job is ",
   priceAfter: ".",
   paidBefore: "I was paid ",
+  paidPrefix: "$",
   paidAfter: " for this job.",
   paidHint: "(number)",
   paidMax: 9999,

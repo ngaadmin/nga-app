@@ -327,7 +327,7 @@ export function LaunchpadHome({
               <div className="flex items-center gap-2">
                 <div className="flex w-[72px] flex-none flex-col items-center">
                   <VentureThumb ventureId={v.ventureId} />
-                  <p className="mt-0.5 w-full truncate text-center font-heading text-[11px] font-bold leading-[14px] text-nga-ink">{v.name}</p>
+                  <p className="mt-0.5 line-clamp-2 w-full whitespace-normal text-center font-heading text-[11px] font-bold leading-[13px] text-nga-ink">{v.name}</p>
                 </div>
                 <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink">{home.complete}</p>
               </div>

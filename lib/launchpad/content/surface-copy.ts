@@ -344,6 +344,8 @@ export const LAUNCHPAD_SURFACE_COPY = {
     drag: ". Drag to move, or use the up and down arrow keys.",
     yourRanking: "Your ranking",
     moveOne: "Move at least one reason back above the line to keep going.",
+    nowNumber: "{item} is now number {n}.",
+    movedBelow: "{item} moved below the line: {zone}.",
   },
   sheets: {
     product: "The product and its buyers",

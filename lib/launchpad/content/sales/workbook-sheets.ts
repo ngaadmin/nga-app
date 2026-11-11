@@ -1,7 +1,7 @@
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { offerOf, priceOf } from "@/lib/launchpad/content/answers";
 import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
-import { availabilityPhrase, chipLabel } from "@/lib/launchpad/content/planning/catalog";
+import { availabilityPhrase, chipLabel, lowerFirst } from "@/lib/launchpad/content/planning/catalog";
 import { OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
@@ -100,7 +100,7 @@ export function marketingLines(
     return found ? [found] : [];
   });
   const listed = ordered.length ? ordered : services.slice(0, 2);
-  const names = joinAnd(listed.map((row) => row.name));
+  const names = joinAnd(listed.map((row) => lowerFirst(row.name)));
   const addons = (offer?.offerings ?? []).flatMap((row) => row.addons.map((id) => chipLabel(id))).filter(Boolean);
   const addonLine = addons.length ? ` Extras I can add: ${joinAnd(addons)}.` : "";
   const rateParts = listed.map((row) => `${row.price} for ${row.unit}`);

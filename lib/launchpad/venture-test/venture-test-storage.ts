@@ -62,6 +62,8 @@ export function parseVentureTestProgress(raw: string | null): VentureTestProgres
         (id): id is string => typeof id === "string",
       );
       const answers = parseLaunchpadAnswers((parsed as { answers?: unknown }).answers);
+      // Tell people about it stays l4-s1-b4. A save from the brief rename to l4-s1-b3 still counts when that answer is present.
+      if (answers.tell_people && ids.includes("l4-s1-b3-t1") && !ids.includes("l4-s1-b4-t1")) ids.push("l4-s1-b4-t1");
       const tasks = parseTaskEntries((parsed as { tasks?: unknown }).tasks, ids);
       const complete = (parsed as { complete?: unknown }).complete === true;
       return {

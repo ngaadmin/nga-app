@@ -345,14 +345,17 @@ function RecordScreens({
         <>
           <p className={`mb-[18px] ${LESSON_BODY}`}>
             {copy.paidBefore}
-            <input
-              aria-label={copy.paidBefore.trim()}
-              inputMode="decimal"
-              placeholder={copy.paidHint}
-              value={job.paid}
-              onChange={(event) => update({ ...job, paid: event.target.value })}
-              className="mx-1 inline-flex h-8 min-w-12 rounded-lg border-[1.5px] border-[#D5DAE3] bg-white px-2.5 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none placeholder:text-[16px] placeholder:font-normal placeholder:text-[#8A94A8]"
-            />
+            <span className="mx-1 inline-flex h-8 w-[4.75rem] items-center rounded-lg border-[1.5px] border-[#D5DAE3] bg-white px-2">
+              <span className="font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]" aria-hidden="true">{copy.paidPrefix}</span>
+              <input
+                aria-label={copy.paidBefore.trim()}
+                inputMode="decimal"
+                placeholder={copy.paidHint}
+                value={job.paid}
+                onChange={(event) => update({ ...job, paid: event.target.value })}
+                className="w-full min-w-0 bg-transparent text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none placeholder:text-[16px] placeholder:font-normal placeholder:text-[#8A94A8]"
+              />
+            </span>
             {copy.paidAfter}
           </p>
           <Replay before={copy.costBefore} value={cost === null ? "" : moneyText(cost)} after={copy.costAfter} />

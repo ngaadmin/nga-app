@@ -117,7 +117,9 @@ const next = () => fireEvent.click(screen.getByRole("button", { name: /^(Next|Fi
 describe("payload edits of shared hints", () => {
   it("shows a payload edit of the choice hint", async () => {
     const payload = structuredClone(PAYLOAD);
-    payload.surface = { ...payload.surface, chrome: { ...payload.surface.chrome, pickAtLeastOne: "Choose at least one." } };
+    const surface = payload.surface;
+    if (!surface) throw new Error("surface missing");
+    payload.surface = { ...surface, chrome: { ...surface.chrome, pickAtLeastOne: "Choose at least one." } } as unknown as typeof surface;
     render(
       <VentureFlow
         initialVentureId="dog-walking"

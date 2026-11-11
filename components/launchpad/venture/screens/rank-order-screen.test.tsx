@@ -4,6 +4,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach } from "vitest";
 afterEach(cleanup);
 import { moveAcrossLine, RankOrderScreen } from "@/components/launchpad/venture/screens/rank-order-screen";
+import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { isPageAnswered } from "@/lib/launchpad/content/task-pages";
 import { rankingAnswer } from "@/lib/launchpad/content/answers";
@@ -72,6 +74,15 @@ describe("RankOrderScreen below the line", () => {
     fireEvent.keyDown(tileOf("d"), { key: "ArrowUp" });
     expect(numbers()).toEqual(["a", "b", "d", "c"]);
     expect(document.querySelector("[data-rank-announce]")?.textContent).toBe("Delta is now number 3.");
+    cleanup();
+    const copy = { ...LAUNCHPAD_SURFACE_COPY, rank: { ...LAUNCHPAD_SURFACE_COPY.rank, nowNumber: "{item} sits at {n}." } };
+    render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <RankOrderScreen screen={edited} />
+      </SurfaceCopyProvider>,
+    );
+    fireEvent.keyDown(tileOf("d"), { key: "ArrowUp" });
+    expect(document.querySelector("[data-rank-announce]")?.textContent).toBe("Delta sits at 3.");
     expect(tileOf("d").getAttribute("tabindex")).toBe("0");
     expect(tileOf("d").getAttribute("aria-label")).toMatch(/up and down arrow keys/);
   });

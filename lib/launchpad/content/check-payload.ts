@@ -786,7 +786,7 @@ function checkDelivery(screen: Obj, where: string, answers: Answers): void {
     const block = screen.record;
     if (!isObj(block)) fail(`${where} record is missing.`);
     else {
-      for (const field of ["emptyLabel", "serviceBefore", "serviceAfter", "priceBefore", "priceAfter", "paidBefore", "paidAfter", "paidHint", "costBefore", "costAfter", "keptBefore", "keptAfter", "lowKeep", "trackerLine", "addJob", "note", "serviceSuffix", "paidLead", "costLead", "keptLead", "lineAfter"] as const) {
+      for (const field of ["emptyLabel", "serviceBefore", "serviceAfter", "priceBefore", "priceAfter", "paidBefore", "paidPrefix", "paidAfter", "paidHint", "costBefore", "costAfter", "keptBefore", "keptAfter", "lowKeep", "trackerLine", "addJob", "note", "serviceSuffix", "paidLead", "costLead", "keptLead", "lineAfter"] as const) {
         text(block[field], `${where} record ${field}`);
       }
       if (typeof block.paidMax !== "number" || !Number.isInteger(block.paidMax) || block.paidMax < 1 || block.paidMax > 9999) {

@@ -122,13 +122,17 @@ describe("Level 5 Delivery", () => {
     const spec = deliveryScreen("Record the job and see what's left");
     const edited = structuredClone(spec);
     edited.question = "What did this job leave you?";
+    edited.record!.paidPrefix = "A$";
     const onFinish = renderDelivery(edited);
     expect(screen.getByText("What did this job leave you?")).toBeTruthy();
     expect(screen.queryByText(spec.question)).toBeNull();
     expect(screen.getByText("Dog walking").className).toContain("font-semibold");
     expect(screen.getByText("$15").className).toContain("font-semibold");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("A$")).toBeTruthy();
+    expect(screen.queryByText(spec.record!.paidPrefix)).toBeNull();
     const paid = screen.getByRole("textbox", { name: edited.record!.paidBefore.trim() }) as HTMLInputElement;
+    expect(paid.parentElement?.className).toContain("w-[4.75rem]");
     fireEvent.change(paid, { target: { value: "15" } });
     expect(screen.getByText("$0.40").className).toContain("font-semibold");
     expect(screen.getByText("$14.60").className).toContain("font-semibold");

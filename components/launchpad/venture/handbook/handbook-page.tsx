@@ -597,7 +597,8 @@ function OrderSystemWorkbook({ silver }: { silver: HandbookPageView["silver"] })
 
 function SalesWorkbookPage({ sheet }: { sheet: string }) {
   const ctx = useLaunchpadAnswers();
-  const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || useSurfaceCopy().workbook.fallbackName;
+  const copy = useSurfaceCopy();
+  const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || copy.workbook.fallbackName;
   const page = salesWorkbookSheets(ctx?.answers, name).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }

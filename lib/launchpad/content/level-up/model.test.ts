@@ -17,8 +17,8 @@ describe("Level Up check-in date", () => {
     const grow = levelUpContent().grow;
     const mixed = soonestGrowCheckIn(
       [
-        { idea: "referral", when: "two-weeks", checkIn: "two-months", checkInDate: "January 11, 2027" },
-        { idea: "prepaid", when: "in-a-month", checkIn: "three-months", checkInDate: "February 11, 2027" },
+        { when: "two-weeks", checkIn: "two-months", checkInDate: "January 11, 2027" },
+        { when: "in-a-month", checkIn: "three-months", checkInDate: "February 11, 2027" },
       ],
       grow.startOptions,
       grow.checkInOptions,

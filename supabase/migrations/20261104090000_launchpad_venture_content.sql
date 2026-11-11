@@ -18,6 +18,9 @@
 --
 -- Payload shape: lib/launchpad/content/types.ts (LaunchpadVenturePayload),
 -- validated by lib/launchpad/content/check-payload.ts before any write.
+-- Level Up statements (id, section, label, pace) and the Reflect, Improve,
+-- and Grow copy are fields inside that jsonb payload, not extra columns, so
+-- a future read with LAUNCHPAD_CONTENT_DB on carries them with the rest.
 
 create table if not exists public.launchpad_venture_versions (
   id uuid primary key default gen_random_uuid(),

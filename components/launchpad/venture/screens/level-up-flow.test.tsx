@@ -2,34 +2,60 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { levelUpOf, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
-import { LEVEL_STATEMENTS } from "@/lib/launchpad/content/level-up/model";
+import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 
 afterEach(cleanup);
 
-const reflect: LaunchpadLevelUpScreen = { id: "reflect", type: "level-up", step: "reflect", title: "Reflect", answerKey: "l7-reflect" };
-const improve: LaunchpadLevelUpScreen = { id: "improve", type: "level-up", step: "improve", title: "Improve", answerKey: "l7-improve" };
-const grow: LaunchpadLevelUpScreen = { id: "grow", type: "level-up", step: "grow", title: "Grow", answerKey: "l7-grow" };
+function levelUpScreens(payload = launchpadTestVentureSeed()) {
+  const screens = payload.floors
+    .find((floor) => floor.level === 7)!
+    .silvers.flatMap((silver) => silver.bronzes.flatMap((bronze) => bronze.tasks.flatMap((task) => task.screens)))
+    .filter((item): item is LaunchpadLevelUpScreen => item.type === "level-up");
+  return {
+    reflect: screens.find((item) => item.step === "reflect")!,
+    improve: screens.find((item) => item.step === "improve")!,
+    grow: screens.find((item) => item.step === "grow")!,
+  };
+}
+
+const { reflect, improve, grow } = levelUpScreens();
 
 describe("Level Up screens", () => {
+  it("shows one payload statement on both Reflect and Improve", () => {
+    const payload = launchpadTestVentureSeed();
+    const screens = levelUpScreens(payload);
+    expect(screens.reflect.content).toBe(screens.improve.content);
+    const statement = screens.reflect.content.statements.find((item) => item.id === "more-than-one-way");
+    if (!statement) throw new Error("missing statement");
+    statement.label = "Posted a second notice";
+    const { unmount } = render(<LevelUpFlow screen={screens.reflect} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    expect(screen.getByText("Posted a second notice")).toBeTruthy();
+    expect(screen.queryByText("Using more than one way to get my name out")).toBeNull();
+    unmount();
+    render(<LevelUpFlow screen={screens.improve} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    expect(screen.getByText("Posted a second notice")).toBeTruthy();
+    expect(screen.queryByText("Using more than one way to get my name out")).toBeNull();
+  });
+
   it("walks four Reflect sections and keeps a ticked outcome", () => {
     const onFinish = vi.fn();
     render(<LevelUpFlow screen={reflect} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
     expect(screen.getByText("Section 1 of 4")).toBeTruthy();
-    expect(screen.getByText("I used more than one way to get my name out")).toBeTruthy();
-    expect(screen.getByText("I asked every customer if they'd like to book me again")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "I used more than one way to get my name out" }));
+    expect(screen.getByText("Using more than one way to get my name out")).toBeTruthy();
+    expect(screen.getByText("Asking every customer if they'd like to book me again")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Using more than one way to get my name out" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 2 of 4")).toBeTruthy();
     expect(screen.getByText("What went well in your business?")).toBeTruthy();
-    expect(screen.getByText("Nobody's appointment slipped my mind")).toBeTruthy();
+    expect(screen.getByText("Nobody's appointment slipping my mind")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 4")).toBeTruthy();
-    expect(screen.getByText("I always showed up on time at each job")).toBeTruthy();
+    expect(screen.getByText("Always showing up on time at each job")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 4 of 4")).toBeTruthy();
-    expect(screen.getByText("I remembered all my customer names and their pets' names")).toBeTruthy();
+    expect(screen.getByText("Remembering all customer names and their pets' names")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish).toHaveBeenCalled();
     expect(onFinish.mock.calls[0]?.[0].selected).toEqual(["more-than-one-way"]);
@@ -55,18 +81,18 @@ describe("Level Up screens", () => {
     render(<LevelUpFlow screen={improve} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
     expect(screen.getByText("Section 1 of 5")).toBeTruthy();
     expect(screen.getByText("Pick one thing to improve in each section. The grayed-out ones are already your wins.")).toBeTruthy();
-    const won = screen.getByRole("button", { name: "I used more than one way to get my name out" }) as HTMLButtonElement;
+    const won = screen.getByRole("button", { name: "Using more than one way to get my name out" }) as HTMLButtonElement;
     expect(won.disabled).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "I followed up with everyone who showed interest" }));
+    fireEvent.click(screen.getByRole("button", { name: "Following up with everyone who shows interest" }));
     expect(screen.queryByText("Do now")).toBeNull();
     expect(screen.queryByText("Three months")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("You nailed this one!")).toBeTruthy();
     expect(screen.getByText("Everything in Getting ready is already a win. Keep it up.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "I always showed up on time at each job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Always showing up on time at each job" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "I asked every customer for feedback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Asking every customer for feedback" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 5 of 5")).toBeTruthy();
     expect(screen.getByText("A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.")).toBeTruthy();
@@ -122,16 +148,16 @@ describe("Level Up screens", () => {
     };
     const { unmount } = render(<LevelUpFlow screen={improve} answers={mapped} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "I kept track of every job that came in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keeping track of every job that comes in" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "I always showed up on time at each job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Always showing up on time at each job" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "I asked every customer for feedback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Asking every customer for feedback" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect((screen.getAllByRole("combobox")[0] as HTMLSelectElement).value).toBe("this-month");
     unmount();
 
-    const all = LEVEL_STATEMENTS.map((item) => item.id);
+    const all = reflect.content.statements.map((item) => item.id);
     const onFinish = vi.fn();
     render(
       <LevelUpFlow

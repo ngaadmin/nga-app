@@ -18,6 +18,13 @@ import {
   NAME_FONTS,
 } from "@/lib/launchpad/content/identity";
 import { LAUNCHPAD_READABLE_SCHEMA_VERSIONS } from "@/lib/launchpad/content/schema-version";
+import {
+  GROW_IDEA_IDS,
+  GROW_START_IDS,
+  IMPROVE_START_IDS,
+  LEVEL_COHORTS,
+  LEVEL_SECTION_IDS,
+} from "@/lib/launchpad/content/level-up/model";
 
 /** Most plaques a floor wall holds (the building art draws one window each). */
 export const LAUNCHPAD_MAX_SILVERS_PER_FLOOR = 6;
@@ -129,6 +136,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
       text(silver.title, `${sw} title`);
       bool(silver.placeholder, `${sw} placeholder`);
       const pickerSteps = new Map<string, Set<string>>();
+      const levelUpStatements: string[] = [];
       const notePicker = (screen: unknown) => {
         if (!isObj(screen) || (screen.type !== "logo-picker" && screen.type !== "name-picker")) return;
         const key = String(screen.answerKey);
@@ -155,9 +163,15 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
           list(task.screens, `${tw} screens`).forEach((screen, ki) => {
             checkScreen(screen, `${tw} screen ${ki + 1}`, id, answers);
             notePicker(screen);
+            if (isObj(screen) && screen.type === "level-up" && isObj(screen.content)) {
+              levelUpStatements.push(statementPrint(screen.content.statements));
+            }
           });
         });
       });
+      if (levelUpStatements.length > 1 && levelUpStatements.some((print) => print !== levelUpStatements[0])) {
+        fail(`${sw} Level Up statements differ between doors.`);
+      }
       if (silver.wrapUp !== undefined) checkWrapUp(silver.wrapUp, `${sw} wrap-up`, pickerSteps, answers);
     });
   });
@@ -212,6 +226,120 @@ function reads(answers: Answers, key: unknown, kinds: readonly AnswerKind[], whe
   if (!found) fail(`${where} reads ${key}, which no earlier screen saves.`);
   if (!kinds.includes(found.kind)) fail(`${where} reads ${key}, which is a ${found.kind} answer.`);
   return found.screen;
+}
+
+function statementPrint(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  return JSON.stringify(
+    value.map((item) =>
+      isObj(item) ? { id: item.id, section: item.section, label: item.label, pace: item.pace } : item,
+    ),
+  );
+}
+
+function sameIds(value: unknown, where: string, expected: readonly string[]): void {
+  const rows = list(value, where, expected.length, expected.length);
+  const seen = new Set<string>();
+  rows.forEach((raw, i) => {
+    if (!isObj(raw) || typeof raw.id !== "string" || !expected.includes(raw.id)) fail(`${where} ${i + 1} has an unknown id.`);
+    if (seen.has(raw.id)) fail(`${where} repeats ${raw.id}.`);
+    seen.add(raw.id);
+    text(raw.label, `${where} ${i + 1} label`);
+  });
+}
+
+function checkLevelUp(screen: Obj, where: string): void {
+  if (!isObj(screen.content)) fail(`${where} content is missing.`);
+  const content = screen.content;
+  sameIds(content.sections, `${where} sections`, LEVEL_SECTION_IDS);
+  (content.sections as Obj[]).forEach((section, i) => {
+    if (section.id !== LEVEL_SECTION_IDS[i]) fail(`${where} sections are out of order.`);
+  });
+  const seen = new Set<string>();
+  const bySection = new Map<string, number>();
+  list(content.statements, `${where} statements`).forEach((raw, i) => {
+    const sw = `${where} statement ${i + 1}`;
+    if (!isObj(raw)) fail(`${sw} is malformed.`);
+    if (typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${sw} has no valid id.`);
+    if (seen.has(raw.id)) fail(`${sw} repeats ${raw.id}.`);
+    seen.add(raw.id);
+    if (typeof raw.section !== "string" || !(LEVEL_SECTION_IDS as readonly string[]).includes(raw.section)) {
+      fail(`${sw} has an unknown section.`);
+    }
+    if (raw.pace !== "quick" && raw.pace !== "longer") fail(`${sw} pace is missing.`);
+    text(raw.label, `${sw} label`);
+    bySection.set(String(raw.section), (bySection.get(String(raw.section)) ?? 0) + 1);
+  });
+  for (const section of LEVEL_SECTION_IDS) {
+    if (!bySection.get(section)) fail(`${where} has no statements in ${section}.`);
+  }
+  const reflect = content.reflect;
+  const improve = content.improve;
+  const grow = content.grow;
+  if (!isObj(reflect) || !isObj(improve) || !isObj(grow)) fail(`${where} is missing Reflect, Improve, or Grow copy.`);
+  for (const field of ["context", "guidance", "question"] as const) text(reflect[field], `${where} reflect ${field}`);
+  for (const field of ["context", "guidance", "question", "nailedTitle", "nailedLine", "planContext", "planGuidance", "starting", "startFieldLabel"] as const) {
+    text(improve[field], `${where} improve ${field}`);
+  }
+  if (!String(improve.nailedLine).includes("{section}")) fail(`${where} improve nailedLine must include {section}.`);
+  if (!String(improve.starting).includes("{label}")) fail(`${where} improve starting must include {label}.`);
+  sameIds(improve.startOptions, `${where} improve starts`, IMPROVE_START_IDS);
+  for (const field of [
+    "context",
+    "guidance",
+    "question",
+    "salesLabel",
+    "serviceLabel",
+    "success",
+    "tryStarting",
+    "closerHeadline",
+    "closerContext",
+    "calendarNote",
+    "checkIn",
+    "copyLabel",
+    "copyHint",
+    "startFieldLabel",
+  ] as const) {
+    text(grow[field], `${where} grow ${field}`);
+  }
+  if (!String(grow.checkIn).includes("{date}")) fail(`${where} grow checkIn must include {date}.`);
+  sameIds(grow.startOptions, `${where} grow starts`, GROW_START_IDS);
+  const startIds = new Set((grow.startOptions as Obj[]).map((option) => String(option.id)));
+  const groups = new Set<string>();
+  const ideas = list(grow.ideas, `${where} ideas`, GROW_IDEA_IDS.length, GROW_IDEA_IDS.length);
+  const ideaIds = new Set<string>();
+  ideas.forEach((raw, i) => {
+    const iw = `${where} idea ${i + 1}`;
+    if (!isObj(raw) || typeof raw.id !== "string" || !(GROW_IDEA_IDS as readonly string[]).includes(raw.id)) fail(`${iw} has an unknown id.`);
+    if (ideaIds.has(raw.id)) fail(`${iw} repeats ${raw.id}.`);
+    ideaIds.add(raw.id);
+    if (raw.group !== "sales" && raw.group !== "service") fail(`${iw} group is missing.`);
+    groups.add(String(raw.group));
+    text(raw.label, `${iw} label`);
+    text(raw.context, `${iw} context`);
+    text(raw.question, `${iw} question`);
+    if (typeof raw.start !== "string" || !startIds.has(raw.start)) fail(`${iw} start is missing.`);
+    const optionIds = new Set<string>();
+    list(raw.options, `${iw} options`).forEach((option, oi) => {
+      const ow = `${iw} option ${oi + 1}`;
+      if (!isObj(option) || typeof option.id !== "string" || !NODE_ID_RE.test(option.id)) fail(`${ow} has no valid id.`);
+      if (optionIds.has(option.id)) fail(`${ow} repeats ${option.id}.`);
+      optionIds.add(option.id);
+      text(option.label, `${ow} label`);
+      if (option.cohorts !== undefined) {
+        const cohorts = list(option.cohorts, `${ow} cohorts`);
+        const cohortSeen = new Set<string>();
+        cohorts.forEach((cohort) => {
+          if (typeof cohort !== "string" || !(LEVEL_COHORTS as readonly string[]).includes(cohort) || cohortSeen.has(cohort)) {
+            fail(`${ow} has an unknown cohort.`);
+          }
+          cohortSeen.add(cohort);
+        });
+      }
+    });
+    options(raw.success, `${iw} success`);
+  });
+  if (!groups.has("sales") || !groups.has("service")) fail(`${where} needs a sales idea and a service idea.`);
 }
 
 function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: string) => void, answers: Answers): void {
@@ -323,6 +451,7 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "level-up":
       text(screen.title, `${where} title`);
       if (screen.step !== "reflect" && screen.step !== "improve" && screen.step !== "grow") fail(`${where} step is missing.`);
+      checkLevelUp(screen, where);
       saves(answers, screen, "level-up", where);
       return;
     case "picture":

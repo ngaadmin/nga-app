@@ -1,5 +1,6 @@
 import type { LaunchpadReadableSchemaVersion } from "@/lib/launchpad/content/schema-version";
 import type { LogoIconId, LogoShapeId, NameColorId, NameFontId } from "@/lib/launchpad/content/identity";
+import type { LaunchpadLevelUpContent } from "@/lib/launchpad/content/level-up/model";
 
 /**
  * Launchpad venture content. One payload per venture, stored as one row in
@@ -525,12 +526,16 @@ export type LaunchpadPicturePage =
     }
   | { id: string; split: true };
 
-/** Level 7 Level Up. One bronze step. The pages and copy live with the screen. */
+/**
+ * Level 7 Level Up. One bronze step. Statements and screen copy live on
+ * `content`. The three doors of a silver share one content object.
+ */
 export type LaunchpadLevelUpScreen = TaskScreenBase & {
   type: "level-up";
   step: "reflect" | "improve" | "grow";
   title: string;
   answerKey: string;
+  content: LaunchpadLevelUpContent;
 };
 
 /** A read-through on the shared lesson page: one picture and one paragraph per step. */

@@ -4,7 +4,7 @@ import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf } from "@/lib/launchpad/content/answers";
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
-import { availabilityPhrase, chipLabel, isAvailabilitySlot, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
+import { chipLabel, joinPhrase, playedBackTimes, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
 import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -199,37 +199,30 @@ export function PricingSummarySheet() {
   const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const competitor = competitorOf(ctx?.answers, COMPETITOR_ANSWER_KEY);
-  const addons = competitor?.addons.map((id) => chipLabel(id).toLowerCase()) ?? [];
-  const idea = competitor ? chipLabel(competitor.doDifferently).toLowerCase() : "";
+  const addons = joinPhrase([...(competitor?.addons.map((id) => chipLabel(id).toLowerCase()) ?? []), competitor?.addonsExtra ?? ""], s.list.comma, s.list.and);
+  const idea = joinPhrase([competitor ? chipLabel(competitor.doDifferently).toLowerCase() : "", competitor?.doDifferentlyExtra ?? ""], s.list.comma, s.list.and);
+  const comparedName = competitor?.jobComparedId ? nameFor(competitor.jobComparedId, chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer")) : "";
+  const comparedExtra = competitor?.jobComparedExtra?.trim() ?? "";
   return (
     <div data-pricing-summary="">
       <AccentLabel as="h2">Pricing</AccentLabel>
-      <p className={`mt-3 ${WORKBOOK_BODY}`}>
-        {addons.length ? (
+      <p className={`mt-3 ${WORKBOOK_BODY}`} data-often-include="">
+        {addons ? (
           <>
-            {s.competitor.oftenInclude} <ChosenValue>{addons.join(" and ")}</ChosenValue>.
+            {s.competitor.oftenInclude} <ChosenValue>{addons}</ChosenValue>.
           </>
         ) : (
           s.competitor.notCheckedIncludes
         )}
       </p>
-      <p className={`mt-2 ${WORKBOOK_BODY}`}>{idea ? <>{s.competitor.couldDifferently} <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
-      {(competitor?.jobComparedId || competitor?.jobComparedExtra?.trim()) && (
+      <p className={`mt-2 ${WORKBOOK_BODY}`} data-could-differently="">{idea ? <>{s.competitor.couldDifferently} <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
+      {(comparedName || comparedExtra) && (
         <p className={`mt-1 ${WORKBOOK_BODY}`} data-job-compared="">
-          {s.competitor.jobCompared}: {competitor.jobComparedId ? <span>{nameFor(competitor.jobComparedId, chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer"))}</span> : null}
-          {competitor.jobComparedExtra?.trim() ? <> {competitor.jobComparedId ? " " : null}<ChosenValue>{competitor.jobComparedExtra}</ChosenValue></> : null}
+          {s.competitor.jobCompared}: {comparedName ? <span>{comparedName}</span> : null}
+          {comparedName && comparedExtra ? ` ${s.list.and} ` : null}
+          {comparedExtra ? <ChosenValue>{comparedExtra}</ChosenValue> : null}
         </p>
       )}
-      {competitor?.addonsExtra?.trim() ? (
-        <p className={`mt-1 ${WORKBOOK_BODY}`} data-competitor-extras="">
-          {s.competitor.ownExtras}: <ChosenValue>{competitor.addonsExtra}</ChosenValue>
-        </p>
-      ) : null}
-      {competitor?.doDifferentlyExtra?.trim() ? (
-        <p className={`mt-1 ${WORKBOOK_BODY}`} data-differently-extra="">
-          {s.competitor.ownIdea}: <ChosenValue>{competitor.doDifferentlyExtra}</ChosenValue>
-        </p>
-      ) : null}
       <LargeScribble name="coins" />
     </div>
   );
@@ -256,22 +249,26 @@ function PlanSelling() {
   return (
     <div>
       <AccentLabel>{s.sheets.selling}</AccentLabel>
-      {offer?.offerings.map((row) => (
-        <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
-          {nameFor(row.serviceId, labels)}: <ChosenValue>{row.packages.map(chipLabel).join(", ")}</ChosenValue>
-          {row.addons.length ? (
-            <>
-              {" "}
-              with <ChosenValue>{row.addons.map(chipLabel).join(", ")}</ChosenValue>
-            </>
-          ) : null}
-          .
-        </p>
-      ))}
+      {offer?.offerings.map((row) => {
+        const packages = joinPhrase([...row.packages.map(chipLabel), row.packagesExtra ?? ""], s.list.comma, s.list.and);
+        const extras = joinPhrase([...row.addons.map(chipLabel), row.addonsExtra ?? ""], s.list.comma, s.list.and);
+        return (
+          <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
+            {nameFor(row.serviceId, labels)}: {packages ? <ChosenValue>{packages}</ChosenValue> : null}
+            {extras ? (
+              <>
+                {" "}
+                with <ChosenValue>{extras}</ChosenValue>
+              </>
+            ) : null}
+            .
+          </p>
+        );
+      })}
       <AccentLabel>{s.sheets.whenWho}</AccentLabel>
       <p className={`mt-1 ${WORKBOOK_BODY}`}>
-        {offer?.availability.length ? (
-          <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
+        {offer ? (
+          <ChosenValue>{playedBackTimes(offer.availability, offer.availabilityExtra, s.list.comma, s.list.and)}</ChosenValue>
         ) : templates ? (
           <BlankSlot />
         ) : (
@@ -281,8 +278,8 @@ function PlanSelling() {
       </p>
       {customer && (
         <p className={`mt-1 ${WORKBOOK_BODY}`}>
-          {s.sheets.iAsked} <ChosenValue>{customer.numberAsked}</ChosenValue> {s.sheets.peopleInterested} <ChosenValue>{customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)).map(chipLabel).join(", ")}</ChosenValue>.
-          {customer.times && customer.times.length > 0 ? <> {s.sheets.wantedWalks} <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
+          {s.sheets.iAsked} <ChosenValue>{customer.numberAsked}</ChosenValue> {s.sheets.peopleInterested} <ChosenValue>{joinPhrase([...customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)).map(chipLabel), customer.interestExtra ?? ""], s.list.comma, s.list.and)}</ChosenValue>.
+          {playedBackTimes(customer.times ?? [], customer.timesExtra, s.list.comma, s.list.and) ? <> {s.sheets.wantedWalks} <ChosenValue>{playedBackTimes(customer.times ?? [], customer.timesExtra, s.list.comma, s.list.and)}</ChosenValue>.</> : null}
         </p>
       )}
       <LargeScribble name="pawtrail" />
@@ -330,7 +327,8 @@ function PlanOthers() {
   const price = priceOf(ctx?.answers, SET_PRICE_ANSWER_KEY);
   const currency = readCurrencyPreference();
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
-  const addons = competitor?.addons.map((id) => chipLabel(id).toLowerCase()).join(" and ") ?? "";
+  const addons = joinPhrase([...(competitor?.addons.map((id) => chipLabel(id).toLowerCase()) ?? []), competitor?.addonsExtra ?? ""], s.list.comma, s.list.and);
+  const differently = joinPhrase([competitor ? chipLabel(competitor.doDifferently).toLowerCase() : "", competitor?.doDifferentlyExtra ?? ""], s.list.comma, s.list.and);
   return (
     <div>
       <AccentLabel>{s.price.whatOthersCharge}</AccentLabel>
@@ -345,7 +343,7 @@ function PlanOthers() {
       </p>
       {competitor && (
         <p className={`mt-1 ${WORKBOOK_BODY}`}>
-          {s.competitor.couldDifferently} <ChosenValue>{chipLabel(competitor.doDifferently).toLowerCase()}</ChosenValue>.
+          {s.competitor.couldDifferently} <ChosenValue>{differently}</ChosenValue>.
         </p>
       )}
       <AccentLabel>{s.price.myPrice}</AccentLabel>

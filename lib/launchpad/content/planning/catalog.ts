@@ -48,18 +48,50 @@ export function isAvailabilitySlot(id: string): boolean {
   return AVAILABILITY_SLOT_IDS.has(id);
 }
 
-/** "weekday mornings and afternoons, and weekend mornings", or "…" when nothing is selected. */
-export function availabilityPhrase(ids: readonly string[]): string {
+/** One phrase per day column, such as "weekday mornings and afternoons". */
+export function availabilityGroups(ids: readonly string[]): string[] {
   const selected = new Set(ids);
-  const groups = AVAILABILITY_COLUMNS.map((column) => {
+  return AVAILABILITY_COLUMNS.map((column) => {
     const parts = AVAILABILITY_ROWS.filter((row) => selected.has(availabilitySlotId(column.key, row.key))).map((row) => row.phrase);
     if (parts.length === 0) return "";
     const list = parts.length === 1 ? parts[0]! : parts.length === 2 ? `${parts[0]} and ${parts[1]}` : `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
     return `${column.phrase} ${list}`;
   }).filter(Boolean);
+}
+
+/** "weekday mornings and afternoons, and weekend mornings", or "…" when nothing is selected. */
+export function availabilityPhrase(ids: readonly string[]): string {
+  const groups = availabilityGroups(ids);
   if (groups.length === 0) return "…";
   if (groups.length === 1) return groups[0]!;
   return `${groups[0]}, and ${groups[1]}`;
+}
+
+/**
+ * A, then A and B, then A, B, and C. The comma and the joining word come from
+ * the caller, which reads them from the payload.
+ */
+export function joinPhrase(items: readonly string[], comma: string, andWord: string): string {
+  const rows = items.map((item) => item.trim()).filter((item) => item.length > 0);
+  if (rows.length === 0) return "";
+  if (rows.length === 1) return rows[0]!;
+  if (rows.length === 2) return `${rows[0]} ${andWord} ${rows[1]}`;
+  return `${rows.slice(0, -1).join(comma)}${comma}${andWord} ${rows[rows.length - 1]}`;
+}
+
+/** Saved picks, with a typed extra on the end. No extra leaves an availability sentence as availabilityPhrase wrote it. */
+export function playedBackTimes(ids: readonly string[], extra: string | undefined, comma: string, andWord: string): string {
+  const typed = extra?.trim() ?? "";
+  if (!typed) {
+    if (ids.length === 0) return "";
+    if (ids.every(isAvailabilitySlot)) {
+      const phrase = availabilityPhrase(ids);
+      return phrase === "…" ? "" : phrase;
+    }
+    return joinPhrase(ids.map(chipLabel), comma, andWord);
+  }
+  const groups = ids.length > 0 && ids.every(isAvailabilitySlot) ? availabilityGroups(ids) : ids.map(chipLabel);
+  return joinPhrase([...groups, typed], comma, andWord);
 }
 
 export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [

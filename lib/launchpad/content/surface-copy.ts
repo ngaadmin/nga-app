@@ -131,6 +131,11 @@ export const LAUNCHPAD_SURFACE_COPY = {
     doorsNotOpen: "These doors aren't open yet.",
     congratulations: "Congratulations!",
   },
+  /** Comma and joining word for workbook lists. Typed extras use the same pair. */
+  list: {
+    comma: ", ",
+    and: "and",
+  },
   workbook: {
     open: "Open workbook",
     close: "Close workbook",

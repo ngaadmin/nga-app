@@ -743,65 +743,83 @@ describe("L5 delivery workbook", () => {
 });
 
 describe("L2 playback extras and L7 workbook pages", () => {
-  it("shows typed extras only when they are filled, and a payload label edit", () => {
-    const answers = {
-      "l1-offer": selectionAnswer(["dog-walking"]),
-      "l2-offer": {
-        kind: "offer" as const,
-        version: 1 as const,
-        offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], packagesExtra: "Puppy visits", addons: ["photo-updates"], addonsExtra: "Rain coat" }],
-        availability: ["weekday_morning"],
-        availabilityExtra: "Saturday mornings",
-      },
-      "l2-customers": { kind: "customer" as const, version: 1 as const, numberAsked: 3, yesNo: "yes" as const, interests: ["30-minute-walk"], timesExtra: "After dinner" },
-      "l2-competitors": {
-        kind: "competitor" as const,
-        version: 1 as const,
-        walkersChecked: 2,
-        jobComparedId: "dog-walking",
-        jobComparedExtra: "Park walks",
-        priceLow: 10,
-        priceHigh: 20,
-        addons: ["photo-updates"],
-        addonsExtra: "Water bowl",
-        doDifferently: "walk-one-dog-at-a-time",
-        doDifferentlyExtra: "Send a photo",
-      },
-    };
-    const copy = {
-      ...LAUNCHPAD_SURFACE_COPY,
-      offer: { ...LAUNCHPAD_SURFACE_COPY.offer, packagesExtraLine: "Package I typed" },
-    };
+  const offer = {
+    kind: "offer" as const,
+    version: 1 as const,
+    offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], packagesExtra: "Puppy visits", addons: ["photo-updates"], addonsExtra: "Rain coat" }],
+    availability: ["weekday_morning", "weekday_afternoon", "weekend_morning"],
+    availabilityExtra: "Saturdays 3 to 5pm",
+  };
+  const customer = { kind: "customer" as const, version: 1 as const, numberAsked: 3, yesNo: "yes" as const, interests: ["30-minute-walk"], interestExtra: "puppies", times: ["weekday_afternoon"], timesExtra: "After dinner" };
+  const competitor = {
+    kind: "competitor" as const,
+    version: 1 as const,
+    walkersChecked: 2,
+    jobComparedId: "dog-walking",
+    jobComparedExtra: "Park walks",
+    priceLow: 10,
+    priceHigh: 20,
+    addons: ["photo-updates"],
+    addonsExtra: "Water bowl",
+    doDifferently: "walk-one-dog-at-a-time",
+    doDifferentlyExtra: "Send a photo",
+  };
+
+  function renderPlayback(andWord = LAUNCHPAD_SURFACE_COPY.list.and, answers = { offer, customer, competitor }) {
+    const copy = { ...LAUNCHPAD_SURFACE_COPY, list: { ...LAUNCHPAD_SURFACE_COPY.list, and: andWord } };
     render(
       <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
-        <LaunchpadAnswersProvider value={{ iconVentureId: "dog-walking", answers, setAnswer: () => {}, floors: FLOORS }}>
+        <LaunchpadAnswersProvider value={{
+          iconVentureId: "dog-walking",
+          answers: { "l1-offer": selectionAnswer(["dog-walking"]), "l2-offer": answers.offer, "l2-customers": answers.customer, "l2-competitors": answers.competitor },
+          setAnswer: () => {},
+          floors: FLOORS,
+        }}>
           <ProductHandbook />
           <PricingSummarySheet />
         </LaunchpadAnswersProvider>
       </SurfaceCopyProvider>,
     );
-    expect(screen.getByText(/Package I typed/)).toBeTruthy();
-    expect(screen.queryByText(LAUNCHPAD_SURFACE_COPY.offer.packagesExtraLine)).toBeNull();
-    expect(screen.getByText("Puppy visits").className).toContain("font-semibold");
-    expect(screen.getByText("Rain coat").className).toContain("font-semibold");
-    expect(screen.getByText("After dinner").className).toContain("font-semibold");
-    expect(screen.getByText("Park walks").className).toContain("font-semibold");
-    expect(screen.getByText("Water bowl").className).toContain("font-semibold");
-    expect(screen.getByText("Send a photo").className).toContain("font-semibold");
-    const compared = document.querySelector("[data-job-compared]");
-    expect(compared?.textContent).toContain("Dog walking");
-    expect(compared?.querySelector("[data-chosen-value]")?.textContent).toBe("Park walks");
-    const product = document.querySelector("[data-module2-handbook]")!;
-    const times = product.querySelector("[data-times-extra]")!;
-    const ownTime = product.querySelector("[data-availability-extra]")!;
-    expect(times.textContent).toContain(LAUNCHPAD_SURFACE_COPY.offer.timesExtraLine);
-    expect(times.textContent).toContain("After dinner");
-    expect(ownTime.textContent).toContain(LAUNCHPAD_SURFACE_COPY.sheets.ownTime);
-    expect(ownTime.textContent).toContain("Saturday mornings");
-    const when = within(product).getByRole("heading", { name: "When" });
-    expect(when.compareDocumentPosition(times) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(product.querySelector("input, textarea, button")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
+  }
+
+  it("appends typed extras to the existing sentences, and a payload join word shows", () => {
+    renderPlayback("plus");
+    const selling = document.querySelector("[data-selling-line]")!;
+    expect(selling.textContent).toContain("30-minute walk plus Puppy visits");
+    expect(selling.textContent).toContain("Photo updates plus Rain coat");
+    expect(selling.textContent).not.toContain(LAUNCHPAD_SURFACE_COPY.offer.packagesExtraLine);
+    expect(document.querySelector("[data-when-line]")?.textContent).toBe("weekday mornings and afternoons, weekend mornings, plus Saturdays 3 to 5pm.");
+    const who = document.querySelector("[data-who-line]")!;
+    expect(who.textContent).toContain("30-minute walk plus puppies");
+    expect(who.textContent).toContain("weekday afternoons plus After dinner");
+    expect(who.textContent).not.toContain(LAUNCHPAD_SURFACE_COPY.offer.timesExtraLine);
+    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates plus Water bowl");
+    expect(document.querySelector("[data-could-differently]")?.textContent).toContain("walk one dog at a time plus Send a photo");
+    const compared = document.querySelector("[data-job-compared]")!;
+    expect(compared.textContent).toContain("Dog walking plus Park walks");
+    expect(compared.querySelector("[data-chosen-value]")?.textContent).toBe("Park walks");
+    expect(document.querySelector("[data-packages-extra], [data-times-extra], [data-availability-extra], [data-competitor-extras]")).toBeNull();
+    expect(document.querySelector("[data-module2-handbook] input, [data-module2-handbook] textarea, [data-module2-handbook] button")).toBeNull();
+  });
+
+  it("leaves the When sentence unchanged when nothing is typed", () => {
+    renderPlayback(LAUNCHPAD_SURFACE_COPY.list.and, {
+      offer: {
+        ...offer,
+        availabilityExtra: undefined,
+        offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], addons: ["photo-updates"] }],
+      },
+      customer: { ...customer, interestExtra: undefined, timesExtra: undefined },
+      competitor: { ...competitor, jobComparedExtra: undefined, addonsExtra: undefined, doDifferentlyExtra: undefined },
+    });
+    expect(document.querySelector("[data-when-line]")?.textContent).toBe("weekday mornings and afternoons, and weekend mornings.");
+    expect(document.querySelector("[data-selling-line]")?.textContent).toBe("30-minute walk with Photo updates.");
+    expect(document.querySelector("[data-who-line]")?.textContent).toContain("30-minute walk.");
+    expect(document.querySelector("[data-who-line]")?.textContent).toContain("weekday afternoons.");
+    expect(document.querySelector("[data-who-line]")?.textContent).not.toContain("After dinner");
+    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates.");
+    expect(document.querySelector("[data-often-include]")?.textContent).not.toContain("Water bowl");
+    expect(document.querySelector("[data-job-compared]")?.textContent).toBe("Job compared: Dog walking");
   });
 
   it("plays Reflect before the weekly focus and Grow after it, and a payload title edit shows", () => {

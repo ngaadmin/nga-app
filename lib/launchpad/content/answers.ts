@@ -262,6 +262,8 @@ export type LevelUpAnswer = {
   version: 1;
   selected: readonly string[];
   picks: Readonly<Record<string, string>>;
+  /** Silent quick / longer mark for each picked statement. Never shown. */
+  pace: Readonly<Record<string, "quick" | "longer">>;
   starts: Readonly<Record<string, string>>;
   idea: string;
   option: string;
@@ -536,6 +538,15 @@ export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string)
   return value?.kind === "tell-people" ? value : undefined;
 }
 
+function paceMap(value: unknown): Record<string, "quick" | "longer"> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, "quick" | "longer"> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (ID_RE.test(key) && (raw === "quick" || raw === "longer")) out[key] = raw;
+  }
+  return out;
+}
+
 function stringIdMap(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {};
   const out: Record<string, string> = {};
@@ -553,6 +564,7 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     version: 1,
     selected: idList(value.selected),
     picks: stringIdMap(value.picks),
+    pace: paceMap(value.pace),
     starts: stringIdMap(value.starts),
     idea: text(value.idea),
     option: text(value.option),

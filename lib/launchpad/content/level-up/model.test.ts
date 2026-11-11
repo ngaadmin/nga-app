@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { START_OPTIONS, addMonths, checkInClipboard, expandJobsFor, formatCheckInDate } from "@/lib/launchpad/content/level-up/model";
+import { GROW_START_OPTIONS, IMPROVE_START_OPTIONS, addMonths, checkInClipboard, expandJobsFor, formatCheckInDate, mapImproveStart } from "@/lib/launchpad/content/level-up/model";
 
 describe("Level Up check-in date", () => {
   it("adds three calendar months to today", () => {
@@ -9,8 +9,22 @@ describe("Level Up check-in date", () => {
     expect(checkInClipboard("February 10, 2027")).toContain("NextGenAchiever$ check-in");
   });
 
-  it("includes in three months on the Improve timeline dropdown", () => {
-    expect(START_OPTIONS.map((option) => option.label)).toContain("in three months");
+  it("maps older Improve start dates onto this week, this month, and the next three months", () => {
+    expect(IMPROVE_START_OPTIONS.map((option) => option.label)).toEqual(["this week", "this month", "in the next three months"]);
+    expect(mapImproveStart("in-a-month")).toBe("this-month");
+    expect(mapImproveStart("in-three-months")).toBe("next-three-months");
+    expect(mapImproveStart("next-job")).toBe("this-week");
+    expect(mapImproveStart("next-quarter")).toBe("this-week");
+    expect(mapImproveStart(undefined)).toBe("this-week");
+  });
+
+  it("keeps Grow start dates to the four planning choices", () => {
+    expect(GROW_START_OPTIONS.map((option) => option.label)).toEqual([
+      "by my next job",
+      "this week",
+      "in a month",
+      "by next quarter",
+    ]);
   });
 
   it("gates expand jobs by cohort", () => {

@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { levelUpOf, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import { LEVEL_STATEMENTS } from "@/lib/launchpad/content/level-up/model";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 
@@ -21,6 +22,7 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "I used more than one way to get my name out" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 2 of 4")).toBeTruthy();
+    expect(screen.getByText("What went well in your business?")).toBeTruthy();
     expect(screen.getByText("Nobody's appointment slipped my mind")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 4")).toBeTruthy();
@@ -33,13 +35,15 @@ describe("Level Up screens", () => {
     expect(onFinish.mock.calls[0]?.[0].selected).toEqual(["more-than-one-way"]);
   });
 
-  it("offers only unticked statements, nails a finished section, and skips the timing screens", () => {
+  it("grays Reflect wins, nails a finished section, and finishes after four sections", () => {
+    const onFinish = vi.fn();
     const answers: LaunchpadAnswers = {
       "l7-reflect": {
         kind: "level-up",
         version: 1,
         selected: ["kept-track", "confirmed", "slipped", "more-than-one-way"],
         picks: {},
+        pace: {},
         starts: {},
         idea: "",
         option: "",
@@ -47,13 +51,14 @@ describe("Level Up screens", () => {
         start: "",
       },
     };
-    render(<LevelUpFlow screen={improve} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    render(<LevelUpFlow screen={improve} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
     expect(screen.getByText("Section 1 of 5")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "I used more than one way to get my name out" })).toBeNull();
-    expect(screen.getByRole("button", { name: "I followed up with everyone who showed interest" })).toBeTruthy();
+    expect(screen.getByText("Pick one thing to improve in each section. The grayed-out ones are already your wins.")).toBeTruthy();
+    const won = screen.getByRole("button", { name: "I used more than one way to get my name out" }) as HTMLButtonElement;
+    expect(won.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "I followed up with everyone who showed interest" }));
     expect(screen.queryByText("Do now")).toBeNull();
     expect(screen.queryByText("Three months")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "I followed up with everyone who showed interest" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("You nailed this one!")).toBeTruthy();
     expect(screen.getByText("Everything in Getting ready is already a win. Keep it up.")).toBeTruthy();
@@ -62,12 +67,94 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "I asked every customer for feedback" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.queryByText("Pick one to start now and one to start in three months.")).toBeNull();
-    expect(screen.queryByText("Your picks are all quick fixes, so you can start them all now.")).toBeNull();
-    expect(screen.queryByText("These all take a bit longer. Pick one to start in three months.")).toBeNull();
     expect(screen.getByText("Section 5 of 5")).toBeTruthy();
-    expect(screen.getByText(/I followed up with everyone who showed interest, starting/)).toBeTruthy();
-    expect(screen.getByText(/I always showed up on time at each job, starting/)).toBeTruthy();
+    expect(screen.getByText("A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.")).toBeTruthy();
+    expect(screen.getByText("Check your plan. Tap a start date if you want to change it.")).toBeTruthy();
+    expect(screen.queryByText("Pick one to start now and one to start in three months.")).toBeNull();
+    expect(screen.queryByText("Getting ready")).toBeNull();
+    const options = screen.getAllByRole("option").map((option) => option.textContent);
+    expect(options.filter((label) => label === "this week")).toHaveLength(3);
+    expect(options).toContain("this month");
+    expect(options).toContain("in the next three months");
+    expect(options).not.toContain("by my next job");
+    expect(options).not.toContain("by next quarter");
+    expect(options).not.toContain("in a month");
+    expect(options).not.toContain("in three months");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onFinish).toHaveBeenCalled();
+    const saved = onFinish.mock.calls[0]?.[0];
+    expect(saved.starts["followed-up"]).toBe("this-week");
+    expect(saved.starts["on-time"]).toBe("this-week");
+    expect(saved.pace["followed-up"]).toBe("quick");
+    expect(saved.picks.ready).toBeUndefined();
+    expect(screen.queryByText("quick")).toBeNull();
+  });
+
+  it("maps a saved in-a-month start to this month and skips the timeline when every section was nailed", () => {
+    const mapped: LaunchpadAnswers = {
+      "l7-reflect": {
+        kind: "level-up",
+        version: 1,
+        selected: ["more-than-one-way"],
+        picks: {},
+        pace: {},
+        starts: {},
+        idea: "",
+        option: "",
+        success: "",
+        start: "",
+      },
+      "l7-improve": {
+        kind: "level-up",
+        version: 1,
+        selected: [],
+        picks: { customers: "followed-up" },
+        pace: {},
+        starts: { "followed-up": "in-a-month" },
+        idea: "",
+        option: "",
+        success: "",
+        start: "",
+      },
+    };
+    const { unmount } = render(<LevelUpFlow screen={improve} answers={mapped} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "I kept track of every job that came in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "I always showed up on time at each job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "I asked every customer for feedback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect((screen.getAllByRole("combobox")[0] as HTMLSelectElement).value).toBe("this-month");
+    unmount();
+
+    const all = LEVEL_STATEMENTS.map((item) => item.id);
+    const onFinish = vi.fn();
+    render(
+      <LevelUpFlow
+        screen={improve}
+        answers={{
+          "l7-reflect": {
+            kind: "level-up",
+            version: 1,
+            selected: all,
+            picks: {},
+            pace: {},
+            starts: {},
+            idea: "",
+            option: "",
+            success: "",
+            start: "",
+          },
+        }}
+        onExit={() => {}}
+        onSave={() => {}}
+        onFinish={onFinish}
+      />,
+    );
+    for (let i = 0; i < 4; i += 1) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onFinish).toHaveBeenCalled();
+    expect(screen.queryByText("A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.")).toBeNull();
   });
 
   it("sets the Grow check-in to today plus three months and copies that date", async () => {

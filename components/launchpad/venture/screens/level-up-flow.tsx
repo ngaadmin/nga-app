@@ -5,7 +5,6 @@ import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { levelUpOf, selectionOf, type LevelUpAnswer } from "@/lib/launchpad/content/answers";
 import type { LaunchpadLevelUpScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import {
-  DO_NOW_LABEL,
   GROW_CALENDAR_NOTE,
   GROW_CLOSER_CONTEXT,
   GROW_CLOSER_HEADLINE,
@@ -19,35 +18,30 @@ import {
   GROW_SERVICE_LABEL,
   GROW_START_OPTIONS,
   GROW_SUCCESS,
-  IMPROVE_ALL_LATER_QUESTION,
-  IMPROVE_ALL_NOW_QUESTION,
   IMPROVE_CONTEXT,
   IMPROVE_GUIDANCE,
   IMPROVE_PLAN_CONTEXT,
   IMPROVE_PLAN_GUIDANCE,
   IMPROVE_QUESTION,
-  IMPROVE_WHEN_CONTEXT,
-  IMPROVE_WHEN_QUESTION,
+  IMPROVE_START_OPTIONS,
   NAILED_TITLE,
   REFLECT_CONTEXT,
   REFLECT_GUIDANCE,
   REFLECT_QUESTION,
   SECTION_PAGES,
-  SHOW_IMPROVE_TIMING,
-  START_OPTIONS,
-  THREE_MONTHS_LABEL,
   addMonths,
   checkInClipboard,
-  commitLine,
   expandJobsFor,
   formatCheckInDate,
   growIdea,
+  mapImproveStart,
   nailedLine,
   sectionLabel,
   statementsIn,
+  type ImproveStartId,
   type LevelCohort,
+  type LevelPace,
   type LevelSectionId,
-  type LevelStatement,
   type StartId,
 } from "@/lib/launchpad/content/level-up/model";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
@@ -55,10 +49,23 @@ import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 const IMPROVE_PICK_PAGES = SECTION_PAGES.length;
-const IMPROVE_TOTAL = IMPROVE_PICK_PAGES + (SHOW_IMPROVE_TIMING ? 2 : 1);
+/** Four section screens, then the timeline. The counter on every Improve step is of 5. */
+const IMPROVE_TOTAL = IMPROVE_PICK_PAGES + 1;
 
 function blankAnswer(): LevelUpAnswer {
-  return { kind: "level-up", version: 1, selected: [], picks: {}, starts: {}, idea: "", option: "", success: "", start: "" };
+  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, starts: {}, idea: "", option: "", success: "", start: "" };
+}
+
+function pickedStatements(picks: LevelUpAnswer["picks"]) {
+  return SECTION_PAGES.flatMap((section) => {
+    const id = picks[section];
+    const item = id ? statementsIn(section).find((row) => row.id === id) : undefined;
+    return item ? [item] : [];
+  });
+}
+
+function paceFor(picks: LevelUpAnswer["picks"]): Record<string, LevelPace> {
+  return Object.fromEntries(pickedStatements(picks).map((item) => [item.id, item.pace]));
 }
 
 function toggle(list: readonly string[], id: string): string[] {
@@ -112,8 +119,6 @@ export function LevelUpFlow({
   const [page, setPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
   const total = screen.step === "improve" ? IMPROVE_TOTAL : screen.step === "reflect" ? SECTION_PAGES.length : 3;
-  const whenPage = SHOW_IMPROVE_TIMING ? IMPROVE_PICK_PAGES : -1;
-  const planPage = IMPROVE_TOTAL - 1;
   const checkIn = addMonths(today, 3);
   const checkInLabel = formatCheckInDate(checkIn);
 
@@ -129,40 +134,26 @@ export function LevelUpFlow({
   const reflectReady = true;
   const improvePicksReady = (sections: readonly LevelSectionId[]) =>
     sections.every((section) => statementsIn(section).every((item) => wins.has(item.id)) || Boolean(draft.picks[section]));
-  const chosen = Object.values(draft.picks);
-  const chosenItems = chosen.map((id) => statementsIn("customers").concat(statementsIn("ready"), statementsIn("job"), statementsIn("happy")).find((item) => item.id === id)).filter((item): item is LevelStatement => Boolean(item));
-  const nowItems = chosenItems.filter((item) => item.tag === "do-now");
-  const laterItems = chosenItems.filter((item) => item.tag === "three-months");
-  const whenMode = nowItems.length && laterItems.length ? "mixed" : laterItems.length ? "later" : "now";
-  const planItems = !SHOW_IMPROVE_TIMING
-    ? chosenItems
-    : whenMode === "mixed"
-      ? chosenItems.filter((item) => item.id === draft.picks.now || item.id === draft.picks.later)
-      : whenMode === "later"
-        ? chosenItems.filter((item) => item.id === draft.picks.later)
-        : nowItems;
-  const whenReady = whenMode === "now" ? true : whenMode === "later" ? Boolean(draft.picks.later) : Boolean(draft.picks.now && draft.picks.later);
+  const chosenItems = pickedStatements(draft.picks);
   const idea = growIdea(draft.idea);
   const growReady = Boolean(draft.option && draft.success);
 
   let ready = true;
   if (screen.step === "improve" && page < IMPROVE_PICK_PAGES) ready = improvePicksReady([SECTION_PAGES[page]!]);
-  if (screen.step === "improve" && page === whenPage) ready = whenReady;
   if (screen.step === "grow" && page === 0) ready = Boolean(draft.idea);
   if (screen.step === "grow" && page === 1) ready = growReady;
 
   const go = () => {
     if (!ready) return;
     const next = { ...draft };
-    if (screen.step === "improve" && page === IMPROVE_PICK_PAGES - 1 && !SHOW_IMPROVE_TIMING) {
-      next.starts = Object.fromEntries(chosenItems.map((item) => [item.id, next.starts[item.id] ?? "this-week"]));
-    }
-    if (screen.step === "improve" && page === whenPage && whenMode === "now") {
-      next.starts = Object.fromEntries(nowItems.map((item) => [item.id, next.starts[item.id] ?? "this-week"]));
-    }
-    if (screen.step === "improve" && page === whenPage && whenMode !== "now") {
-      const rows = whenMode === "later" ? laterItems.filter((item) => item.id === next.picks.later) : chosenItems.filter((item) => item.id === next.picks.now || item.id === next.picks.later);
-      next.starts = Object.fromEntries(rows.map((item) => [item.id, next.starts[item.id] ?? (item.tag === "do-now" ? "this-week" : "in-three-months")]));
+    if (screen.step === "improve" && page === IMPROVE_PICK_PAGES - 1) {
+      const rows = pickedStatements(next.picks);
+      next.pace = paceFor(next.picks);
+      if (rows.length === 0) {
+        save(next, true);
+        return;
+      }
+      next.starts = Object.fromEntries(rows.map((item) => [item.id, mapImproveStart(next.starts[item.id])]));
     }
     if (screen.step === "grow" && page === 0 && idea) next.start = next.start || idea.start;
     save(next, page >= total - 1);
@@ -187,28 +178,24 @@ export function LevelUpFlow({
             <p className={LESSON_BODY}>{nailedLine(section)}</p>
           </div>
         ) : (
-          live.map((item) => (
-            <Lined
-              key={item.id}
-              item={{ id: item.id, label: item.label }}
-              tag={SHOW_IMPROVE_TIMING ? (item.tag === "do-now" ? DO_NOW_LABEL : THREE_MONTHS_LABEL) : undefined}
-              selected={draft.picks[section] === item.id}
-              onClick={() => setDraft({ ...draft, picks: { ...draft.picks, [section]: item.id } })}
-            />
-          ))
+          rows.map((item) => {
+            const won = wins.has(item.id);
+            return (
+              <Lined
+                key={item.id}
+                item={{ id: item.id, label: item.label }}
+                muted={won}
+                selected={!won && draft.picks[section] === item.id}
+                onClick={() => {
+                  if (!won) setDraft({ ...draft, picks: { ...draft.picks, [section]: item.id } });
+                }}
+              />
+            );
+          })
         )}
       </SectionBlock>
     );
   };
-
-  const group = (label: string, items: readonly LevelStatement[], picked: string | undefined, onPick: (id: string) => void, lock: boolean) => (
-    <div className="mt-[21px]">
-      <ScreenPrompt tone="section" flush className="!mt-0">{label}</ScreenPrompt>
-      {items.map((item) => (
-        <Lined key={item.id} item={{ id: item.id, label: item.label }} selected={lock || picked === item.id} onClick={() => { if (!lock) onPick(item.id); }} />
-      ))}
-    </div>
-  );
 
   let body: React.ReactNode = null;
   if (screen.step === "reflect") {
@@ -218,9 +205,9 @@ export function LevelUpFlow({
           <>
             <p className={`mt-3 ${LESSON_BODY}`}>{REFLECT_CONTEXT}</p>
             <ScreenGuidance flush>{REFLECT_GUIDANCE}</ScreenGuidance>
-            <ScreenPrompt tone="question" flush>{REFLECT_QUESTION}</ScreenPrompt>
           </>
         ) : null}
+        <ScreenPrompt tone="question" flush>{REFLECT_QUESTION}</ScreenPrompt>
         {SECTION_PAGES[page] ? reflectSection(SECTION_PAGES[page]) : null}
       </>
     );
@@ -237,37 +224,18 @@ export function LevelUpFlow({
         {SECTION_PAGES[page] ? improveSection(SECTION_PAGES[page]) : null}
       </>
     );
-  } else if (screen.step === "improve" && page === whenPage) {
-    body = whenMode === "now" ? (
-      <>
-        <ScreenPrompt tone="question" flush className="!mt-3">{IMPROVE_ALL_NOW_QUESTION}</ScreenPrompt>
-        {group(DO_NOW_LABEL, nowItems, undefined, () => {}, true)}
-      </>
-    ) : whenMode === "later" ? (
-      <>
-        <ScreenPrompt tone="question" flush className="!mt-3">{IMPROVE_ALL_LATER_QUESTION}</ScreenPrompt>
-        {group(THREE_MONTHS_LABEL, laterItems, draft.picks.later, (id) => setDraft({ ...draft, picks: { ...draft.picks, later: id } }), false)}
-      </>
-    ) : (
-      <>
-        <p className={`mt-3 ${LESSON_BODY}`}>{IMPROVE_WHEN_CONTEXT}</p>
-        <ScreenPrompt tone="question" flush>{IMPROVE_WHEN_QUESTION}</ScreenPrompt>
-        {group(DO_NOW_LABEL, nowItems, draft.picks.now, (id) => setDraft({ ...draft, picks: { ...draft.picks, now: id } }), false)}
-        {group(THREE_MONTHS_LABEL, laterItems, draft.picks.later, (id) => setDraft({ ...draft, picks: { ...draft.picks, later: id } }), false)}
-      </>
-    );
   } else if (screen.step === "improve") {
     body = (
       <>
         <p className={`mt-3 ${LESSON_BODY}`}>{IMPROVE_PLAN_CONTEXT}</p>
         <ScreenGuidance flush>{IMPROVE_PLAN_GUIDANCE}</ScreenGuidance>
-        {planItems.map((item) => (
-          <p key={item.id} className={`mt-4 ${LESSON_BODY}`}>
-            {SHOW_IMPROVE_TIMING ? `${commitLine(item.label)}, starting` : `${item.label}, starting`}{" "}
+        {chosenItems.map((item) => (
+          <p key={item.id} className={`mt-4 ${LESSON_BODY}`} data-level-section={item.section}>
+            {item.label}, starting{" "}
             <StartPick
-              value={draft.starts[item.id] ?? (SHOW_IMPROVE_TIMING && item.tag === "three-months" ? "in-three-months" : "this-week")}
-              options={START_OPTIONS}
-              onChange={(id) => setDraft({ ...draft, starts: { ...draft.starts, [item.id]: id as StartId } })}
+              value={mapImproveStart(draft.starts[item.id])}
+              options={IMPROVE_START_OPTIONS}
+              onChange={(id) => setDraft({ ...draft, starts: { ...draft.starts, [item.id]: id as ImproveStartId } })}
             />
             .
           </p>

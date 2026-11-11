@@ -99,16 +99,16 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     }
   });
 
-  it("a multi-task bronze (placeholder floors) still steps task to task with no list", async () => {
+  it("a delivery door opens its screen directly, with no task list", async () => {
     renderFlow({ kind: "level", level: 5 });
     const silver = PAYLOAD.floors[4]!.silvers[0]!;
     const bronze = silver.bronzes[0]!;
-    expect(bronze.tasks.length).toBeGreaterThan(1);
+    expect(bronze.placeholder).toBe(false);
+    expect(bronze.tasks).toHaveLength(1);
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(bronze.title));
-    expect(screen.getByText(`Task 1 of ${bronze.tasks.length}`)).toBeTruthy();
-    for (let i = 1; i < bronze.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
-    expect(screen.getByText(`Task ${bronze.tasks.length} of ${bronze.tasks.length}`)).toBeTruthy();
+    expect(screen.queryByText(/Task \d+ of/)).toBeNull();
+    expect(document.querySelector("[data-task-screen='delivery']")).toBeTruthy();
   });
 });
 
@@ -234,8 +234,19 @@ async function finishSilver(silver: (typeof PAYLOAD.floors)[number]["silvers"][n
   fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
   for (const bronze of silver.bronzes) {
     fireEvent.click(door(bronze.title));
-    for (let i = 0; i < bronze.tasks.length; i++) {
-      fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+    const delivery = bronze.tasks.some((task) => task.screens.some((item) => item.type === "delivery"));
+    if (!delivery) {
+      for (let i = 0; i < bronze.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+      continue;
+    }
+    for (let page = 0; page < 3; page++) {
+      for (const box of screen.queryAllByRole("combobox")) {
+        const option = [...box.querySelectorAll("option")].find((item) => (item as HTMLOptionElement).value);
+        if (option) fireEvent.change(box, { target: { value: (option as HTMLOptionElement).value } });
+      }
+      const paid = screen.queryByRole("textbox");
+      if (paid) fireEvent.change(paid, { target: { value: "15" } });
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     }
   }
 }
@@ -310,7 +321,7 @@ describe("floor workbook shortcut", () => {
 });
 
 describe("finishing a step goes straight back to the corridor with the workbook button, no end screen", () => {
-  it("a placeholder step lands on the corridor with Open your workbook (illustration, pop-in)", async () => {
+  it("finishing Do the job lands on the corridor with Open your workbook (illustration, pop-in)", async () => {
     renderFlow({ kind: "level", level: 5 });
     const silver = PAYLOAD.floors[4]!.silvers[0]!;
     await finishSilver(silver);

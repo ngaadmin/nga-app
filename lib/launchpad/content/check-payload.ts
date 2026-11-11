@@ -249,6 +249,9 @@ type AnswerKind =
   | "marketing-materials"
   | "tell-people"
   | "order-system"
+  | "get-ready"
+  | "wrap-up-job"
+  | "record-job"
   | "level-up";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
@@ -531,6 +534,9 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "sales":
       checkSales(screen, where, answers);
       return;
+    case "delivery":
+      checkDelivery(screen, where, answers);
+      return;
     case "level-up":
       text(screen.title, `${where} title`);
       if (screen.step !== "reflect" && screen.step !== "improve" && screen.step !== "grow") fail(`${where} step is missing.`);
@@ -720,6 +726,72 @@ function checkReadyOptions(value: unknown, where: string): void {
     text(raw.id, `${where} option ${i + 1} id`);
     text(raw.label, `${where} option ${i + 1} label`);
   });
+}
+
+function checkDeliveryOptions(value: unknown, where: string): void {
+  const seen = new Set<string>();
+  list(value, where, 1).forEach((raw, i) => {
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id) || seen.has(raw.id)) fail(`${where} option ${i + 1} has no valid id.`);
+    if (isObj(raw) && typeof raw.id === "string") seen.add(raw.id);
+    text(isObj(raw) ? raw.label : undefined, `${where} option ${i + 1} label`);
+  });
+}
+
+function checkDelivery(screen: Obj, where: string, answers: Answers): void {
+  const step = screen.step;
+  const kind = step === "ready" ? "get-ready" : step === "wrap" ? "wrap-up-job" : step === "record" ? "record-job" : "";
+  if (!kind) fail(`${where} has an unknown delivery step.`);
+  saves(answers, screen, kind, where);
+  text(screen.title, `${where} title`);
+  text(screen.question, `${where} question`);
+  text(screen.context, `${where} context`);
+  text(screen.guidance, `${where} guidance`);
+  text(screen.playbackTitle, `${where} playbackTitle`);
+  text(screen.joinWord, `${where} joinWord`);
+  reads(answers, screen.deliverFrom, ["deliver-job"], `${where} deliverFrom`);
+  reads(answers, screen.wrapFrom, ["wrap-job"], `${where} wrapFrom`);
+  reads(answers, screen.costsFrom, ["costs"], `${where} costsFrom`);
+  reads(answers, screen.priceFrom, ["price"], `${where} priceFrom`);
+  reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  list(screen.doodles, `${where} doodles`, 3, 3).forEach((name, i) => text(name, `${where} doodle ${i + 1}`));
+  if (step === "ready") {
+    const block = screen.ready;
+    if (!isObj(block)) fail(`${where} ready is missing.`);
+    else {
+      for (const field of ["emptyLabel", "remindBefore", "remindAfter", "aboutBefore", "aboutAfter", "travelBefore", "travelAfter", "leaveBefore", "leaveAfter", "packBefore", "packAfter", "packTitle", "packSep", "packEmpty", "note"] as const) {
+        text(block[field], `${where} ready ${field}`);
+      }
+      checkDeliveryOptions(block.aboutOptions, `${where} ready aboutOptions`);
+      checkDeliveryOptions(block.travelOptions, `${where} ready travelOptions`);
+      checkDeliveryOptions(block.leaveOptions, `${where} ready leaveOptions`);
+      checkDeliveryOptions(block.packOptions, `${where} ready packOptions`);
+    }
+  }
+  if (step === "wrap") {
+    const block = screen.wrap;
+    if (!isObj(block)) fail(`${where} wrap is missing.`);
+    else {
+      for (const field of ["emptyLabel", "proofBefore", "proofAfter", "paymentBefore", "paymentAfter", "askPayBefore", "askPayAfter", "feedbackBefore", "feedbackAfter", "askBefore", "trackerLine", "whenBefore", "whenAfter", "note"] as const) {
+        text(block[field], `${where} wrap ${field}`);
+      }
+      if (block.askAfter !== undefined && typeof block.askAfter !== "string") fail(`${where} wrap askAfter must be text.`);
+      checkDeliveryOptions(block.askPayOptions, `${where} wrap askPayOptions`);
+      checkDeliveryOptions(block.askOptions, `${where} wrap askOptions`);
+      checkDeliveryOptions(block.whenOptions, `${where} wrap whenOptions`);
+    }
+  }
+  if (step === "record") {
+    const block = screen.record;
+    if (!isObj(block)) fail(`${where} record is missing.`);
+    else {
+      for (const field of ["emptyLabel", "serviceBefore", "serviceAfter", "priceBefore", "priceAfter", "paidBefore", "paidAfter", "paidHint", "costBefore", "costAfter", "keptBefore", "keptAfter", "lowKeep", "trackerLine", "addJob", "note", "serviceSuffix", "paidLead", "costLead", "keptLead", "lineAfter"] as const) {
+        text(block[field], `${where} record ${field}`);
+      }
+      if (typeof block.paidMax !== "number" || !Number.isInteger(block.paidMax) || block.paidMax < 1 || block.paidMax > 9999) {
+        fail(`${where} record paidMax must be a whole number from 1 to 9999.`);
+      }
+    }
+  }
 }
 
 function checkSales(screen: Obj, where: string, answers: Answers): void {

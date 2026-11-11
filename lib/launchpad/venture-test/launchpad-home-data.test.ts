@@ -84,6 +84,6 @@ describe("r4 building window counts", () => {
     const counts = Object.fromEntries(
       launchpadTestVentureSeed("dog-walking").floors.map((f) => [f.level, f.silvers.length]),
     );
-    expect(counts).toEqual({ 1: 3, 2: 3, 3: 2, 4: 2, 5: 3, 6: 1, 7: 1 });
+    expect(counts).toEqual({ 1: 3, 2: 3, 3: 2, 4: 2, 5: 2, 6: 1, 7: 1 });
   });
 });

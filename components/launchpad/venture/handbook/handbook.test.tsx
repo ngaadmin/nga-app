@@ -732,6 +732,36 @@ describe("L4 My order system workbook page", () => {
   });
 });
 
+describe("L5 delivery workbook", () => {
+  it("plays the three pages back and a payload edit changes the title", () => {
+    const floors = structuredClone(FLOORS);
+    const ready = floors.find((floor) => floor.level === 5)!.silvers.find((silver) => silver.id === "l5-s2")!;
+    const spec = ready.bronzes[0]!.tasks[0]!.screens[0]!;
+    if (spec.type !== "delivery") throw new Error("delivery screen missing");
+    const original = spec.playbackTitle;
+    spec.playbackTitle = "Before the job";
+    const progress = withShortcutSampleAnswers(through("l5-s3"), floors, "dog-walking", "Happy Paws");
+    const sheets = handbookPages(progress, floors).filter((page) => page.level === 5).map((page) => page.sheet);
+    expect(sheets).toEqual(["ready-before", "ready-after", "job-record"]);
+    render(
+      <Handbook
+        entry="building"
+        businessName="Happy Paws"
+        floors={floors}
+        progress={progress}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+        initialSheet="ready-before"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Before the job" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: original })).toBeNull();
+    expect(screen.getByText("text").className).toContain("text-[#0CC1E0]");
+    expect(screen.getByText(/Water bottle and fold-up bowl/)).toBeTruthy();
+  });
+});
+
 describe("template and L4 workbook placement", () => {
   it("orders the Templates tab by when a learner reaches each page", () => {
     const pages = LAUNCHPAD_SURFACE_COPY.templates.pages;

@@ -22,6 +22,7 @@ import { IdentityEditor } from "@/components/launchpad/venture/identity/identity
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble, SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { orderSystemOf } from "@/lib/launchpad/content/answers";
+import { DeliveryWorkbook } from "@/components/launchpad/venture/handbook/delivery-workbook";
 import type { OrderSystemCopy } from "@/lib/launchpad/content/types";
 import { WeeklyFocusSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
@@ -639,6 +640,8 @@ export function HandbookPage({
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.sheet === "order-system" ? (
         <OrderSystemWorkbook silver={page.silver} />
+      ) : page.sheet === "ready-before" || page.sheet === "ready-after" || page.sheet === "job-record" ? (
+        <DeliveryWorkbook silver={page.silver} sheet={page.sheet} />
       ) : page.sheet?.startsWith("sales-") ? (
         <SalesWorkbookPage sheet={page.sheet} />
       ) : page.sheet === "budget-split" ? (

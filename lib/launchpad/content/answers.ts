@@ -264,6 +264,34 @@ export type OrderSystemAnswer = {
   reminder: string;
 };
 
+/** Level 5. The four picks for the plan before a job. Replays are not stored. */
+export type GetReadyAnswer = {
+  kind: "get-ready";
+  version: 1;
+  remindAbout: string;
+  travelHow: string;
+  leaveEarly: string;
+  packWhen: string;
+};
+
+/** Level 5. The three picks for the plan after a job. Replays are not stored. */
+export type WrapUpJobAnswer = {
+  kind: "wrap-up-job";
+  version: 1;
+  paymentWhen: string;
+  feedbackQuestion: string;
+  trackerWhen: string;
+};
+
+/** Level 5. One finished job: the service and what was paid. Cost and kept are calculated. */
+export type RecordedJob = { serviceId: string; paid: number };
+
+export type RecordJobAnswer = {
+  kind: "record-job";
+  version: 1;
+  jobs: readonly RecordedJob[];
+};
+
 /** One Grow idea the learner planned. `checkInDate` is written once, when that idea's screen is completed. */
 export type GrowPlan = {
   idea: string;
@@ -313,6 +341,9 @@ export type LaunchpadAnswer =
   | MarketingMaterialsAnswer
   | TellPeopleAnswer
   | OrderSystemAnswer
+  | GetReadyAnswer
+  | WrapUpJobAnswer
+  | RecordJobAnswer
   | LevelUpAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
@@ -565,6 +596,54 @@ export function orderSystemOf(answers: LaunchpadAnswers | undefined, key: string
   return parseOrderSystemAnswer(answers?.[key]) ?? undefined;
 }
 
+function pickId(value: unknown): string {
+  return typeof value === "string" && ID_RE.test(value) ? value : "";
+}
+
+export function parseGetReadyAnswer(value: unknown): GetReadyAnswer | null {
+  if (!isRecord(value) || value.kind !== "get-ready" || value.version !== 1) return null;
+  const remindAbout = pickId(value.remindAbout);
+  const travelHow = pickId(value.travelHow);
+  const leaveEarly = pickId(value.leaveEarly);
+  const packWhen = pickId(value.packWhen);
+  if (!remindAbout || !travelHow || !leaveEarly || !packWhen) return null;
+  return { kind: "get-ready", version: 1, remindAbout, travelHow, leaveEarly, packWhen };
+}
+
+export function parseWrapUpJobAnswer(value: unknown): WrapUpJobAnswer | null {
+  if (!isRecord(value) || value.kind !== "wrap-up-job" || value.version !== 1) return null;
+  const paymentWhen = pickId(value.paymentWhen);
+  const feedbackQuestion = pickId(value.feedbackQuestion);
+  const trackerWhen = pickId(value.trackerWhen);
+  if (!paymentWhen || !feedbackQuestion || !trackerWhen) return null;
+  return { kind: "wrap-up-job", version: 1, paymentWhen, feedbackQuestion, trackerWhen };
+}
+
+export function parseRecordJobAnswer(value: unknown): RecordJobAnswer | null {
+  if (!isRecord(value) || value.kind !== "record-job" || value.version !== 1 || !Array.isArray(value.jobs)) return null;
+  const jobs: RecordedJob[] = [];
+  for (const raw of value.jobs.slice(0, 20)) {
+    if (!isRecord(raw) || typeof raw.serviceId !== "string" || !ID_RE.test(raw.serviceId)) continue;
+    const paid = typeof raw.paid === "number" ? raw.paid : Number(raw.paid);
+    if (!Number.isFinite(paid) || paid < 0 || paid > 9999) continue;
+    jobs.push({ serviceId: raw.serviceId, paid: Math.round(paid * 100) / 100 });
+  }
+  if (jobs.length === 0) return null;
+  return { kind: "record-job", version: 1, jobs };
+}
+
+export function getReadyOf(answers: LaunchpadAnswers | undefined, key: string): GetReadyAnswer | undefined {
+  return parseGetReadyAnswer(answers?.[key]) ?? undefined;
+}
+
+export function wrapUpJobOf(answers: LaunchpadAnswers | undefined, key: string): WrapUpJobAnswer | undefined {
+  return parseWrapUpJobAnswer(answers?.[key]) ?? undefined;
+}
+
+export function recordJobOf(answers: LaunchpadAnswers | undefined, key: string): RecordJobAnswer | undefined {
+  return parseRecordJobAnswer(answers?.[key]) ?? undefined;
+}
+
 export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string): TellPeopleAnswer | undefined {
   const value = answers?.[key];
   return value?.kind === "tell-people" ? value : undefined;
@@ -687,6 +766,12 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseTellPeopleAnswer(value);
     case "order-system":
       return parseOrderSystemAnswer(value);
+    case "get-ready":
+      return parseGetReadyAnswer(value);
+    case "wrap-up-job":
+      return parseWrapUpJobAnswer(value);
+    case "record-job":
+      return parseRecordJobAnswer(value);
     case "level-up":
       return parseLevelUpAnswer(value);
     default:

@@ -69,12 +69,12 @@ function door(id: string, title: string, step: LaunchpadSalesScreen["step"], ans
   return { id, title, placeholder: false, tasks: [task(`${id}-t1`, title, step, answerKey)] };
 }
 
-/** Level 4 marketing doors for rows 35, 36, and 37. The pitch door stays a placeholder. */
+/** Level 4 marketing doors. The pitch door was removed. Tell people stays. */
 export function salesDoors(): LaunchpadBronze[] {
   return [
     door("l4-s1-b1", "Pick the sales channel(s)", "channels", SALES_CHANNELS_KEY),
     door("l4-s1-b2", "Develop your marketing materials", "materials", MARKETING_MATERIALS_KEY),
-    door("l4-s1-b4", "Tell people about it", "targets", TELL_PEOPLE_KEY),
+    door("l4-s1-b3", "Tell people about it", "targets", TELL_PEOPLE_KEY),
   ];
 }
 

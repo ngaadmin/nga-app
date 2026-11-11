@@ -42,6 +42,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "funding-start",
   "getting-ready",
   "sales",
+  "delivery",
   "picture",
   "level-up",
 ] as const;
@@ -574,6 +575,93 @@ export type LaunchpadPictureScreen = TaskScreenBase & {
   pages: readonly LaunchpadPicturePage[];
 };
 
+export type DeliveryOption = { id: string; label: string };
+
+export type DeliveryStep = "ready" | "wrap" | "record";
+
+/** Rows 38-40. One door, three sections. Copy and options live on the screen. */
+export type LaunchpadDeliveryScreen = TaskScreenBase & {
+  type: "delivery";
+  step: DeliveryStep;
+  answerKey: string;
+  title: string;
+  question: string;
+  /** Earlier answers this door replays. Not stored again. */
+  deliverFrom: string;
+  wrapFrom: string;
+  costsFrom: string;
+  priceFrom: string;
+  servicesFrom: string;
+  joinWord: string;
+  doodles: readonly [string, string, string];
+  playbackTitle: string;
+  ready?: {
+    emptyLabel: string;
+    remindBefore: string;
+    remindAfter: string;
+    aboutBefore: string;
+    aboutAfter: string;
+    aboutOptions: readonly DeliveryOption[];
+    travelBefore: string;
+    travelAfter: string;
+    travelOptions: readonly DeliveryOption[];
+    leaveBefore: string;
+    leaveAfter: string;
+    leaveOptions: readonly DeliveryOption[];
+    packBefore: string;
+    packAfter: string;
+    packOptions: readonly DeliveryOption[];
+    packTitle: string;
+    packSep: string;
+    packEmpty: string;
+    note: string;
+  };
+  wrap?: {
+    emptyLabel: string;
+    proofBefore: string;
+    proofAfter: string;
+    paymentBefore: string;
+    paymentAfter: string;
+    askPayBefore: string;
+    askPayAfter: string;
+    askPayOptions: readonly DeliveryOption[];
+    feedbackBefore: string;
+    feedbackAfter: string;
+    askBefore: string;
+    askAfter: string;
+    askOptions: readonly DeliveryOption[];
+    trackerLine: string;
+    whenBefore: string;
+    whenAfter: string;
+    whenOptions: readonly DeliveryOption[];
+    note: string;
+  };
+  record?: {
+    emptyLabel: string;
+    serviceBefore: string;
+    serviceAfter: string;
+    priceBefore: string;
+    priceAfter: string;
+    paidBefore: string;
+    paidAfter: string;
+    paidHint: string;
+    paidMax: number;
+    costBefore: string;
+    costAfter: string;
+    keptBefore: string;
+    keptAfter: string;
+    lowKeep: string;
+    trackerLine: string;
+    addJob: string;
+    note: string;
+    serviceSuffix: string;
+    paidLead: string;
+    costLead: string;
+    keptLead: string;
+    lineAfter: string;
+  };
+};
+
 /** Rows 35-37. One step per door. Copy and options live on the screen. */
 export type LaunchpadSalesScreen = TaskScreenBase & {
   type: "sales";
@@ -640,6 +728,7 @@ export type LaunchpadTaskScreen =
   | LaunchpadFundingScreen
   | LaunchpadGettingReadyScreen
   | LaunchpadSalesScreen
+  | LaunchpadDeliveryScreen
   | LaunchpadPictureScreen
   | LaunchpadLevelUpScreen;
 

@@ -66,6 +66,7 @@ export default async function TestLaunchpadVenturePage({
     templates?: string;
     sheet?: string;
     workbookLevel?: string;
+    bronze?: string;
   }>;
 }) {
   if (!isVentureTestEnabled()) notFound();
@@ -97,6 +98,7 @@ export default async function TestLaunchpadVenturePage({
       openTemplates={params.templates === "1"}
       openSheet={params.sheet && /^[a-z0-9-]+$/.test(params.sheet) ? params.sheet : null}
       openWorkbookLevel={params.workbookLevel && /^[1-7]$/.test(params.workbookLevel) ? Number(params.workbookLevel) : null}
+      openBronze={params.bronze && /^l\d+-s\d+-b\d+$/.test(params.bronze) ? params.bronze : null}
     />
   );
 }

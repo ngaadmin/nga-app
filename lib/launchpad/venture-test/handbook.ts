@@ -15,6 +15,7 @@ import { keptPerJob, weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/con
 import { workbookView } from "@/lib/launchpad/content/know-your-cost/logic";
 import { AGREE_JOB_KEY, DELIVER_JOB_KEY, FIND_CUSTOMERS_KEY, POLISH_SERVICE_KEY, PRACTICE_RUN_KEY, WRAP_JOB_KEY } from "@/lib/launchpad/content/getting-ready/copy";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
+import { deliverySample } from "@/lib/launchpad/content/delivery/logic";
 import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
 import { SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
@@ -147,6 +148,11 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       out.push({ ...page, kind: "summary", sheet: "budget-split" });
     } else if (page.silver.id === "l4-s2") {
       out.push({ ...page, kind: "summary", sheet: "order-system" });
+    } else if (page.silver.id === "l5-s2") {
+      out.push({ ...page, kind: "summary", sheet: "ready-before" });
+      out.push({ ...page, kind: "summary", sheet: "ready-after" });
+    } else if (page.silver.id === "l5-s3") {
+      out.push({ ...page, kind: "summary", sheet: "job-record" });
     } else if (page.silver.id === "l4-s1") {
       const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
       const sheets = salesWorkbookSheets(progress.answers, name);
@@ -420,6 +426,10 @@ export function withShortcutSampleAnswers(
       for (const b of silver.bronzes)
         for (const t of b.tasks)
           for (const screen of t.screens) {
+            if (screen.type === "delivery" && !next.answers?.[screen.answerKey]) {
+              const sample = deliverySample(screen);
+              if (sample) next = setProgressAnswer(next, screen.answerKey, sample);
+            }
             if (screen.type === "sales" && screen.step === "order" && screen.order && !next.answers?.[screen.answerKey]) {
               const tracker = screen.order.trackerOptions[0]?.id;
               const reminder = screen.order.reminderDefault;

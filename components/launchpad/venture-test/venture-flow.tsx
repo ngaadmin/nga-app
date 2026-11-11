@@ -64,6 +64,7 @@ import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/l
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
+import { DeliveryFlow } from "@/components/launchpad/venture/screens/delivery-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
@@ -132,6 +133,14 @@ export function buildingFloors(progress: VentureTestProgress, floors: readonly L
   }));
 }
 
+function bronzeTaskView(floors: readonly LaunchpadFloor[], bronzeId: string): View | null {
+  for (const floor of floors)
+    for (const silver of floor.silvers)
+      for (const bronze of silver.bronzes)
+        if (bronze.id === bronzeId) return { screen: "workbook", level: floor.level, silverId: silver.id, bronzeId: bronze.id, index: 0 };
+  return null;
+}
+
 function floorAt(floors: readonly LaunchpadFloor[], level: number): LaunchpadFloor {
   const floor = floors.find((f) => f.level === level);
   if (!floor) throw new Error(`Unknown venture floor: ${level}`);
@@ -194,6 +203,7 @@ export function VentureFlow({
   openTemplates = false,
   openSheet = null,
   openWorkbookLevel = null,
+  openBronze = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -211,6 +221,8 @@ export function VentureFlow({
   openSheet?: string | null;
   /** TEST-ONLY `?workbookLevel=<n>`: open the workbook on that level's tab. */
   openWorkbookLevel?: number | null;
+  /** TEST-ONLY `?bronze=<id>`: open that door's task. */
+  openBronze?: string | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -281,6 +293,8 @@ export function VentureFlow({
       shortcut && initialVentureId && shortcutContent?.ok
         ? applyVentureTestShortcut(shortcut, shortcutContent.payload.floors, loadVentureTestProgress(initialVentureId))
         : null;
+    const loaded = initialVentureId ? ventures[initialVentureId] : undefined;
+    const bronzeLanding = openBronze && loaded?.ok ? bronzeTaskView(loaded.payload.floors, openBronze) : null;
     if (applied && initialVentureId && shortcutContent?.ok) {
       const shortcutProgress = withShortcutSampleAnswers(
         applied.progress,
@@ -293,10 +307,18 @@ export function VentureFlow({
       setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
       setVentureId(initialVentureId);
       setProgress(shortcutProgress);
-      go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
-      if (openSheet) setHandbook({ ventureId: initialVentureId, entry: "building", openSheet });
-      else if (openWorkbookLevel) setHandbook({ ventureId: initialVentureId, entry: "building", openLevel: openWorkbookLevel });
-      else if (openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
+      go(bronzeLanding ?? (applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land));
+      if (!bronzeLanding && openSheet) setHandbook({ ventureId: initialVentureId, entry: "building", openSheet });
+      else if (!bronzeLanding && openWorkbookLevel) setHandbook({ ventureId: initialVentureId, entry: "building", openLevel: openWorkbookLevel });
+      else if (!bronzeLanding && openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
+      return;
+    }
+    if (bronzeLanding && initialVentureId && loaded?.ok) {
+      markVentureTestOnboardingSeen(initialVentureId);
+      setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
+      setVentureId(initialVentureId);
+      setProgress(loadVentureTestProgress(initialVentureId));
+      go(bronzeLanding);
       return;
     }
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
@@ -779,6 +801,21 @@ export function VentureFlow({
             onFinish={() => {
               save(completeTask(progress, taskId));
               go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const deliveryScreen = current?.screens.find((s) => s.type === "delivery");
+      if (deliveryScreen && deliveryScreen.type === "delivery" && current) {
+        body = (
+          <DeliveryFlow
+            screen={deliveryScreen}
+            answers={answers}
+            floors={floors}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              forward(setProgressAnswer(progress, deliveryScreen.answerKey, answer), false);
             }}
           />
         );

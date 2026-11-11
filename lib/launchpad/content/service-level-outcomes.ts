@@ -77,21 +77,12 @@ export const SERVICE_FLOOR_STRUCTURE: Readonly<
   4: [
     {
       title: "Marketing your business",
-      bronzes: [
-        "Pick the sales channel(s)",
-        "Develop your marketing materials",
-        "Develop and practice your pitch",
-        "Tell people about it",
-      ],
+      bronzes: ["Pick the sales channel(s)", "Develop your marketing materials", "Tell people about it"],
     },
   ],
   5: [
-    {
-      title: "Plan the work",
-      bronzes: ["Take orders", "Plan and schedule the job", "Tell customers what to expect"],
-    },
-    { title: "Do the job", bronzes: ["Do the job", "Take payment", "Ask for customer feedback"] },
-    { title: "Know your profit", bronzes: ["Record all sales", "Calculate what's left"] },
+    { title: "Do the job", bronzes: ["Get ready for the job", "Wrap up the job"] },
+    { title: "Know your profit", bronzes: ["Record the job and see what's left"] },
   ],
   6: [
     {

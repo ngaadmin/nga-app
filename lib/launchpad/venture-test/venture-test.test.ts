@@ -62,13 +62,13 @@ describe("venture test structure", () => {
       [2, "Planning", 3],
       [3, "Getting Ready", 2],
       [4, "Sales", 2],
-      [5, "Delivery", 3],
+      [5, "Delivery", 2],
       [6, "Budgeting", 1],
       [7, "Growing", 1],
     ]);
     expect(FLOORS[6]!.silvers.map((s) => s.title)).toEqual(["Level Up"]);
     expect(FLOORS[6]!.silvers[0]!.bronzes.map((bronze) => bronze.title)).toEqual(["Reflect", "Improve", "Grow"]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
     expect(L1.gold.title).toBe(
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
     );
@@ -212,8 +212,8 @@ describe("building floor access (tap any floor)", () => {
       const sales = FLOORS.find((floor) => floor.level === 4)!;
       expect(silverStates(progress, FLOORS, sales)).toEqual(["current", "current"]);
       const salesDoors = bronzeStates(progress, sales.silvers[0]!, true, true);
-      expect(salesDoors.filter((state) => state === "current").length).toBeGreaterThan(1);
-      expect(salesDoors.some((state) => state === "locked")).toBe(true);
+      expect(salesDoors.filter((state) => state === "current").length).toBe(sales.silvers[0]!.bronzes.length);
+      expect(salesDoors.some((state) => state === "locked")).toBe(false);
       const delivery = FLOORS.find((floor) => floor.level === 5)!;
       expect(silverStates(progress, FLOORS, delivery).every((state) => state === "current")).toBe(true);
       const budgeting = FLOORS.find((floor) => floor.level === 6)!;

@@ -20,6 +20,8 @@ const PAYLOAD_FILES = new Set([
   "lib/launchpad/content/budgeting/copy.ts",
   "lib/launchpad/content/budgeting/screens.ts",
   "lib/launchpad/content/budgeting/workbook.ts",
+  "lib/launchpad/content/delivery/copy.ts",
+  "lib/launchpad/content/delivery/screens.ts",
   "lib/launchpad/content/sales/copy.ts",
   "lib/launchpad/content/sales/screens.ts",
   "lib/launchpad/content/sales/workbook-sheets.ts",

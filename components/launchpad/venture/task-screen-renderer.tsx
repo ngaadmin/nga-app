@@ -16,6 +16,7 @@ import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/l
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
+import { DeliveryFlow } from "@/components/launchpad/venture/screens/delivery-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 
@@ -50,6 +51,7 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
     <GettingReadyFlow screen={screen} floors={[]} businessName="Paws & Paths" onExit={() => {}} onFinish={() => {}} />
   ),
   sales: (screen) => <SalesFlow screen={screen} floors={[]} onExit={() => {}} onFinish={() => {}} />,
+  delivery: (screen) => <DeliveryFlow screen={screen} floors={[]} onExit={() => {}} onFinish={() => {}} />,
   picture: (screen) => <PictureFlow screen={screen} onExit={() => {}} onFinish={() => {}} />,
   "level-up": (screen) => <LevelUpFlow screen={screen} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />,
 };

@@ -278,7 +278,7 @@ function checkLevelUp(screen: Obj, where: string): void {
   const grow = content.grow;
   if (!isObj(reflect) || !isObj(improve) || !isObj(grow)) fail(`${where} is missing Reflect, Improve, or Grow copy.`);
   for (const field of ["context", "guidance", "question"] as const) text(reflect[field], `${where} reflect ${field}`);
-  for (const field of ["context", "guidance", "question", "nailedTitle", "nailedLine", "planContext", "planGuidance", "starting", "startFieldLabel"] as const) {
+  for (const field of ["context", "guidance", "question", "nailedTitle", "nailedLine", "planContext", "planGuidance", "starting", "period", "startFieldLabel"] as const) {
     text(improve[field], `${where} improve ${field}`);
   }
   if (!String(improve.nailedLine).includes("{section}")) fail(`${where} improve nailedLine must include {section}.`);
@@ -292,6 +292,7 @@ function checkLevelUp(screen: Obj, where: string): void {
     "serviceLabel",
     "success",
     "tryStarting",
+    "period",
     "closerHeadline",
     "closerContext",
     "calendarNote",

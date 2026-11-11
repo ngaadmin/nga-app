@@ -43,6 +43,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
       planContext: "A plan with dates is a plan you'll actually do. Here's when you'll start each improvement.",
       planGuidance: "Check your plan. Tap a start date if you want to change it.",
       starting: "{label}, starting",
+      period: ".",
       startFieldLabel: "Start date",
       startOptions: [
         { id: "this-week", label: "this week" },
@@ -58,6 +59,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
       serviceLabel: "Grow your service",
       success: "What will success look like?",
       tryStarting: "I will try it starting",
+      period: ".",
       closerHeadline: "See you in three months.",
       closerContext: "Checking in every three months shows you how your business is going. Set a reminder so you don't forget.",
       calendarNote: "NextGenAchiever$ check-in: review what worked, what to fix, and where to grow.",

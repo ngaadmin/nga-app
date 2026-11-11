@@ -216,7 +216,7 @@ export function LevelUpFlow({
               options={content.improve.startOptions}
               onChange={(id) => setDraft({ ...draft, starts: { ...draft.starts, [item.id]: id as ImproveStartId } })}
             />
-            .
+            {content.improve.period}
           </p>
         ))}
       </>
@@ -269,7 +269,7 @@ export function LevelUpFlow({
             options={content.grow.startOptions}
             onChange={(id) => setDraft({ ...draft, start: id as StartId })}
           />
-          .
+          {content.grow.period}
         </p>
         <ScreenPrompt tone="section" flush className="!mt-2">{content.grow.success}</ScreenPrompt>
         {idea.success.map((option) => (

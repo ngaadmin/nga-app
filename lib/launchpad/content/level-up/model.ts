@@ -61,6 +61,8 @@ export type LaunchpadLevelUpContent = {
     planGuidance: string;
     /** `{label}` is the statement. The start menu follows this phrase. */
     starting: string;
+    /** Closes the start sentence after the menu. */
+    period: string;
     startFieldLabel: string;
     startOptions: readonly { id: ImproveStartId; label: string }[];
   };
@@ -72,6 +74,8 @@ export type LaunchpadLevelUpContent = {
     serviceLabel: string;
     success: string;
     tryStarting: string;
+    /** Closes the start sentence after the menu. */
+    period: string;
     closerHeadline: string;
     closerContext: string;
     calendarNote: string;

@@ -467,6 +467,44 @@ export function withShortcutSampleAnswers(
                 next = setProgressAnswer(next, screen.answerKey, { kind: "order-system", version: 1, tracker, reminder });
               }
             }
+            if (screen.type === "sales" && screen.step === "channels" && screen.channels && screen.whereGroups && !next.answers?.[screen.answerKey]) {
+              const wanted = ["flyers", "friends", "online", "cards"];
+              const selected = wanted.filter((id) => screen.channels?.some((channel) => channel.id === id));
+              const where: Record<string, string[]> = {};
+              for (const group of screen.whereGroups) {
+                if (!selected.includes(group.channelId)) continue;
+                const picked = group.channelId === "friends"
+                  ? group.options.filter((option) => option.id === "see" || option.id === "message").map((option) => option.id)
+                  : group.options.slice(0, 1).map((option) => option.id);
+                if (picked.length) where[group.channelId] = picked;
+              }
+              if (selected.length) next = setProgressAnswer(next, screen.answerKey, { kind: "sales-channels", version: 1, selected, where });
+            }
+            if (screen.type === "sales" && screen.step === "materials" && !next.answers?.[screen.answerKey]) {
+              const pieces: Record<string, string> = {};
+              for (const field of screen.pieceFields ?? []) {
+                const option = field.options[0]?.id;
+                if (option) pieces[field.id] = option;
+              }
+              const hook = screen.hooks?.[0]?.id;
+              const proof = screen.proofs?.[0]?.id;
+              next = setProgressAnswer(next, screen.answerKey, {
+                kind: "marketing-materials",
+                version: 1,
+                mainService: "dog-walking",
+                secondService: "grooming",
+                ...(hook ? { hook } : {}),
+                ...(proof ? { proof } : {}),
+                pieces,
+              });
+            }
+            if (screen.type === "sales" && screen.step === "targets" && !next.answers?.[screen.answerKey]) {
+              next = setProgressAnswer(next, screen.answerKey, {
+                kind: "tell-people",
+                version: 1,
+                counts: { flyers: 20, see: 8, message: 6, days: 7, ask: 3, cards: 20, stores: 3 },
+              });
+            }
             if (screen.type !== "know-your-cost" || next.answers?.[screen.answerKey]) continue;
             next = setProgressAnswer(next, screen.answerKey, sampleCostsAnswer(screen, floors, next.answers));
           }

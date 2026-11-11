@@ -931,6 +931,25 @@ describe("template and L4 workbook placement", () => {
     expect(screen.queryByRole("heading", { name: "My order system" })).toBeNull();
   });
 
+  it("keeps the six Level 4 sales workbook pages", () => {
+    const progress = withShortcutSampleAnswers(through("l4-s2"), FLOORS, "dog-walking", "Happy Paws");
+    const sheets = handbookPages(progress, FLOORS).filter((page) => page.level === 4).map((page) => page.sheet);
+    expect(sheets.filter((sheet) => sheet === "sales-where" || sheet?.startsWith("sales-market-") || sheet === "sales-tell")).toEqual([
+      "sales-where",
+      "sales-market-1",
+      "sales-market-2",
+      "sales-market-3",
+      "sales-market-4",
+      "sales-tell",
+    ]);
+    render(<Harness entry="building" initial={progress} />);
+    turnTo("sales-where");
+    expect(screen.getByText("Where I'll use my channels")).toBeTruthy();
+    turnTo("sales-tell");
+    expect(screen.getByText("How I'll tell people about it")).toBeTruthy();
+    expect(document.querySelector("[data-paper-scroll] input, [data-paper-scroll] textarea")).toBeNull();
+  });
+
   it("puts My order system on the L4 tab after the marketing pages", () => {
     const progress = setProgressAnswer(
       setProgressAnswer(through("l4-s2"), "sales_channels", {

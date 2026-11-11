@@ -116,6 +116,7 @@ function checkTemplatePages(value: unknown[], where: string): void {
     if (!isObj(page) || typeof page.id !== "string" || !NODE_ID_RE.test(page.id) || seen.has(page.id)) fail(`${pw} has no valid id.`);
     seen.add(page.id);
     text(page.title, `${pw} title`);
+    if (page.kind === "poster") return;
     text(page.scribble, `${pw} scribble`);
     for (const field of ["lead", "subhead", "intro", "tip", "jobTitle", "wrapTitle"] as const) {
       text(page[field], `${pw} ${field}`, true);

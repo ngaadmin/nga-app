@@ -10,14 +10,16 @@ export type WorkbookTemplateField = { id: string; label: string; wide?: boolean 
 export type WorkbookTemplatePage = {
   id: string;
   title: string;
-  scribble: string;
+  /** Poster pages use the templates.poster block. Form pages are write-in sheets. */
+  kind?: "poster";
+  scribble?: string;
   lead?: string;
   subhead?: string;
   intro?: string;
   tip?: string;
   jobTitle?: string;
   wrapTitle?: string;
-  fields: readonly WorkbookTemplateField[];
+  fields?: readonly WorkbookTemplateField[];
   wrapFields?: readonly WorkbookTemplateField[];
   ticks?: readonly WorkbookTemplateField[];
 };
@@ -40,7 +42,7 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
   },
   {
     id: "taking-order-2",
-    title: "Taking a customer order",
+    title: "Customer booking",
     scribble: "wallet",
     wrapTitle: "Wrap-up",
     fields: [
@@ -53,6 +55,21 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
       { id: "proof", label: "How I'll show proof" },
       { id: "payment", label: "How I'll collect payment" },
       { id: "feedback", label: "How I'll ask for feedback" },
+    ],
+  },
+  {
+    id: "poster",
+    kind: "poster",
+    title: "Here's your draft poster",
+  },
+  {
+    id: "business-card",
+    title: "Business card",
+    scribble: "paw",
+    fields: [
+      { id: "cardName", label: "Business name" },
+      { id: "cardOffer", label: "What I offer", wide: true },
+      { id: "cardContact", label: "How to get in touch", wide: true },
     ],
   },
   {

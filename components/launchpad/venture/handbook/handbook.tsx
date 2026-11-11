@@ -122,8 +122,7 @@ export function Handbook({
   const [templatesOpen, setTemplatesOpen] = useState(initialTemplates);
   const [templatePage, setTemplatePage] = useState(0);
   const poster = s.templates.poster;
-  const formPages = s.templates.pages ?? [];
-  const templatePages = poster ? [{ id: "poster" }, ...formPages] : formPages;
+  const templatePages = s.templates.pages ?? [];
   const templateAt = Math.min(templatePage, Math.max(0, templatePages.length - 1));
   const pagingTemplates = templatesOpen && templatePages.length > 0;
   const [index, setIndex] = useState(() => {
@@ -250,10 +249,10 @@ export function Handbook({
                 <TemplateBlanks on={scopeLevel != null}>
                   {templatesOpen ? (
                     pagingTemplates ? (
-                      poster && templateAt === 0 ? (
+                      templatePages[templateAt]?.kind === "poster" && poster ? (
                         <PosterTemplatePage poster={poster} />
-                      ) : (
-                        <WorkbookTemplatePage key={formPages[poster ? templateAt - 1 : templateAt]!.id} page={formPages[poster ? templateAt - 1 : templateAt]!} editable={entry === "building" && Boolean(setAnswer)} />
+                      ) : templatePages[templateAt]?.kind === "poster" ? null : (
+                        <WorkbookTemplatePage key={templatePages[templateAt]!.id} page={templatePages[templateAt]!} editable={entry === "building" && Boolean(setAnswer)} />
                       )
                     ) : <TemplatesComingSoon />
                   ) : page ? (
@@ -262,7 +261,7 @@ export function Handbook({
                 </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
-            {pagingTemplates && !(poster && templateAt === 0) ? (
+            {pagingTemplates && templatePages[templateAt]?.kind !== "poster" ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel({ number: templateAt + 1, sheet: templatePages[templateAt]!.id, silver: { id: "templates" } })}
               </p>

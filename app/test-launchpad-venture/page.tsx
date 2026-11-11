@@ -65,6 +65,7 @@ export default async function TestLaunchpadVenturePage({
     cohort?: string;
     templates?: string;
     sheet?: string;
+    workbookLevel?: string;
   }>;
 }) {
   if (!isVentureTestEnabled()) notFound();
@@ -95,6 +96,7 @@ export default async function TestLaunchpadVenturePage({
       cohort={params.cohort === "explorer" || params.cohort === "pathfinder" || params.cohort === "maverick" ? params.cohort : null}
       openTemplates={params.templates === "1"}
       openSheet={params.sheet && /^[a-z0-9-]+$/.test(params.sheet) ? params.sheet : null}
+      openWorkbookLevel={params.workbookLevel && /^[1-7]$/.test(params.workbookLevel) ? Number(params.workbookLevel) : null}
     />
   );
 }

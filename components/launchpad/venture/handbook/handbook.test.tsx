@@ -610,11 +610,13 @@ describe("L7 weekly focus and the Templates tab", () => {
       templates: {
         ...LAUNCHPAD_SURFACE_COPY.templates,
         poster: undefined,
-        pages: LAUNCHPAD_SURFACE_COPY.templates.pages.map((page, index) =>
-          index === 0
-            ? { ...page, title: "Order sheet", fields: page.fields.map((field) => (field.id === "name" ? { ...field, label: "Owner name" } : field)) }
-            : page,
-        ),
+        pages: LAUNCHPAD_SURFACE_COPY.templates.pages
+          .filter((page) => page.kind !== "poster" && page.id !== "business-card")
+          .map((page, index) =>
+            index === 0
+              ? { ...page, title: "Order sheet", fields: (page.fields ?? []).map((field) => (field.id === "name" ? { ...field, label: "Owner name" } : field)) }
+              : page,
+          ),
       },
     };
     const { unmount } = render(
@@ -648,8 +650,7 @@ describe("L7 weekly focus and the Templates tab", () => {
     unmount();
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     fireEvent.click(screen.getByRole("button", { name: "Templates" }));
-    expect(screen.getByRole("heading", { name: "Here's your draft poster" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "Taking a customer order" })).toBeTruthy();
     expect((screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement).disabled).toBe(true);
   });
 
@@ -674,6 +675,9 @@ describe("L7 weekly focus and the Templates tab", () => {
       </SurfaceCopyProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    for (let step = 0; step < 6 && !screen.queryByRole("heading", { name: "Your poster draft" }); step += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    }
     expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
     expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
@@ -725,6 +729,47 @@ describe("L4 My order system workbook page", () => {
     expect(screen.getByText(spec.order.templateStrong).className).toContain("text-[#0CC1E0]");
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
     expect(document.querySelector("[data-order-workbook]")?.textContent).not.toMatch(/best choice/);
+  });
+});
+
+describe("template and L4 workbook placement", () => {
+  it("orders the Templates tab by when a learner reaches each page", () => {
+    const pages = LAUNCHPAD_SURFACE_COPY.templates.pages;
+    const posterAt = pages.findIndex((page) => page.kind === "poster");
+    expect(pages.map((page) => page.title)).toEqual([
+      "Taking a customer order",
+      "Customer booking",
+      "Here's your draft poster",
+      "Business card",
+      "My order booking form",
+    ]);
+    expect(posterAt).toBe(2);
+    expect(pages.slice(0, posterAt).every((page) => page.kind !== "poster")).toBe(true);
+    render(<Harness entry="building" initial={through("l1-s1")} />);
+    fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    for (const title of pages.map((page) => (page.kind === "poster" ? LAUNCHPAD_SURFACE_COPY.templates.poster.heading : page.title))) {
+      expect(screen.getByRole("heading", { name: title })).toBeTruthy();
+      if (title !== "My order booking form") fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    }
+    expect(screen.queryByRole("heading", { name: "My order system" })).toBeNull();
+  });
+
+  it("puts My order system on the L4 tab after the marketing pages", () => {
+    const progress = setProgressAnswer(
+      setProgressAnswer(through("l4-s2"), "sales_channels", {
+        kind: "sales-channels",
+        version: 1,
+        selected: ["cards"],
+        where: { cards: ["cafe"] },
+      }),
+      "order_system",
+      { kind: "order-system", version: 1, tracker: "calendar", reminder: "night-before" },
+    );
+    const sheets = handbookPages(progress, FLOORS).filter((page) => page.level === 4).map((page) => page.sheet);
+    const market = sheets.findIndex((sheet) => sheet?.startsWith("sales-market"));
+    const order = sheets.indexOf("order-system");
+    expect(market).toBeGreaterThanOrEqual(0);
+    expect(order).toBeGreaterThan(market);
   });
 });
 

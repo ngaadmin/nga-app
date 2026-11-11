@@ -319,7 +319,7 @@ export function TemplatesComingSoon() {
 const TEMPLATE_HINT = "font-sans text-[16px] font-normal leading-[26px] text-[#4A5568]";
 const TEMPLATE_LINE = "border-b-[1.5px] border-[#8390AF] bg-transparent font-sans text-[16px] leading-[26px] text-[#19347D] outline-none";
 
-function templateScribble(name: string): ScribbleName | undefined {
+function templateScribble(name?: string): ScribbleName | undefined {
   if (name === "beagle" || name === "wallet" || name === "calendar" || name === "growth" || name === "star" || name === "sparkle") return name;
   return undefined;
 }
@@ -418,7 +418,7 @@ export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplat
       {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
       {page.jobTitle ? <h3 className={`${FREDOKA_HEADING_CLASS} mt-3 text-[18px] font-bold leading-6 text-[#0CC1E0]`}>{page.jobTitle}</h3> : null}
       <div className="mt-2">
-        {page.fields.map((field) => (
+        {(page.fields ?? []).map((field) => (
           <TemplateWriteIn key={field.id} field={field} value={text(field.id)} editable={editable} compact={compact} onChange={(value) => write(field.id, value)} />
         ))}
       </div>

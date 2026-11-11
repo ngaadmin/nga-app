@@ -193,6 +193,7 @@ export function VentureFlow({
   cohort = null,
   openTemplates = false,
   openSheet = null,
+  openWorkbookLevel = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -208,6 +209,8 @@ export function VentureFlow({
   openTemplates?: boolean;
   /** TEST-ONLY `?sheet=<id>`: open the workbook on that page. */
   openSheet?: string | null;
+  /** TEST-ONLY `?workbookLevel=<n>`: open the workbook on that level's tab. */
+  openWorkbookLevel?: number | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -292,6 +295,7 @@ export function VentureFlow({
       setProgress(shortcutProgress);
       go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
       if (openSheet) setHandbook({ ventureId: initialVentureId, entry: "building", openSheet });
+      else if (openWorkbookLevel) setHandbook({ ventureId: initialVentureId, entry: "building", openLevel: openWorkbookLevel });
       else if (openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
       return;
     }

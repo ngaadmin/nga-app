@@ -9,7 +9,7 @@ Two passes, same 31 pages, none of them the generic "What I did" placeholder:
 
 `l2-s1` and `l2-s3` are stored with page kind `placeholder`, but the renderer does not use the generic placeholder. `l2-s1` draws The product and its buyers. `l2-s3` draws the funding sheet. `l3-s1` has no page of its own. Its answers are played on `ready-a` and `ready-b`.
 
-The Level 4 sales shortcut sample (the change that makes `sales-where`, `sales-market-1` through `sales-market-4`, and `sales-tell` show up under `?complete=all`) is already on the branch from `8371f05`. Jasper has not confirmed it. This run does not change that behavior.
+The Level 4 sales shortcut sample fills `sales_channels`, `marketing_materials`, and `tell_people` only when those answers are empty, so `?complete=all` shows `sales-where`, `sales-market-1` through `sales-market-4`, and `sales-tell`. Cath approved that sample. A saved answer is left as the learner wrote it.
 
 ## A. Every capturing screen to its playback
 

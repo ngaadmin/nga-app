@@ -396,6 +396,17 @@ export function handbookBusinessName(progress: VentureTestProgress, floors: read
   return fallback;
 }
 
+/** Service ids from the Level 1 offer screen, so sales samples use payload ids. */
+function payloadServiceIds(floors: readonly LaunchpadFloor[]): string[] {
+  for (const floor of floors)
+    for (const silver of floor.silvers)
+      for (const bronze of silver.bronzes)
+        for (const task of bronze.tasks)
+          for (const screen of task.screens)
+            if (screen.type === "choice-capture" && screen.answerKey === "l1-offer") return screen.options.map((option) => option.id);
+  return [];
+}
+
 /**
  * TEST-ONLY. A `?complete=` shortcut marks silvers done without the learner
  * ever answering anything. So the wrap-ups and handbook pages have something
@@ -470,29 +481,45 @@ export function withShortcutSampleAnswers(
             if (screen.type === "sales" && screen.step === "channels" && screen.channels && screen.whereGroups && !next.answers?.[screen.answerKey]) {
               const wanted = ["flyers", "friends", "online", "cards"];
               const selected = wanted.filter((id) => screen.channels?.some((channel) => channel.id === id));
+              const preferredWhere: Record<string, readonly string[]> = {
+                flyers: ["school", "shop"],
+                friends: ["see", "message"],
+                online: ["page"],
+                cards: ["cafe"],
+              };
               const where: Record<string, string[]> = {};
               for (const group of screen.whereGroups) {
                 if (!selected.includes(group.channelId)) continue;
-                const picked = group.channelId === "friends"
-                  ? group.options.filter((option) => option.id === "see" || option.id === "message").map((option) => option.id)
-                  : group.options.slice(0, 1).map((option) => option.id);
+                const preferred = (preferredWhere[group.channelId] ?? []).filter((id) => group.options.some((option) => option.id === id));
+                const picked = preferred.length ? preferred : group.options.slice(0, 1).map((option) => option.id);
                 if (picked.length) where[group.channelId] = picked;
               }
               if (selected.length) next = setProgressAnswer(next, screen.answerKey, { kind: "sales-channels", version: 1, selected, where });
             }
             if (screen.type === "sales" && screen.step === "materials" && !next.answers?.[screen.answerKey]) {
+              const preferredPiece: Record<string, string> = {
+                "flyer-book": "message",
+                "flyer-extra": "friendly",
+                "verbal-close": "book",
+                "message-close": "book",
+                "online-close": "reply",
+              };
               const pieces: Record<string, string> = {};
               for (const field of screen.pieceFields ?? []) {
-                const option = field.options[0]?.id;
+                const preferred = preferredPiece[field.id];
+                const option = field.options.find((item) => item.id === preferred)?.id ?? field.options[0]?.id;
                 if (option) pieces[field.id] = option;
               }
-              const hook = screen.hooks?.[0]?.id;
-              const proof = screen.proofs?.[0]?.id;
+              const services = payloadServiceIds(floors);
+              const hook = screen.hooks?.find((item) => item.id === "too-busy")?.id ?? screen.hooks?.[0]?.id;
+              const proof = screen.proofs?.find((item) => item.id === "photo")?.id ?? screen.proofs?.[0]?.id;
+              const mainService = services.find((id) => id === "dog-walking") ?? services[0];
+              const secondService = services.find((id) => id === "grooming") ?? services[1];
               next = setProgressAnswer(next, screen.answerKey, {
                 kind: "marketing-materials",
                 version: 1,
-                mainService: "dog-walking",
-                secondService: "grooming",
+                ...(mainService ? { mainService } : {}),
+                ...(secondService ? { secondService } : {}),
                 ...(hook ? { hook } : {}),
                 ...(proof ? { proof } : {}),
                 pieces,

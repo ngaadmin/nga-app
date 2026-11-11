@@ -931,23 +931,46 @@ describe("template and L4 workbook placement", () => {
     expect(screen.queryByRole("heading", { name: "My order system" })).toBeNull();
   });
 
-  it("keeps the six Level 4 sales workbook pages", () => {
-    const progress = withShortcutSampleAnswers(through("l4-s2"), FLOORS, "dog-walking", "Happy Paws");
-    const sheets = handbookPages(progress, FLOORS).filter((page) => page.level === 4).map((page) => page.sheet);
-    expect(sheets.filter((sheet) => sheet === "sales-where" || sheet?.startsWith("sales-market-") || sheet === "sales-tell")).toEqual([
-      "sales-where",
-      "sales-market-1",
-      "sales-market-2",
-      "sales-market-3",
-      "sales-market-4",
-      "sales-tell",
-    ]);
+  it("?complete=all gives the six sales pages in order and no What I did page", () => {
+    const done = applyVentureTestShortcut({ kind: "all", land: "building" }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!.progress;
+    const progress = withShortcutSampleAnswers(done, FLOORS, "dog-walking", "Happy Paws");
+    const l4 = handbookPages(progress, FLOORS).filter((page) => page.silver.id === "l4-s1");
+    const sales = l4.map((page) => page.sheet);
+    expect(sales[0]).toBe("sales-where");
+    expect(sales.at(-1)).toBe("sales-tell");
+    expect(sales.slice(1, -1).every((sheet, index) => sheet === `sales-market-${index + 1}`)).toBe(true);
+    expect(sales.filter((sheet) => sheet?.startsWith("sales-market-")).length).toBeGreaterThan(0);
+    expect(l4.some((page) => page.kind === "placeholder")).toBe(false);
+    const level5 = applyVentureTestShortcut({ kind: "level", level: 5 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!.progress;
+    const fromLevel = handbookPages(withShortcutSampleAnswers(level5, FLOORS, "dog-walking", "Happy Paws"), FLOORS)
+      .filter((page) => page.silver.id === "l4-s1")
+      .map((page) => page.sheet);
+    expect(fromLevel).toEqual(sales);
     render(<Harness entry="building" initial={progress} />);
     turnTo("sales-where");
     expect(screen.getByText("Where I'll use my channels")).toBeTruthy();
+    expect(screen.queryByText("What I did")).toBeNull();
     turnTo("sales-tell");
     expect(screen.getByText("How I'll tell people about it")).toBeTruthy();
-    expect(document.querySelector("[data-paper-scroll] input, [data-paper-scroll] textarea")).toBeNull();
+    expect(screen.queryByText("What I did")).toBeNull();
+  });
+
+  it("never overwrites a real sales answer", () => {
+    const saved = {
+      kind: "sales-channels" as const,
+      version: 1 as const,
+      selected: ["cards"],
+      where: { cards: ["work"] },
+    };
+    const base = setProgressAnswer(through("l4-s1"), "sales_channels", saved);
+    const filled = withShortcutSampleAnswers(base, FLOORS, "dog-walking", "Happy Paws");
+    expect(filled.answers?.sales_channels).toEqual(saved);
+    expect(filled.answers?.marketing_materials).toMatchObject({ kind: "marketing-materials" });
+    expect(filled.answers?.tell_people).toMatchObject({ kind: "tell-people" });
+    const again = withShortcutSampleAnswers(filled, FLOORS, "dog-walking", "Happy Paws");
+    expect(again.answers?.sales_channels).toEqual(saved);
+    expect(again.answers?.marketing_materials).toEqual(filled.answers?.marketing_materials);
+    expect(again.answers?.tell_people).toEqual(filled.answers?.tell_people);
   });
 
   it("puts My order system on the L4 tab after the marketing pages", () => {

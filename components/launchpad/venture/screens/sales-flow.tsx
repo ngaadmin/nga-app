@@ -61,8 +61,10 @@ function ChannelsStep({
   const pages = useMemo(() => [[] as string[], ...(screen.wherePages ?? []).map((ids) => [...ids])], [screen.wherePages]);
   const total = pages.length;
   const current = (pages[Math.min(page, total - 1)] ?? []).filter((id) => selected.includes(id));
+  const known = new Set((screen.channels ?? []).map((channel) => channel.id));
+  const liveSelected = selected.filter((id) => known.has(id));
   const ready = page === 0
-    ? selected.some((id) => id !== "tbc")
+    ? liveSelected.length > 0
     : current.every((id) => (where[id] ?? []).length > 0 || extra[id]?.trim());
   const finish = () => {
     if (!ready) return;
@@ -70,7 +72,9 @@ function ChannelsStep({
       setPage(page + 1);
       return;
     }
-    onFinish({ kind: "sales-channels", version: 1, selected, where, ...(Object.keys(extra).length ? { whereExtra: extra } : {}) });
+    const keptWhere = Object.fromEntries(Object.entries(where).filter(([id]) => known.has(id)));
+    const keptExtra = Object.fromEntries(Object.entries(extra).filter(([id]) => known.has(id) && extra[id]?.trim()));
+    onFinish({ kind: "sales-channels", version: 1, selected: liveSelected, where: keptWhere, ...(Object.keys(keptExtra).length ? { whereExtra: keptExtra } : {}) });
   };
   return (
     <LessonSurface

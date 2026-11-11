@@ -218,7 +218,6 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   const sheets: ScriptedSheet[] = [];
   if (sales && sales.selected.length > 0) {
     const lines = sales.selected.flatMap((id) => {
-      if (id === "tbc") return [];
       const channel = CHANNELS.find((row) => row.id === id);
       const phrases = whereSentences(id, sales.where[id] ?? [], sales.whereExtra?.[id]);
       if (!channel || phrases.length === 0) return [];

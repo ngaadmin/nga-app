@@ -262,6 +262,31 @@ describe("Level Up screens", () => {
     }
   });
 
+  it("shows a payload edit of the closer heading and the shortest of mixed picks", () => {
+    const edited = structuredClone(grow);
+    edited.content.grow.closerHeadline = "Come back in {period}.";
+    const answer = {
+      kind: "level-up" as const,
+      version: 1 as const,
+      selected: [],
+      picks: {},
+      pace: {},
+      improvePlan: [],
+      ideas: ["referral", "prepaid"],
+      growPlans: [
+        { idea: "referral", options: ["free-walk"], when: "two-weeks", successCount: 2, checkIn: "three-months", checkInDate: "February 11, 2027" },
+        { idea: "prepaid", options: ["subscription"], when: "in-a-month", successCount: 2, checkIn: "two-months", checkInDate: "January 11, 2027" },
+      ],
+    };
+    render(<LevelUpFlow screen={edited} answers={{ "l7-grow": answer }} today={new Date(2026, 10, 11)} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Come back in two weeks.")).toBeTruthy();
+    expect(screen.queryByText("See you in two weeks.")).toBeNull();
+    expect(screen.getByText("Your next check-in: November 25, 2026")).toBeTruthy();
+  });
+
   it("shows a payload edit of a bundles lead-in", () => {
     const edited = structuredClone(grow);
     const bundles = edited.content.grow.ideas.find((idea) => idea.id === "bundle");
@@ -323,11 +348,11 @@ describe("Level Up screens", () => {
     expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 3")).toBeTruthy();
-    expect(screen.getByText("Your next check-in: February 10, 2027")).toBeTruthy();
+    expect(screen.getByText("See you in this week.")).toBeTruthy();
+    expect(screen.getByText("Your next check-in: November 17, 2026")).toBeTruthy();
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
-    expect(screen.getByText("See you in three months.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("November 17, 2026"));
     expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
     expect(screen.getByRole("status").textContent).toBe("Copied");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -443,7 +468,7 @@ describe("Level Up screens", () => {
     expect(screen.getByText("Section 1 of 2")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("See you in three months.")).toBeTruthy();
+    expect(screen.getByText("Checking in every three months shows you how your business is going. Set a reminder so you don't forget.")).toBeTruthy();
     expect(screen.queryByText("Select at least one.")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish.mock.calls[0]?.[0].ideas).toEqual(["referral"]);

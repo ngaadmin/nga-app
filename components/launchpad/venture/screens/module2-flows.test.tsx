@@ -29,7 +29,7 @@ describe("Decide what to sell chips", () => {
     expect(screen.queryByText(/bronze|gold|silver/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "30-minute walk" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: "Dog Training" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Dog training" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Add another service" })).toBeNull();
     expect(packageServiceId("overnight-stay")).toBe("dog-sitting");
     expect(packageServiceId("30-minute-walk")).toBe("dog-walking");

@@ -18,7 +18,7 @@ const costs: CostsAnswer = {
   startup: { marketing: [{ id: "setup", label: "Setup", amount: sample.startup }], starterGear: [], done: true },
   ongoing: [
     { serviceId: "dog-walking", label: "Dog walking", lines: [{ id: "restock", label: "Restock", amount: sample.walk.cost }], done: true },
-    { serviceId: "dog-training", label: "Dog Training", lines: [{ id: "restock", label: "Restock", amount: sample.training.cost }], done: true },
+    { serviceId: "dog-training", label: "Dog training", lines: [{ id: "restock", label: "Restock", amount: sample.training.cost }], done: true },
   ],
 };
 
@@ -34,7 +34,7 @@ describe("Set the price", () => {
       />,
     );
     fireEvent.change(screen.getByRole("textbox", { name: "Price for Dog walking" }), { target: { value: "15" } });
-    fireEvent.change(screen.getByRole("textbox", { name: "Price for Dog Training" }), { target: { value: "25" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Price for Dog training" }), { target: { value: "25" } });
     expect(screen.getByText("You keep $14.60")).toBeTruthy();
     expect(screen.getByText("You keep $24.45")).toBeTruthy();
     expect(screen.queryByText(/I give|charity share|donate/i)).toBeNull();
@@ -69,7 +69,7 @@ describe("Jobs to cover costs", () => {
     expect(walking.getAttribute("data-service-tile-layout")).toBe("row");
     for (let i = 0; i < sample.walksPerWeek; i += 1) fireEvent.click(within(walking).getByRole("button", { name: "More Dog walking jobs" }));
     const training = document.querySelector("[data-service-card='dog-training']") as HTMLElement;
-    fireEvent.click(within(training).getByRole("button", { name: "More Dog Training jobs" }));
+    fireEvent.click(within(training).getByRole("button", { name: "More Dog training jobs" }));
     expect(document.querySelector("[data-weekly-keep]")?.textContent).toBe("$68.25");
     expect(document.querySelector("[data-weeks-needed]")?.textContent).toBe(`${sample.weeks} weeks`);
     expect(document.querySelector("[data-startup-total]")?.textContent).toBe("$80");

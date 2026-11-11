@@ -67,7 +67,19 @@ export type LevelUpIdea = {
   };
 };
 
-export type GrowChoice = { id: string; label: string; months?: number };
+export type GrowChoice = {
+  id: string;
+  label: string;
+  /** Calendar months until this pick. */
+  months?: number;
+  /** Whole days until this pick, when it is shorter than a month. */
+  days?: number;
+  /**
+   * Words that fill `{period}` in the closer heading. No leading "in",
+   * so "See you in {period}." does not become "in in".
+   */
+  period?: string;
+};
 
 /** Shared by the Reflect, Improve, and Grow screens of one Level Up silver. */
 export type LaunchpadLevelUpContent = {
@@ -172,6 +184,57 @@ export function paceFor(content: LaunchpadLevelUpContent, picks: Readonly<Record
 /** Today plus three calendar months. 10 Nov 2026 becomes 10 Feb 2027. */
 export function addMonths(today: Date, months: number): Date {
   return new Date(today.getFullYear(), today.getMonth() + months, today.getDate());
+}
+
+export function addDays(today: Date, days: number): Date {
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() + days);
+}
+
+function spanDays(option: GrowChoice): number | null {
+  if (typeof option.days === "number" && option.days > 0) return option.days;
+  if (typeof option.months === "number" && option.months > 0) return option.months * 30;
+  return null;
+}
+
+/** Heading word for a timing option. Drops a leading "in" so the template does not repeat it. */
+export function periodWord(option: GrowChoice): string {
+  const period = option.period?.trim();
+  if (period) return period;
+  const label = option.label.trim();
+  return /^in\s+/i.test(label) ? label.replace(/^in\s+/i, "") : label;
+}
+
+export type SoonestCheckIn = { period: string; date: Date };
+
+/**
+ * The soonest timing the learner picked on their Grow ideas (a start or a
+ * check-in). No picks falls back to the three-month check-in option.
+ */
+export function soonestGrowCheckIn(
+  plans: readonly { when?: string; checkIn?: string; checkInDate?: string }[],
+  startOptions: readonly GrowChoice[] | undefined,
+  checkInOptions: readonly GrowChoice[] | undefined,
+  today: Date,
+): SoonestCheckIn {
+  const byId = new Map([...(startOptions ?? []), ...(checkInOptions ?? [])].map((option) => [option.id, option]));
+  const fallback = (checkInOptions ?? []).find((option) => option.months === 3) ?? (checkInOptions ?? []).find((option) => (option.months ?? 0) > 0);
+  const fallbackDate = addMonths(today, fallback?.months && fallback.months > 0 ? fallback.months : 3);
+  let best: { span: number; date: Date; period: string } | null = null;
+  for (const plan of plans) {
+    for (const id of [plan.when, plan.checkIn]) {
+      if (!id) continue;
+      const option = byId.get(id);
+      const span = option ? spanDays(option) : null;
+      if (!option || span === null) continue;
+      const saved = id === plan.checkIn ? plan.checkInDate?.trim() : "";
+      const parsed = saved ? Date.parse(saved) : Number.NaN;
+      const date = !Number.isNaN(parsed) ? new Date(parsed) : option.days ? addDays(today, option.days) : addMonths(today, option.months ?? 0);
+      const period = periodWord(option);
+      if (!period) continue;
+      if (!best || span < best.span || (span === best.span && date.getTime() < best.date.getTime())) best = { span, date, period };
+    }
+  }
+  return best ? { period: best.period, date: best.date } : { period: fallback ? periodWord(fallback) : "", date: fallbackDate };
 }
 
 export function formatCheckInDate(date: Date): string {

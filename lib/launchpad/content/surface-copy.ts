@@ -308,7 +308,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     selling: "What I am selling",
     whenWho: "When and who might want it",
     dogWalking: "Dog walking",
-    dogTraining: "Dog Training",
+    dogTraining: "Dog training",
     addAnother: "+ Add another",
     editTime: "Edit your own time",
     ownTime: "Your own time",

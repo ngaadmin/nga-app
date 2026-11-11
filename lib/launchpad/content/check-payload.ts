@@ -350,6 +350,13 @@ function checkLevelUp(screen: Obj, where: string): void {
       if (!isObj(item) || typeof item.id !== "string" || !NODE_ID_RE.test(item.id) || seen.has(item.id)) fail(`${cw} has no valid id.`);
       seen.add(item.id);
       text(item.label, `${cw} label`);
+      text(item.period, `${cw} period`, true);
+      if (item.days !== undefined && (typeof item.days !== "number" || !Number.isInteger(item.days) || item.days < 1 || item.days > 3660)) {
+        fail(`${cw} days are missing.`);
+      }
+      if (item.months !== undefined && (typeof item.months !== "number" || !Number.isInteger(item.months) || item.months < 1 || item.months > 36)) {
+        fail(`${cw} months are missing.`);
+      }
       if (withMonths && (typeof item.months !== "number" || !Number.isInteger(item.months) || item.months < 1 || item.months > 36)) {
         fail(`${cw} months are missing.`);
       }

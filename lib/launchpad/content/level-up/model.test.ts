@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 
@@ -12,6 +12,34 @@ function levelUpContent() {
 }
 
 describe("Level Up check-in date", () => {
+  it("uses the shortest Grow pick, and three months when nothing is picked", () => {
+    const today = new Date(2026, 10, 11);
+    const grow = levelUpContent().grow;
+    const mixed = soonestGrowCheckIn(
+      [
+        { idea: "referral", when: "two-weeks", checkIn: "two-months", checkInDate: "January 11, 2027" },
+        { idea: "prepaid", when: "in-a-month", checkIn: "three-months", checkInDate: "February 11, 2027" },
+      ],
+      grow.startOptions,
+      grow.checkInOptions,
+      today,
+    );
+    expect(mixed.period).toBe("two weeks");
+    expect(formatCheckInDate(mixed.date)).toBe("November 25, 2026");
+    const single = soonestGrowCheckIn(
+      [{ when: "", checkIn: "two-months", checkInDate: "January 11, 2027" }],
+      grow.startOptions,
+      grow.checkInOptions,
+      today,
+    );
+    expect(single.period).toBe("two months");
+    expect(formatCheckInDate(single.date)).toBe("January 11, 2027");
+    const none = soonestGrowCheckIn([], grow.startOptions, grow.checkInOptions, today);
+    expect(none.period).toBe("three months");
+    expect(formatCheckInDate(none.date)).toBe(formatCheckInDate(addMonths(today, 3)));
+    expect(addDays(today, 14).getDate()).toBe(25);
+  });
+
   it("adds three calendar months to today", () => {
     const date = addMonths(new Date(2026, 10, 10), 3);
     const grow = levelUpContent().grow;

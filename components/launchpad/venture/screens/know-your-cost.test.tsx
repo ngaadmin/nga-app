@@ -79,7 +79,7 @@ describe("Know your cost flow", () => {
     expect(within(book).getByText("Treat pouch")).toBeTruthy();
     expect(within(book).getByText("$0")).toBeTruthy();
     expect(within(book).getByText("Dog walking")).toBeTruthy();
-    expect(within(book).getByText("Dog Training")).toBeTruthy();
+    expect(within(book).getByText("Dog training")).toBeTruthy();
     expect(within(book).queryByRole("button", { name: "Edit start-up total" })).toBeNull();
     expect(within(book).getByRole("button", { name: "Edit start-up costs" })).toBeTruthy();
     expect(within(book).getByRole("button", { name: "Edit Dog walking" })).toBeTruthy();

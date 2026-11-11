@@ -35,6 +35,23 @@ const answers: LaunchpadAnswers = {
 };
 
 describe("Level 4 workbook playback", () => {
+  it("drops a saved unfinished channel without throwing", () => {
+    const sheets = salesWorkbookSheets(
+      {
+        sales_channels: {
+          kind: "sales-channels",
+          version: 1,
+          selected: ["tbc", "flyers"],
+          where: { flyers: ["school"], tbc: ["school"] },
+        },
+      },
+      "Happy Paws",
+    );
+    const text = JSON.stringify(sheets);
+    expect(text).not.toContain("TBC");
+    expect(text).toContain("Flyers or posters");
+  });
+
   it("plays the selected channels back and underlines only the marketing short name", () => {
     const sheets = salesWorkbookSheets(answers, "Happy Paws");
     const where = sheets.find((sheet) => sheet.id === "sales-where");

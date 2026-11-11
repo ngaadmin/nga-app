@@ -23,7 +23,7 @@ import type { LaunchpadCostItem } from "@/lib/launchpad/content/types";
 
 const screen = dogWalkingKnowYourCostScreen();
 const walking: ChosenService = { id: "dog-walking", label: "Dog walking" };
-const training: ChosenService = { id: "dog-training", label: "Dog Training" };
+const training: ChosenService = { id: "dog-training", label: "Dog training" };
 const grooming: ChosenService = { id: "grooming", label: "Grooming" };
 
 function gearIds(ids: readonly string[]): string[] {

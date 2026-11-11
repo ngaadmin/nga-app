@@ -121,7 +121,7 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     // Offer: one screen.
     fireEvent.click(door(silver.bronzes[0]!.title));
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
-    fireEvent.click(screen.getByRole("button", { name: "Dog Training" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dog training" }));
     next();
     // Why (AC3): no arrows; the keyboard fallback reorders, and below the line takes a reason out of the goal loop.
     fireEvent.click(door(silver.bronzes[1]!.title));

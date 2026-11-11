@@ -29,7 +29,6 @@ export const CHANNELS = [
   { id: "online", label: "An online post or online community group", short: "online post" },
   { id: "cards", label: "Business cards", short: "business card" },
   { id: "noticeboard", label: "Noticeboard in a public place (supermarket, sports club, community center)", short: "noticeboard" },
-  { id: "tbc", label: "[new channel - TBC]", short: "" },
 ] as const;
 
 export type SalesChannelId = (typeof CHANNELS)[number]["id"];

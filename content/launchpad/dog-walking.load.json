@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/service-business-framework.xlsx",
     "sheet": "Final Service Business Framewor",
-    "md5": "bbaf7a749104108b115d9c0cfb35854f",
+    "md5": "803d6cb41ce815ee423eba5ac928db13",
     "rows": "2-16",
     "notes": [
       {
@@ -92,7 +92,7 @@
                         },
                         {
                           "id": "dog-training",
-                          "label": "Dog Training"
+                          "label": "Dog training"
                         },
                         {
                           "id": "manage-bookings-for-others",
@@ -133,7 +133,7 @@
                           },
                           {
                             "id": "dog-training",
-                            "label": "Dog Training"
+                            "label": "Dog training"
                           },
                           {
                             "id": "manage-bookings-for-others",

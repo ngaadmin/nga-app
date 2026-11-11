@@ -93,14 +93,14 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(hint).toHaveText("Pick at least one to keep going.");
   });
   await shot(t, "Offer door, nothing picked (Finish off)", next);
-  await step(t, "Offer door: pick Dog walking and Dog Training (multi-select), then un-pick and re-pick", async () => {
+  await step(t, "Offer door: pick Dog walking and Dog training (multi-select), then un-pick and re-pick", async () => {
     await btn(page, "Dog walking").click();
-    await btn(page, "Dog Training").click();
+    await btn(page, "Dog training").click();
     await expect(btn(page, "Dog walking")).toHaveAttribute("aria-pressed", "true");
-    await expect(btn(page, "Dog Training")).toHaveAttribute("aria-pressed", "true");
-    await btn(page, "Dog Training").click();
-    await expect(btn(page, "Dog Training")).toHaveAttribute("aria-pressed", "false");
-    await btn(page, "Dog Training").click();
+    await expect(btn(page, "Dog training")).toHaveAttribute("aria-pressed", "true");
+    await btn(page, "Dog training").click();
+    await expect(btn(page, "Dog training")).toHaveAttribute("aria-pressed", "false");
+    await btn(page, "Dog training").click();
     await expect(next).toBeEnabled();
   });
   await fits(t, "Offer door", next);

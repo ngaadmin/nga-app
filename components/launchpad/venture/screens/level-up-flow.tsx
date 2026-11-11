@@ -11,6 +11,7 @@ import {
   fillToken,
   formatCheckInDate,
   joinList,
+  soonestGrowCheckIn,
   paceFor,
   pickedStatements,
   sectionLabel,
@@ -192,9 +193,12 @@ export function LevelUpFlow({
   const growDetail = statementMode || Boolean(content.grow.startOptions?.length && content.grow.checkInOptions?.length && growIdeas.every((idea) => idea.successLine));
   const growTotal = 1 + (growDetail ? growIdeas.length : 0) + 1;
   const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : growTotal;
-  const checkIn = addMonths(today, 3);
-  const checkInLabel = formatCheckInDate(checkIn);
+  const soonest = soonestGrowCheckIn(draft.growPlans, content.grow.startOptions, content.grow.checkInOptions, today);
+  const checkInLabel = formatCheckInDate(soonest.date);
   const checkInLine = fillToken(content.grow.checkIn, "date", checkInLabel);
+  const closerHeadline = content.grow.closerHeadline.includes("{period}")
+    ? fillToken(content.grow.closerHeadline, "period", soonest.period)
+    : content.grow.closerHeadline;
 
   const save = (next: LevelUpAnswer, done: boolean) => {
     setDraft(next);
@@ -626,7 +630,7 @@ export function LevelUpFlow({
   } else {
     body = (
       <>
-        <ScreenPrompt tone="question" flush className="!mt-3">{content.grow.closerHeadline}</ScreenPrompt>
+        <ScreenPrompt tone="question" flush className="!mt-3">{closerHeadline}</ScreenPrompt>
         <p className={`mt-[21px] ${LESSON_BODY}`}>{content.grow.closerContext}</p>
         <p className={`mt-4 select-text ${LESSON_BODY}`} data-check-in-date="">{checkInLine}</p>
         <p className={`mt-4 select-text ${LESSON_BODY}`}>{content.grow.calendarNote}</p>

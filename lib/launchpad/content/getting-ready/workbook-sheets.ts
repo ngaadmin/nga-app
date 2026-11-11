@@ -21,6 +21,7 @@ import {
   joinHow,
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import type { ScriptedBlock, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
 
 const NOT_YET = "Not answered yet";
@@ -62,6 +63,8 @@ export function gettingReadyWorkbookSheets(
           result: polish.rows[q.id]?.result ?? "good",
           suggestion: polish.rows[q.id]?.suggestion,
         })),
+        LAUNCHPAD_SURFACE_COPY.list.comma,
+        LAUNCHPAD_SURFACE_COPY.list.and,
       )
     : null;
 
@@ -98,7 +101,10 @@ export function gettingReadyWorkbookSheets(
   ];
   if (notes) {
     for (const note of notes.notes) practiceBlocks.push({ kind: "paragraph", parts: [note.question, " ", { value: note.note }] });
-    practiceBlocks.push({ kind: "paragraph", parts: [notes.other] });
+    if (notes.happyLead && notes.happy) {
+      practiceBlocks.push({ kind: "paragraph", parts: [notes.happyLead] });
+      practiceBlocks.push({ kind: "paragraph", parts: [{ value: notes.happy }, "."] });
+    }
   } else if (templates) {
     practiceBlocks.push({ kind: "paragraph", parts: [{ value: null }] });
   }

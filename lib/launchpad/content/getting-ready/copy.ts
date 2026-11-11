@@ -1,3 +1,5 @@
+import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
+
 /**
  * Getting Ready copy and sentences (framework rows 28-33, md5 bbaf7a74).
  * Row 34 was empty. The wrap lines below are the proposed workbook pages.
@@ -116,14 +118,16 @@ export const PRACTICE_WHEN = [
   { id: "next_week", label: "next week" },
 ] as const;
 
+export const POLISH_HAPPY_LEAD = "The customer was happy with:";
+
 export const POLISH_QUESTIONS = [
-  { id: "service_explained", prompt: "Was the service explained clearly?" },
-  { id: "cost", prompt: "Was the cost reasonable?" },
-  { id: "timing", prompt: "Did the available times work for you?" },
-  { id: "communication", prompt: "Was communication clear and helpful?" },
-  { id: "delivery", prompt: "Was the service delivered well?" },
-  { id: "payment", prompt: "Was there a good range of payment options?" },
-  { id: "proof", prompt: "Did the proof of completion show the work well?" },
+  { id: "service_explained", prompt: "Was the service explained clearly?", topic: "how I explained the service" },
+  { id: "cost", prompt: "Was the cost reasonable?", topic: "the cost" },
+  { id: "timing", prompt: "Did the available times work for you?", topic: "the times" },
+  { id: "communication", prompt: "Was communication clear and helpful?", topic: "how we communicated" },
+  { id: "delivery", prompt: "Was the service delivered well?", topic: "how the service was delivered" },
+  { id: "payment", prompt: "Was there a good range of payment options?", topic: "the payment options" },
+  { id: "proof", prompt: "Did the proof of completion show the work well?", topic: "the proof of completion" },
 ] as const;
 
 export const POLISH_RESULTS = [
@@ -225,18 +229,20 @@ export function practiceLines(who: string, serviceLabel: string, when: string): 
 
 export type PolishRow = { id: string; result: "good" | "suggestions"; suggestion?: string };
 
-export function feedbackWrap(rows: readonly PolishRow[]): { notes: { question: string; note: string }[]; other: string } {
+export function feedbackWrap(
+  rows: readonly PolishRow[],
+  comma: string,
+  andWord: string,
+): { notes: { question: string; note: string }[]; happyLead: string | null; happy: string | null } {
   const notes = rows
     .filter((row) => row.result === "suggestions" && row.suggestion?.trim())
     .map((row) => ({
       question: POLISH_QUESTIONS.find((q) => q.id === row.id)?.prompt ?? row.id,
       note: row.suggestion!.trim(),
     }));
-  const otherCount = rows.filter((row) => row.result === "good").length;
-  return {
-    notes,
-    other: `The other ${otherCount} questions: was good, nothing to change.`,
-  };
+  const topics = POLISH_QUESTIONS.filter((question) => rows.some((row) => row.id === question.id && row.result === "good")).map((question) => question.topic);
+  if (topics.length === 0) return { notes, happyLead: null, happy: null };
+  return { notes, happyLead: POLISH_HAPPY_LEAD, happy: joinPhrase(topics, comma, andWord) };
 }
 
 export function findReady(channelIds: readonly string[], extra: string): boolean {

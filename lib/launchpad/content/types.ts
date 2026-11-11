@@ -491,7 +491,9 @@ export type LaunchpadGettingReadyScreen = TaskScreenBase & {
   practiceServiceLead?: string;
   practiceWhenLead?: string;
   practicePlayback?: string;
-  polishQuestions?: readonly { id: string; prompt: string }[];
+  polishQuestions?: readonly { id: string; prompt: string; topic: string }[];
+  /** Lead above the topics the learner marked as good. */
+  polishHappyLead?: string;
   polishResults?: readonly ReadyOption[];
   polishSuggestion?: string;
   eyebrow?: string;

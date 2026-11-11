@@ -14,6 +14,7 @@ import {
   DELIVER_JOB_KEY,
   PAYMENT_HOW,
   POLISH_LEAD,
+  POLISH_HAPPY_LEAD,
   POLISH_QUESTIONS,
   POLISH_RESULTS,
   POLISH_SERVICE_KEY,
@@ -110,7 +111,8 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
     question: "What feedback did your trial customer give you?",
     hint: POLISH_LEAD,
     polishSuggestion: SUGGESTION_PROMPT,
-    polishQuestions: POLISH_QUESTIONS.map((row) => ({ id: row.id, prompt: row.prompt })),
+    polishHappyLead: POLISH_HAPPY_LEAD,
+    polishQuestions: POLISH_QUESTIONS.map((row) => ({ id: row.id, prompt: row.prompt, topic: row.topic })),
     polishResults: POLISH_RESULTS.map((row) => ({ id: row.id, label: row.label })),
   };
 }

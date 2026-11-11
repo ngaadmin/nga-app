@@ -65,7 +65,7 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 3 | l3-s1 | l3-s1-b4 Wrap-up | getting-ready wrap-job | wrap_up | paymentHow, feedbackHow | ready-b | Taking payment, Getting feedback | played |
 | 3 | l3-s1 | l3-s1-b4 | wrap-job | wrap_up | paymentHow, feedbackHow | ready-after | Payment and feedback lookups | played |
 | 3 | l3-s3 Test and Tweak | l3-s3-b1 Do the practice run | getting-ready practice | practice_run | who, services, when | ready-c | Your practice run. Services joined with the payload comma and joining word | played |
-| 3 | l3-s3 | l3-s3-b2 Polish your service | getting-ready polish | polish_service | rows.result, rows.suggestion | ready-c | Feedback from my trial run. Suggestions as notes. "Good" rows as one count | played |
+| 3 | l3-s3 | l3-s3-b2 Polish your service | getting-ready polish | polish_service | rows.result, rows.suggestion | ready-c | Suggestions stay as question plus note. Good answers become one bold sentence under "The customer was happy with:". Hidden when none were good | played |
 | 4 | l4-s1 Marketing your business | l4-s1-b1 Pick the sales channels | sales channels | sales_channels | selected, where | sales-where | Where I'll use my channels | played |
 | 4 | l4-s1 | l4-s1-b1 | sales channels | sales_channels | whereExtra | sales-where | End of that channel's place list | played |
 | 4 | l4-s1 | l4-s1-b1 | sales channels | sales_channels | selected and where | sales-market-1 to sales-market-4 | Which pieces are included | played |
@@ -116,7 +116,7 @@ Repeated chrome on every page after the cover: small logo and business name from
 | ready-a | What I'll agree before a job | l3-s1-b2 | agree_the_job | understood | played |
 | ready-b | Deliver and wrap-up lines | l3-s1-b3 and l3-s1-b4 | deliver_the_job, wrap_up | beforeHow, afterHow, paymentHow, feedbackHow | played |
 | ready-c | Practice run | l3-s3-b1 | practice_run | who, services, when. Services are joined with the payload comma and joining word | played |
-| ready-c | Trial feedback | l3-s3-b2 | polish_service | rows | played |
+| ready-c | Trial feedback | l3-s3-b2 | polish_service | suggestion notes, then the good topics joined with the payload comma and joining word | played |
 | sales-where | One line per selected channel | l4-s1-b1 | sales_channels | selected, where, whereExtra | played |
 | sales-market-1 to sales-market-4 | Piece copy | l4-s1-b2, plus lookups | marketing_materials, l2-offer, l2-price, sales_channels | hook, proof, services, pieces, offer, price | played |
 | sales-market section titles | What my flyer will say, and the other piece titles | none | none | none | label only |
@@ -164,6 +164,7 @@ Approved removals already on the branch, listed as requested:
 
 - The 8 old Level 5 placeholder bronzes, the pitch door "Develop and practice your pitch" (Cath confirmed this again; Tell people about it now uses `l4-s1-b3`), and the old Level 5 "Plan the work" silver. The in-person workbook page stays.
 - Level 2 workbook sheets plan-1 through plan-4, the plan costs summary, the workbook title "The product and its buyers", the separate Pricing and My price pages, the Jobs to cover stepper page, and the single-select practice-run pick. Cath approved these. The silver door is still named The product and its buyers.
+- The practice-run line "The other N questions: was good, nothing to change." Cath approved replacing it with "The customer was happy with:" and the joined topics.
 - The one-off Jobs and Funding workbook auto-opens, replaced by the per-silver auto-open.
 - The direct Level 7 "Go to the rooftop", replaced by the workbook, then the lift, then the rooftop.
 - The Level 4 order screen `trackerExtra` field.

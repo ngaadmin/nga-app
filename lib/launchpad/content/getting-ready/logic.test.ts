@@ -8,6 +8,7 @@ import {
   feedbackWrap,
   findReady,
   findSentence,
+  POLISH_QUESTIONS,
   practiceLines,
   wrapJobLines,
 } from "@/lib/launchpad/content/getting-ready/copy";
@@ -77,14 +78,41 @@ describe("getting ready sentences", () => {
       { id: "delivery", result: "good" },
       { id: "payment", result: "good" },
       { id: "proof", result: "good" },
-    ]);
+    ], ", ", "and");
     expect(wrap.notes).toEqual([
       {
         question: "Was communication clear and helpful?",
         note: "Send a text when you are on your way, so the dog is ready.",
       },
     ]);
-    expect(wrap.other).toBe("The other 6 questions: was good, nothing to change.");
+    expect(wrap.happyLead).toBe("The customer was happy with:");
+    expect(wrap.happy).toBe("how I explained the service, the cost, the times, how the service was delivered, the payment options, and the proof of completion");
+    expect(JSON.stringify(wrap)).not.toContain("The other");
+  });
+
+  it("lists every good topic, and hides the happy line when none were good", () => {
+    const all = POLISH_QUESTIONS.map((question) => ({ id: question.id, result: "good" as const }));
+    const every = feedbackWrap(all, ", ", "and");
+    expect(every.notes).toEqual([]);
+    expect(every.happy).toBe("how I explained the service, the cost, the times, how we communicated, how the service was delivered, the payment options, and the proof of completion");
+    const none = feedbackWrap(
+      POLISH_QUESTIONS.map((question) => ({ id: question.id, result: "suggestions" as const, suggestion: "A note" })),
+      ", ",
+      "and",
+    );
+    expect(none.happyLead).toBeNull();
+    expect(none.happy).toBeNull();
+    expect(none.notes).toHaveLength(POLISH_QUESTIONS.length);
+    const some = feedbackWrap(
+      [
+        { id: "cost", result: "good" as const },
+        { id: "timing", result: "suggestions" as const, suggestion: "Earlier, please." },
+      ],
+      ", ",
+      "plus",
+    );
+    expect(some.notes.map((note) => note.note)).toEqual(["Earlier, please."]);
+    expect(some.happy).toBe("the cost");
   });
 
   it("keeps an old wrap string and stores customer times as slot ids", () => {

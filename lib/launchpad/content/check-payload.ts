@@ -910,11 +910,13 @@ function checkGettingReady(screen: Obj, where: string, answers: Answers): void {
     text(screen.question, `${where} question`);
     text(screen.hint, `${where} hint`);
     text(screen.polishSuggestion, `${where} polishSuggestion`);
+    text(screen.polishHappyLead, `${where} polishHappyLead`);
     checkReadyOptions(screen.polishResults, `${where} polishResults`);
     list(screen.polishQuestions, `${where} polishQuestions`, 1).forEach((raw, i) => {
       if (!isObj(raw)) fail(`${where} polish question ${i + 1} is malformed.`);
       text(raw.id, `${where} polish question ${i + 1} id`);
       text(raw.prompt, `${where} polish question ${i + 1} prompt`);
+      text(raw.topic, `${where} polish question ${i + 1} topic`);
     });
   }
 }

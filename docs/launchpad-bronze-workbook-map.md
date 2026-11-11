@@ -37,35 +37,24 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 1 | l1-s3 | l1-s3-b1 Name your business | name | l2-s2-identity | name | cover, and the small name on later pages | Business name | played |
 | 1 | l1-s3 | l1-s3-b1 | font | l2-s2-identity | font | none | Cover name is always Fredoka | GAP |
 | 1 | l1-s3 | l1-s3-b1 | name color | l2-s2-identity | nameColor | none | Cover name color is always navy | GAP |
-| 2 | l2-s1 The product and its buyers | l2-s1-b1 Decide what to sell | l2-s1-b1-t1-offer | l2-offer | offerings.packages | l2-s1 | What I am selling | played |
-| 2 | l2-s1 | l2-s1-b1 | offer-loop | l2-offer | offerings.packagesExtra | l2-s1 | End of the package list | played |
-| 2 | l2-s1 | l2-s1-b1 | offer-loop | l2-offer | offerings.addons | l2-s1 | Extras list after "with" | played |
-| 2 | l2-s1 | l2-s1-b1 | offer-loop | l2-offer | offerings.addonsExtra | l2-s1 | End of the extras list | played |
-| 2 | l2-s1 | l2-s1-b1 | offer-loop, Add another time | l2-offer | availability | l2-s1 | When sentence | played |
-| 2 | l2-s1 | l2-s1-b1 | offer-loop, Add another time | l2-offer | availabilityExtra | l2-s1 | End of the When sentence. No "Also:" label | played |
-| 2 | l2-s1 | l2-s1-b1 | same fields | l2-offer | packages, packagesExtra, addons, addonsExtra, availability, availabilityExtra | plan-1 | What I am selling, and When and who might want it | played |
+| 2 | l2-s1 The product and its buyers | l2-s1-b1 Decide what to sell | l2-s1-b1-t1-offer | l2-offer | offerings.packages, packagesExtra, addons, addonsExtra | l2-s1 | What I am selling, inline | played |
+| 2 | l2-s1 | l2-s1-b1 | offer-loop, Add another time | l2-offer | availability, availabilityExtra | l2-s1 | When sentence. Typed time is inline. No Also box | played |
 | 2 | l2-s1 | l2-s1-b1 | same offer fields used as lookups | l2-offer | packages, addons, availability | sales-market-1 to sales-market-4 | Offer, extras, rate, and availability lines | played |
 | 2 | l2-s1 | l2-s1-b2 Know who your customers are | customer-check | l2-customers | numberAsked, yesNo | l2-s1 | Who might want it | played |
 | 2 | l2-s1 | l2-s1-b2 | customer-check | l2-customers | interests | l2-s1 | They were interested in | played |
 | 2 | l2-s1 | l2-s1-b2 | customer-check | l2-customers | interestExtra | l2-s1 | End of the interest list, when filled. The customer screen does not show a typed-interest box today | played if present |
 | 2 | l2-s1 | l2-s1-b2 | customer-check times | l2-customers | times | l2-s1 | They wanted walks | played |
 | 2 | l2-s1 | l2-s1-b2 | customer-check times | l2-customers | timesExtra | l2-s1 | End of They wanted walks | played |
-| 2 | l2-s1 | l2-s1-b2 | same customer fields | l2-customers | numberAsked, interests, interestExtra, times, timesExtra | plan-1 | Who block under When and who might want it | played |
+| 2 | l2-s1 | l2-s1-b2 | same customer fields | l2-customers | numberAsked, interests, interestExtra, times, timesExtra | l2-s1 | When and who might want it | played |
 | 2 | l2-s2 Pricing | l2-s2-b1 Know your cost | know-your-cost | l2-costs | startup.marketing | costs-a | Marketing and setup rows | played |
 | 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | startup.starterGear, startup total | costs-b | Starter gear and start-up total | played |
 | 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | ongoing lines and per-job total | costs-b | Ongoing cost per job | played |
-| 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | startup and ongoing totals | plan-2 | My costs | played |
-| 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | per-job cost | price, jobs, ready-before, job-record | Job cost, pack list, record cost | played |
-| 2 | l2-s2 | l2-s2-b2 Research competitors | competitor-check | l2-competitors | addons, addonsExtra | pricing-b | They often include | played |
-| 2 | l2-s2 | l2-s2-b2 | competitor-check | l2-competitors | doDifferently, doDifferentlyExtra | pricing-b | I could do differently | played |
-| 2 | l2-s2 | l2-s2-b2 | competitor-check | l2-competitors | jobComparedId, jobComparedExtra | pricing-b | Job compared. Typed job is inline, bold. Picked job stays regular weight | played |
-| 2 | l2-s2 | l2-s2-b2 | competitor-check | l2-competitors | walkersChecked, priceLow, priceHigh, addons, addonsExtra, doDifferently, doDifferentlyExtra | plan-3 | What others charge, and I could do differently | played |
-| 2 | l2-s2 | l2-s2-b2 | competitor-check | l2-competitors | priceLow, priceHigh, addons | price | Others charge, for the compared service | played |
-| 2 | l2-s2 | l2-s2-b3 Set the price | set-price | l2-price | prices.price, costPerJob, keptPerJob, comparedToOthers | price | My price, one block per service | played |
-| 2 | l2-s2 | l2-s2-b3 | set-price | l2-price | prices | plan-3 | I keep, per service | played |
+| 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | startup and ongoing totals | costs-a and costs-b | The plan costs summary was removed. These rows stay on My costs | played |
+| 2 | l2-s2 | l2-s2-b1 | know-your-cost | l2-costs | per-job cost | pricing, week, ready-before, job-record | Job cost, pack list, record cost | played |
+| 2 | l2-s2 | l2-s2-b2 Research competitors | competitor-check | l2-competitors | walkersChecked, priceLow, priceHigh, addons, addonsExtra, doDifferently, doDifferentlyExtra, jobComparedId, jobComparedExtra | pricing | What others charge, I could do differently, Job compared | played |
+| 2 | l2-s2 | l2-s2-b3 Set the price | set-price | l2-price | prices.price, costPerJob, keptPerJob, comparedToOthers | pricing | Name and price, I keep, gray calc, Mine is when a comparison was saved | played |
 | 2 | l2-s2 | l2-s2-b3 | set-price | l2-price | price and kept | sales-market-1 to sales-market-4 | Rate lines | played |
-| 2 | l2-s2 | l2-s2-b4 Jobs to cover costs | jobs-to-cover | l2-jobs | jobsPerWeek or typicalWeek, weeklyKeep, startupTotal, weeksNeeded | jobs | Jobs to cover my costs | played |
-| 2 | l2-s2 | l2-s2-b4 | jobs-to-cover | l2-jobs | weeklyKeep, weeksNeeded | plan-4 | Week summary | played |
+| 2 | l2-s2 | l2-s2-b4 Jobs to cover costs | jobs-to-cover | l2-jobs | jobsPerWeek or typicalWeek, weeklyKeep, startupTotal, weeksNeeded | week | Typical week | played |
 | 2 | l2-s3 Funding | l2-s3-b1 Get the money you need to start | funding-start | funding_start | fundingSource, startupTotal, repay mode, count, unit, period payment or weekly amount, weeks to repay | funding | How I'll cover my start-up costs | played |
 | 3 | l3-s1 Learn the customer journey | l3-s1-b1 Attract the customer | getting-ready find | find_customers | channels | ready-a | How I'll find customers | played |
 | 3 | l3-s1 | l3-s1-b1 | find | find_customers | channelsExtra | ready-a | Also line under How I'll find customers | played |
@@ -75,7 +64,7 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 3 | l3-s1 | l3-s1-b3 | deliver | deliver_the_job | afterHow | ready-after | Proof lookup | played |
 | 3 | l3-s1 | l3-s1-b4 Wrap-up | getting-ready wrap-job | wrap_up | paymentHow, feedbackHow | ready-b | Taking payment, Getting feedback | played |
 | 3 | l3-s1 | l3-s1-b4 | wrap-job | wrap_up | paymentHow, feedbackHow | ready-after | Payment and feedback lookups | played |
-| 3 | l3-s3 Test and Tweak | l3-s3-b1 Do the practice run | getting-ready practice | practice_run | who, service, when | ready-c | Your practice run | played |
+| 3 | l3-s3 Test and Tweak | l3-s3-b1 Do the practice run | getting-ready practice | practice_run | who, services, when | ready-c | Your practice run. Services joined with the payload comma and joining word | played |
 | 3 | l3-s3 | l3-s3-b2 Polish your service | getting-ready polish | polish_service | rows.result, rows.suggestion | ready-c | Feedback from my trial run. Suggestions as notes. "Good" rows as one count | played |
 | 4 | l4-s1 Marketing your business | l4-s1-b1 Pick the sales channels | sales channels | sales_channels | selected, where | sales-where | Where I'll use my channels | played |
 | 4 | l4-s1 | l4-s1-b1 | sales channels | sales_channels | whereExtra | sales-where | End of that channel's place list | played |
@@ -113,25 +102,20 @@ Repeated chrome on every page after the cover: small logo and business name from
 | l1-s1 | Section labels | none | none | none | label only |
 | l1-s2 | My goals, one sentence per goal | l1-s2-b1 | the six goal keys above | each goal's fields | played |
 | l1-s2 | My goals label | none | none | none | label only |
-| l2-s1 | The product and its buyers, What I am selling | none | none | none | label only |
+| l2-s1 | What I am selling, When and who might want it | none | none | none | label only |
 | l2-s1 | Service name, packages, extras | l2-s1-b1 | l2-offer | offerings | played |
 | l2-s1 | When sentence, including a typed time | l2-s1-b1 | l2-offer | availability, availabilityExtra | played |
 | l2-s1 | Who might want it | l2-s1-b2 | l2-customers | numberAsked, yesNo, interests, interestExtra, times, timesExtra | played |
-| pricing-b | Pricing, They often include, I could do differently, Job compared | labels from payload. Values from l2-s2-b2 | l2-competitors | addons, addonsExtra, doDifferently, doDifferentlyExtra, jobComparedId, jobComparedExtra | played. Headings are label only |
+| pricing | What others charge, My price, I keep, gray calc, Job compared | l2-s2-b2 and l2-s2-b3 | l2-competitors, l2-price | competitor fields, price, keptPerJob, comparedToOthers | played. Headings are label only |
 | costs-a | Marketing and setup rows | l2-s2-b1 | l2-costs | startup.marketing | played |
 | costs-a | My costs, section label | none | none | none | label only |
 | costs-b | Starter gear, start-up total, ongoing per job | l2-s2-b1 | l2-costs | starterGear, ongoing | played |
-| price | My price blocks | l2-s2-b3, with cost from l2-s2-b1 and range from l2-s2-b2 | l2-price, l2-costs, l2-competitors | price, costPerJob, keptPerJob, comparedToOthers, priceLow, priceHigh | played |
-| jobs | Counts, keep, start-up, weeks | l2-s2-b4, totals from l2-s2-b1 and l2-s2-b3 | l2-jobs | typicalWeek or jobsPerWeek, weeklyKeep, startupTotal, weeksNeeded | played |
-| plan-1 | Selling and when and who | l2-s1-b1 and l2-s1-b2 | l2-offer, l2-customers | same fields as l2-s1 | played |
-| plan-2 | Cost rows | l2-s2-b1 | l2-costs | marketing, starterGear, ongoing | played |
-| plan-3 | Others charge, and I keep | l2-s2-b2 and l2-s2-b3 | l2-competitors, l2-price | walkersChecked, prices, addons, doDifferently, keptPerJob | played |
-| plan-4 | Week summary | l2-s2-b4 | l2-jobs | weeklyKeep, weeksNeeded | played |
+| week | Typical week, keep, calc, weeks | l2-s2-b4 | l2-jobs | typicalWeek or jobsPerWeek, weeklyKeep, startupTotal, weeksNeeded | played |
 | funding | How I'll cover my start-up costs | l2-s3-b1 | funding_start | fundingSource and the repay fields | played |
 | ready-a | How I'll find customers | l3-s1-b1 | find_customers | channels, channelsExtra | played |
 | ready-a | What I'll agree before a job | l3-s1-b2 | agree_the_job | understood | played |
 | ready-b | Deliver and wrap-up lines | l3-s1-b3 and l3-s1-b4 | deliver_the_job, wrap_up | beforeHow, afterHow, paymentHow, feedbackHow | played |
-| ready-c | Practice run | l3-s3-b1 | practice_run | who, service, when | played |
+| ready-c | Practice run | l3-s3-b1 | practice_run | who, services, when. Services are joined with the payload comma and joining word | played |
 | ready-c | Trial feedback | l3-s3-b2 | polish_service | rows | played |
 | sales-where | One line per selected channel | l4-s1-b1 | sales_channels | selected, where, whereExtra | played |
 | sales-market-1 to sales-market-4 | Piece copy | l4-s1-b2, plus lookups | marketing_materials, l2-offer, l2-price, sales_channels | hook, proof, services, pieces, offer, price | played |

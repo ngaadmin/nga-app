@@ -13,7 +13,7 @@ import {
 } from "@/lib/launchpad/content/fetch-published";
 import { movedTasks, publishLaunchpadDraft } from "@/lib/launchpad/content/publish";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
-import { launchpadSeedSql } from "@/lib/launchpad/content/seed/seed-sql";
+import { launchpadPublishV4Sql, launchpadSeedSql } from "@/lib/launchpad/content/seed/seed-sql";
 import type { LaunchpadVenturePayload } from "@/lib/launchpad/content/types";
 
 const SEED = launchpadTestVentureSeed("dog-walking");
@@ -223,12 +223,45 @@ describe("launchpad seed SQL", () => {
     expect(file).toBe(launchpadSeedSql(launchpadTestVentureSeed()));
   });
 
+  it("the checked-in v4 publish file matches the generator", () => {
+    const file = readFileSync(path.join(process.cwd(), "supabase/seeds/launchpad_venture_publish_v4.sql"), "utf8");
+    expect(file).toBe(launchpadPublishV4Sql([launchpadTestVentureSeed()]));
+  });
+
   it("is idempotent and only touches the two new tables", () => {
-    const sql = launchpadSeedSql(SEED);
+    const sql = launchpadPublishV4Sql([SEED]);
+    const statements = sql.replace(/\$lp_seed\$[\s\S]*\$lp_seed\$/g, "''");
     expect(sql).toMatch(/on conflict \(venture_id, content_hash\) do nothing/);
     expect(sql).toMatch(/on conflict \(venture_id\) do update/);
+    expect(statements).not.toMatch(/\b(create|alter|drop|delete|truncate|grant|revoke)\b/i);
     const tables = [...sql.matchAll(/(?:insert into|update|from)\s+public\.(\w+)/g)].map((m) => m[1]);
     expect(new Set(tables)).toEqual(new Set(["launchpad_venture_versions", "launchpad_venture_current"]));
+  });
+});
+
+describe("published v4 row loads as the bundled seed", () => {
+  it("returns a payload deep-equal to the seed when the DB source serves that row", async () => {
+    const seed = launchpadTestVentureSeed();
+    const sql = readFileSync(path.join(process.cwd(), "supabase/seeds/launchpad_venture_publish_v4.sql"), "utf8");
+    const stored = sql.match(/\$lp_seed\$([\s\S]*)\$lp_seed\$/)?.[1];
+    expect(stored).toBeTruthy();
+    const payload = JSON.parse(stored ?? "");
+    const source: LaunchpadContentSource = {
+      name: "db",
+      read: async () => ({
+        id: VERSION,
+        contentHash: launchpadContentHash(payload),
+        payload,
+      }),
+    };
+    const load = await loadLaunchpadVenture("dog-walking", { source });
+    expect(load.ok).toBe(true);
+    if (!load.ok) return;
+    expect(load.source).toBe("current");
+    expect(load.venture).toEqual(seed);
+    expect(load.venture.schemaVersion).toBe(4);
+    expect(load.venture.floors).toHaveLength(7);
+    expect(load.venture.surface).toBeTruthy();
   });
 });
 

@@ -18,6 +18,7 @@ import {
   floorAccess,
   floorState,
   isBuildingDone,
+  levelUpFinishLanding,
   lockedDoorsNote,
   setProgressAnswer,
   silverStates,
@@ -126,6 +127,26 @@ describe("venture test progress", () => {
     expect(floorState(p, BASE_FLOORS, 1)).toBe("done");
     expect(currentLevel(p, BASE_FLOORS)).toBe(2);
     expect(floorState(p, BASE_FLOORS, 2)).toBe("current");
+  });
+
+  it("sends a finished building from Grow to the rooftop, and an unfinished one back to the doors", () => {
+    const floors = FLOORS;
+    const growing = floors[floors.length - 1]!;
+    const silver = growing.silvers[0]!;
+    const bronze = silver.bronzes[silver.bronzes.length - 1]!;
+    const finished = doneThrough(
+      EMPTY_VENTURE_TEST_PROGRESS,
+      floors.flatMap((floor) => floor.silvers.flatMap((item) => item.bronzes.flatMap((door) => door.tasks.map((task) => task.id)))),
+    );
+    const advance = advanceAfterTask(finished, growing, silver, bronze, bronze.tasks.length - 1);
+    expect(levelUpFinishLanding("grow", advance, isBuildingDone(finished, floors))).toBe("rooftop");
+    expect(levelUpFinishLanding("reflect", advance, true)).toBe("doors");
+    expect(levelUpFinishLanding("improve", advance, true)).toBe("doors");
+    const onlyGrowing = doneThrough(
+      EMPTY_VENTURE_TEST_PROGRESS,
+      growing.silvers.flatMap((item) => item.bronzes.flatMap((door) => door.tasks.map((task) => task.id))),
+    );
+    expect(levelUpFinishLanding("grow", advanceAfterTask(onlyGrowing, growing, silver, bronze, bronze.tasks.length - 1), isBuildingDone(onlyGrowing, floors))).toBe("doors");
   });
 
   it("walks every level and ends on Growing", () => {

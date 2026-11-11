@@ -20,8 +20,10 @@ import {
   restoreTaskDraft,
   bronzeEntryTaskIndex,
   floorState,
+  isBuildingDone,
   isFloorDone,
   isSilverDone,
+  levelUpFinishLanding,
   lockedDoorsNote,
   setProgressAnswer,
   silverStates,
@@ -744,8 +746,10 @@ export function VentureFlow({
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
             onSave={(answer) => save(setProgressAnswer(progress, levelUpScreen.answerKey, answer))}
             onFinish={(answer) => {
-              save(completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId));
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
+              const updated = completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId);
+              save(updated);
+              const landing = levelUpFinishLanding(levelUpScreen.step, advanceAfterTask(updated, floor, silver, bronze, index), isBuildingDone(updated, floors));
+              go(landing === "rooftop" ? { screen: "rooftop" } : { screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

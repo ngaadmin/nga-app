@@ -14,8 +14,8 @@ export const LAUNCHPAD_READABLE_SCHEMA_VERSIONS = [1, 2, 3, 4] as const;
 export type LaunchpadReadableSchemaVersion = (typeof LAUNCHPAD_READABLE_SCHEMA_VERSIONS)[number];
 
 /**
- * Ventures whose content is read from launchpad_venture_versions when the
- * database flag is on. Empty until the migration is applied and a version is
- * published and promoted. Every other venture reads the bundled seed.
+ * Ventures read from launchpad_venture_versions when the database flag is on.
+ * dog-walking has a published schema 4 version. Every other venture reads the
+ * bundled seed.
  */
-export const LAUNCHPAD_DB_VENTURES: readonly string[] = [];
+export const LAUNCHPAD_DB_VENTURES: readonly string[] = ["dog-walking"];

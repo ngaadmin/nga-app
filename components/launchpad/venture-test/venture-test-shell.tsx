@@ -104,16 +104,28 @@ function BottomBar() {
  * step aside and the page is pinned to the viewport, so a task never scrolls
  * the page and its Next / Finish stays in view.
  */
-export function VentureTestShell({ children, focus = false }: { children: ReactNode; focus?: boolean }) {
+export function VentureTestShell({
+  children,
+  focus = false,
+  contentSource,
+  contentHash,
+}: {
+  children: ReactNode;
+  focus?: boolean;
+  /** Where this page's venture payload was loaded. Not shown to the learner. */
+  contentSource?: "db" | "seed";
+  contentHash?: string;
+}) {
+  const marker = contentSource ? { "data-content-source": contentSource, "data-content-hash": contentHash ?? "" } : {};
   if (focus) {
     return (
-      <div className="mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-nga-ink" data-focus-mode="">
+      <div className="mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-nga-ink" data-focus-mode="" {...marker}>
         <main className="flex min-h-0 flex-1 flex-col">{children}</main>
       </div>
     );
   }
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink" {...marker}>
       <TopBar />
       <main className={`flex min-h-0 flex-1 flex-col ${TAB_BAR_CLEARANCE_CLASS}`} data-tab-bar-clearance="">{children}</main>
       <BottomBar />

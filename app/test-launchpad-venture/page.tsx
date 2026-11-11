@@ -26,9 +26,10 @@ export const metadata: Metadata = {
  * The landing page is the Launchpad home (Business Ideas carousel);
  * `?venture=<id>` deep-links into a venture, `?reset=1` clears local progress.
  * Venture content (floors, plaques, doors, tasks, task screens) is loaded per
- * venture by loadLaunchpadVenture: the database when LAUNCHPAD_CONTENT_DB is
- * on for that venture, otherwise the bundled seed. `?draft=<id|latest>` reads
- * a draft version on preview only.
+ * venture by loadLaunchpadVenture. Listed ventures read the database on a
+ * Vercel preview (and whenever LAUNCHPAD_CONTENT_DB is explicitly on).
+ * Production, local, and every unlisted venture stay on the bundled seed.
+ * `?draft=<id|latest>` reads a draft version on preview only.
  *
  * Test shortcuts (this browser's localStorage only, never the database):
  * - `?rooftop=1` marks every task in the venture complete and opens the
@@ -73,7 +74,7 @@ export default async function TestLaunchpadVenturePage({
     ids.map((id, i) => {
       const load = loads[i]!;
       const view: LaunchpadVentureView = load.ok
-        ? { ok: true, payload: load.venture, versionId: load.versionId, source: load.source }
+        ? { ok: true, payload: load.venture, versionId: load.versionId, contentHash: load.contentHash, source: load.source }
         : { ok: false };
       return [id, view];
     }),

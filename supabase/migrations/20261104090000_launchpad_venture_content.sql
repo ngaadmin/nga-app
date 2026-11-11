@@ -2,10 +2,10 @@
 -- Launchpad venture content: versioned per-venture payloads, plus one current
 -- pointer per venture. Mirrors 20261026001000_academy_lesson_versions.sql.
 --
--- NOT APPLIED. Prod migrations need Cath's direct yes; previews share the
--- prod database. The app does not read these tables until LAUNCHPAD_CONTENT_DB
--- is on and the venture is listed in LAUNCHPAD_DB_VENTURES
--- (lib/launchpad/content/schema-version.ts).
+-- Applied in prod on 4 Nov as 20261103223752_launchpad_venture_content.
+-- dog-walking has a published schema 4 version. Previews read these tables
+-- for ventures listed in LAUNCHPAD_DB_VENTURES. Production and local stay on
+-- the bundled seed unless LAUNCHPAD_CONTENT_DB is explicitly on.
 --
 -- Additive only: creates two new tables, their constraints, RLS policies and
 -- grants. It does not alter, drop or write to any existing table, and creates

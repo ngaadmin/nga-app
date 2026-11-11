@@ -218,6 +218,9 @@ export function VentureFlow({
   } | null>(null);
   const closeHandbook = useCallback(() => setHandbook(null), []);
   const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
+  const served = (ventureId && ventures[ventureId]) || ventures["dog-walking"];
+  const contentSource = served?.ok ? (served.source === "seed" ? "seed" : "db") : undefined;
+  const contentHash = served?.ok ? served.contentHash : undefined;
 
   const go = useCallback((next: View) => {
     setHandbook(null);
@@ -295,7 +298,7 @@ export function VentureFlow({
 
   if (view.screen === "home") {
     return (
-      <VentureTestShell>
+      <VentureTestShell contentSource={contentSource} contentHash={contentHash}>
         {inProgress ? (
           <LaunchpadHome
             inProgress={inProgress}
@@ -336,7 +339,7 @@ export function VentureFlow({
   const content = ventureId ? ventures[ventureId] : undefined;
   if (ventureId && !content?.ok) {
     return (
-      <VentureTestShell>
+      <VentureTestShell contentSource={contentSource} contentHash={contentHash}>
         <VentureUnavailable onBack={toHome} />
       </VentureTestShell>
     );
@@ -344,7 +347,7 @@ export function VentureFlow({
 
   if (!progress || !ventureId || !content?.ok) {
     // White frame while the local progress stub loads.
-    return <VentureTestShell>{null}</VentureTestShell>;
+    return <VentureTestShell contentSource={contentSource} contentHash={contentHash}>{null}</VentureTestShell>;
   }
   const floors = content.payload.floors;
 
@@ -850,8 +853,8 @@ export function VentureFlow({
   const surface = content?.ok && content.payload.surface ? content.payload.surface : LAUNCHPAD_SURFACE_COPY;
   return (
     <SurfaceCopyProvider value={surface}>
-    <VentureTestShell focus={view.screen === "workbook"}>
-      <div className="flex min-h-0 flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
+    <VentureTestShell focus={view.screen === "workbook"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
+      <div className="flex min-h-0 flex-1 flex-col bg-white" data-content-source={content.source === "seed" ? "seed" : "db"} data-content-hash={content.contentHash}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
         {handbook?.entry === "building" && handbook.ventureId === ventureId && (
           <Handbook

@@ -126,18 +126,25 @@ describe("launchpad payload schema", () => {
 });
 
 describe("launchpad content flag and source", () => {
-  it("defaults off and accepts 1 or true", () => {
+  it("is on for preview unless an explicit value says otherwise", () => {
     expect(launchpadContentDbEnabled({})).toBe(false);
-    expect(launchpadContentDbEnabled({ VERCEL_ENV: "preview" })).toBe(false);
+    expect(launchpadContentDbEnabled({ VERCEL_ENV: "production" })).toBe(false);
+    expect(launchpadContentDbEnabled({ VERCEL_ENV: "preview" })).toBe(true);
+    expect(launchpadContentDbEnabled({ NEXT_PUBLIC_VERCEL_ENV: "preview" })).toBe(true);
     expect(launchpadContentDbEnabled({ LAUNCHPAD_CONTENT_DB: "1" })).toBe(true);
     expect(launchpadContentDbEnabled({ NEXT_PUBLIC_LAUNCHPAD_CONTENT_DB: "true" })).toBe(true);
     expect(launchpadContentDbEnabled({ LAUNCHPAD_CONTENT_DB: "0" })).toBe(false);
+    expect(launchpadContentDbEnabled({ LAUNCHPAD_CONTENT_DB: "false" })).toBe(false);
+    expect(launchpadContentDbEnabled({ VERCEL_ENV: "preview", LAUNCHPAD_CONTENT_DB: "0" })).toBe(false);
+    expect(launchpadContentDbEnabled({ VERCEL_ENV: "production", LAUNCHPAD_CONTENT_DB: "1" })).toBe(true);
   });
 
-  it("uses the seed unless the flag is on and the venture is listed", () => {
+  it("reads dog-walking from the database only when the flag is on", () => {
     expect(launchpadContentSourceFor("dog-walking", {}).name).toBe("seed");
-    // LAUNCHPAD_DB_VENTURES is empty for now, so even the flag keeps the seed.
-    expect(launchpadContentSourceFor("dog-walking", { LAUNCHPAD_CONTENT_DB: "1" }).name).toBe("seed");
+    expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "production" }).name).toBe("seed");
+    expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "preview" }).name).toBe("db");
+    expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "preview", LAUNCHPAD_CONTENT_DB: "0" }).name).toBe("seed");
+    expect(launchpadContentSourceFor("lemonade-stand", { VERCEL_ENV: "preview" }).name).toBe("seed");
   });
 
   it("honors drafts on preview only", () => {

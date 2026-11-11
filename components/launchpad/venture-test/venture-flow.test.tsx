@@ -10,7 +10,7 @@ import { markVentureTestOnboardingSeen, saveVentureTestProgress } from "@/lib/la
 
 const PAYLOAD = launchpadTestVentureSeed("dog-walking");
 const VENTURES: Record<string, LaunchpadVentureView> = {
-  "dog-walking": { ok: true, payload: PAYLOAD, versionId: "seed", source: "seed" },
+  "dog-walking": { ok: true, payload: PAYLOAD, versionId: "seed", contentHash: "seed", source: "seed" },
 };
 
 beforeEach(() => {

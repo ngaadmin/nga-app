@@ -10,6 +10,7 @@ export type LaunchpadVentureView =
       ok: true;
       payload: LaunchpadVenturePayload;
       versionId: string;
+      contentHash: string;
       source: "current" | "draft" | "stale" | "seed";
     }
   | { ok: false };

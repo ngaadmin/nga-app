@@ -107,7 +107,7 @@ describe("Launchpad home In Progress tile", () => {
       completedTaskIds: doneSilvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),
       answers: {},
     });
-    const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", source: "seed" } };
+    const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", contentHash: "seed", source: "seed" } };
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={ventures} reset={false} />);
     const bar = await screen.findByRole("progressbar", { name: `${doneSilvers.length} of ${silvers.length} milestones done` });
     expect(bar).toBeTruthy();
@@ -121,7 +121,7 @@ describe("Launchpad home In Progress tile", () => {
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: done.flatMap((floor) => floor.silvers.flatMap((silver) => silver.bronzes.flatMap((bronze) => bronze.tasks.map((task) => task.id)))),
     });
-    const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", source: "seed" } };
+    const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", contentHash: "seed", source: "seed" } };
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={ventures} reset={false} />);
     expect(await screen.findByText("Growing")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));

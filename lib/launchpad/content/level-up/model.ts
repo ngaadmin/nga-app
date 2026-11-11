@@ -67,7 +67,29 @@ export type LaunchpadLevelUpContent = {
     copyHint: string;
     ideas: readonly LevelUpIdea[];
   };
+  /**
+   * Ordered Growing workbook pages. Absent on a payload published before
+   * these pages. Each id has a renderer; the title is the page heading.
+   */
+  workbookPages?: readonly { id: string; title: string }[];
 };
+
+/** Improve picks in week order, with the payload week label and statement label. */
+export function weeklyFocusRows(
+  content: LaunchpadLevelUpContent,
+  plan: readonly { statementId: string; week: number }[],
+): { weekLabel: string; line: string }[] {
+  const labels = content.improve.weekLabels ?? [];
+  const byId = new Map(content.statements.map((item) => [item.id, item.label]));
+  return [...plan]
+    .filter((row) => byId.has(row.statementId) && row.week >= 1)
+    .sort((a, b) => a.week - b.week || a.statementId.localeCompare(b.statementId))
+    .flatMap((row) => {
+      const weekLabel = labels[row.week - 1];
+      const line = byId.get(row.statementId);
+      return weekLabel && line ? [{ weekLabel, line }] : [];
+    });
+}
 
 export function statementsIn(statements: readonly LevelStatement[], section: LevelSectionId): LevelStatement[] {
   return statements.filter((item) => item.section === section);

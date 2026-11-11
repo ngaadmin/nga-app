@@ -122,6 +122,13 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
   const out: HandbookPageView[] = [];
   for (const page of pages) {
     if (page.silver.id === "l3-s1") continue;
+    if (page.done && page.kind === "placeholder") {
+      const entries = levelUpWorkbookPages(page.silver);
+      if (entries.length) {
+        for (const item of entries) out.push({ ...page, kind: "summary", sheet: item.id });
+        continue;
+      }
+    }
     if (page.kind === "costs") {
       out.push({ ...page, kind: "summary", sheet: "pricing-b" });
       out.push({ ...page, sheet: "costs-a" });
@@ -150,6 +157,15 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
     } else out.push(page);
   }
   return out.map((page, i) => ({ ...page, number: i + 1 }));
+}
+
+/** Ordered workbook pages declared on a Level Up silver. Empty when that payload has none yet. */
+function levelUpWorkbookPages(silver: LaunchpadSilver): readonly { id: string; title: string }[] {
+  for (const bronze of silver.bronzes)
+    for (const task of bronze.tasks)
+      for (const screen of task.screens)
+        if (screen.type === "level-up") return screen.content.workbookPages ?? [];
+  return [];
 }
 
 function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {

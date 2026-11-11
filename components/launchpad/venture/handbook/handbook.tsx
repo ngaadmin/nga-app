@@ -17,7 +17,7 @@ import {
 } from "@/lib/launchpad/venture-test/handbook";
 import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
-import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
+import { HandbookPage, TemplatesComingSoon } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
@@ -116,6 +116,7 @@ export function Handbook({
     .filter((tab) => scopeLevel == null || tab.level === scopeLevel)
     .map((tab) => (scopeLevel == null ? tab : { ...tab, tappable: true }));
   // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [index, setIndex] = useState(() => {
     if (initialSheet) {
       const found = pages.findIndex((item) => item.sheet === initialSheet);
@@ -212,50 +213,56 @@ export function Handbook({
             </span>
           </div>
         )}
-        {page && (
+        {(page || templatesOpen) && (
           <div
             className="absolute bottom-[108px] left-[11px] right-[11px] top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC]"
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
             onPointerUp={(e) => {
-              if (swipeX.current === null) return;
+              if (templatesOpen || swipeX.current === null) return;
               const dx = e.clientX - swipeX.current;
               swipeX.current = null;
               if (Math.abs(dx) > 60) go(at + (dx < 0 ? 1 : -1));
             }}
           >
             <SpiralBinding />
-            {(page.number === 2 || page.number === 6) && <Washi page={page.number === 6 ? 6 : 2} />}
+            {!templatesOpen && page && (page.number === 2 || page.number === 6) && <Washi page={page.number === 6 ? 6 : 2} />}
             <div ref={paperRef} className={`h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6 ${WORKBOOK_BODY}`} data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
                 <TemplateBlanks on={scopeLevel != null}>
-                  <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+                  {templatesOpen ? (
+                    <TemplatesComingSoon />
+                  ) : page ? (
+                    <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+                  ) : null}
                 </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
-            <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
-              {paperLabel(page)}
-            </p>
+            {!templatesOpen && page ? (
+              <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
+                {paperLabel(page)}
+              </p>
+            ) : null}
           </div>
         )}
 
-        <nav aria-label={s.workbook.floors} className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-7 gap-1" data-workbook-chrome="folder">
+        <nav aria-label={s.workbook.floors} className="absolute bottom-[72px] left-3 z-raised grid w-[266px] grid-cols-8 gap-0.5" data-workbook-chrome="folder">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
-            const viewing = page?.level === t.level;
+            const viewing = !templatesOpen && page?.level === t.level;
             const later = !!page && t.level > page.level;
             // The floor being viewed gets the app's orange ring (outline, so it sits outside
             // the 44px tab and stacks with any state styling) whatever the tab's state.
             const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
-            const base = `flex h-10 w-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px] ${viewedRing}`;
+            const base = `flex h-[38px] w-full min-w-0 items-center justify-center rounded-b-[3px] rounded-t-none border px-0 font-sans text-[13px] font-semibold ${viewedRing}`;
             const fill = viewing
-              ? "border-[#19347D] bg-white font-semibold text-[#19347D]"
+              ? "border-[#19347D] bg-white text-[#19347D]"
               : later
-                ? "border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#C4C0B8]"
-                : "border-[#E7E1D6] bg-[#F3EFE6] font-semibold text-[#6B645C]";
+                ? "border-[#E5E7EB] bg-[#F7F5F1] text-[#C4C0B8]"
+                : "border-[#E7E1D6] bg-[#F3EFE6] text-[#6B645C]";
             if (!t.tappable)
               return (
                 <button
@@ -264,7 +271,7 @@ export function Handbook({
                   disabled
                   aria-label={`${label}${s.chrome.notEarnedYet}`}
                   aria-current={viewing ? "true" : undefined}
-                  className={`${base} border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#9CA3AF]`}
+                  className={`${base} border-[#E5E7EB] bg-[#F7F5F1] text-[#9CA3AF]`}
                   data-tab-state={t.state}
                   data-viewed={viewing ? "" : undefined}
                 >
@@ -277,7 +284,10 @@ export function Handbook({
                 type="button"
                 aria-label={label}
                 aria-current={viewing ? "true" : undefined}
-                onClick={() => go(handbookTabTarget(pages, t.level))}
+                onClick={() => {
+                  setTemplatesOpen(false);
+                  go(handbookTabTarget(pages, t.level));
+                }}
                 className={`${base} ${fill}`}
                 data-tab-state={t.state}
                 data-viewed={viewing ? "" : undefined}
@@ -286,6 +296,18 @@ export function Handbook({
               </button>
             );
           })}
+          <button
+            type="button"
+            aria-label={s.templates.label}
+            aria-current={templatesOpen ? "true" : undefined}
+            data-templates-tab=""
+            onClick={() => setTemplatesOpen(true)}
+            className={`flex h-[38px] w-full min-w-0 items-center justify-center rounded-b-[3px] rounded-t-none border font-sans text-[#19347D] ${templatesOpen ? "border-[#19347D] bg-white outline outline-2 outline-offset-2 outline-[#FFA503]" : "border-[#E7E1D6] bg-[#F3EFE6]"}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+          </button>
         </nav>
 
         <div className="sr-only">
@@ -297,15 +319,15 @@ export function Handbook({
           </div>
         </div>
         <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
-          <button type="button" aria-label={s.workbook.previous} disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.previous} disabled={templatesOpen || at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="left" />
           </button>
-          <button type="button" aria-label={s.workbook.next} disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.next} disabled={templatesOpen || isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="right" />
           </button>
         </div>
         <div className="absolute inset-x-0 bottom-3 flex justify-center">
-          <button type="button" onClick={() => (isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
+          <button type="button" onClick={() => (templatesOpen || isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
             Continue
           </button>
         </div>

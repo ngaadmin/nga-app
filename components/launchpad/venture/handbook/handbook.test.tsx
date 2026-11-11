@@ -26,6 +26,9 @@ import {
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { Handbook } from "@/components/launchpad/venture/handbook/handbook";
+import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
+import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 
 afterEach(cleanup);
@@ -331,7 +334,9 @@ describe("<Handbook>", () => {
     expect(card.className).toContain("right-[11px]");
     expect(card.className).not.toContain("right-[88px]");
     const floors = within(dialog).getByRole("navigation", { name: "Workbook floors" });
-    expect(floors.className).toContain("grid-cols-7");
+    expect(floors.className).toContain("grid-cols-8");
+    expect(floors.className).toContain("w-[266px]");
+    expect(within(floors).getByRole("button", { name: "Templates" })).toBeTruthy();
     expect(floors.getAttribute("data-workbook-chrome")).toBe("folder");
     expect(within(dialog).getByRole("button", { name: "Continue" })).toBeTruthy();
     const spiral = dialog.querySelector("[data-spiral-binding]")!;
@@ -403,7 +408,7 @@ describe("<Handbook>", () => {
     expect(l2.hasAttribute("data-viewed")).toBe(true);
     expect(l2.getAttribute("aria-current")).toBe("true");
     expect(l2.className).toMatch(/\boutline-2\b/);
-    expect(l2.className).toContain("w-11");
+    expect(l2.className).toContain("h-[38px]");
     // Moving to L1 moves the ring.
     fireEvent.click(tab(/^Level 1/));
     expect(ringed()).toEqual(["Level 1, " + FLOORS[0]!.name]);
@@ -528,6 +533,74 @@ describe("home level scope", () => {
     expect(screen.queryByRole("button", { name: /Level 2/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "‹ Back to Launchpad" }));
     expect(onBack).toHaveBeenCalled();
+  });
+});
+
+describe("L7 weekly focus and the Templates tab", () => {
+  it("replaces the Growing placeholder with the payload page and shows only the saved weeks", () => {
+    const floors = structuredClone(FLOORS);
+    const levelUp = floors[6]!.silvers[0]!.bronzes[0]!.tasks[0]!.screens[0]! as LaunchpadLevelUpScreen;
+    levelUp.content.workbookPages = [{ id: "weekly-focus", title: "Focus this week" }];
+    const progress = setProgressAnswer(ALL, "l7-improve", {
+      kind: "level-up",
+      version: 1,
+      selected: [],
+      picks: {},
+      pace: {},
+      improvePlan: [
+        { statementId: "feedback", week: 3 },
+        { statementId: "confirmed", week: 1 },
+      ],
+      ideas: [],
+    });
+    render(
+      <Handbook
+        entry="building"
+        businessName="Happy Paws"
+        floors={floors}
+        progress={progress}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+        onBackToLift={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Level 7, Growing" }));
+    const page = document.querySelector("[data-weekly-focus]") as HTMLElement;
+    expect(within(page).getByRole("heading", { name: "Focus this week" })).toBeTruthy();
+    expect(within(page).queryByRole("heading", { name: "My weekly focus areas" })).toBeNull();
+    expect(within(page).getByRole("heading", { name: "Week 1" })).toBeTruthy();
+    expect(within(page).getByText("Confirming each job with the customer beforehand")).toBeTruthy();
+    expect(within(page).getByRole("heading", { name: "Week 3" })).toBeTruthy();
+    expect(within(page).getByText("Asking every customer for feedback")).toBeTruthy();
+    expect(within(page).queryByText("Week 2")).toBeNull();
+    expect(within(page).queryByText("Week 4")).toBeNull();
+    expect(page.querySelectorAll("[data-aqua-bullet]")).toHaveLength(2);
+    expect(page.querySelector("[data-tick]")).toBeNull();
+    expect(within(page).queryByRole("checkbox")).toBeNull();
+  });
+
+  it("shows the Templates tab on every page and opens the payload coming-soon page", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      templates: { label: "Patterns", title: "Patterns", comingSoon: "Patterns coming soon." },
+    };
+    render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <Harness entry="home" initial={WITH_IDENTITY} />
+      </SurfaceCopyProvider>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Workbook floors" });
+    const tab = within(nav).getByRole("button", { name: "Patterns" });
+    expect(tab.querySelector("svg")?.getAttribute("width")).toBe("16");
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name: "Patterns" })).toBeTruthy();
+    fireEvent.click(tab);
+    expect(screen.getByRole("heading", { name: "Patterns" })).toBeTruthy();
+    expect(screen.getByText("Patterns coming soon.")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Previous page" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(tab.getAttribute("aria-current")).toBe("true");
   });
 });
 

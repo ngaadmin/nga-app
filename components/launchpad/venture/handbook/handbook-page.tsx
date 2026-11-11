@@ -20,6 +20,7 @@ import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { WeeklyFocusSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
@@ -299,6 +300,18 @@ function CoverPageBody({
  * K14: every page after the cover carries a small identity header (logo and
  * name) so the workbook reads as the learner's own. Left off until either is chosen.
  */
+/** Workbook page opened from the paperclip tab. Copy comes from the payload. */
+export function TemplatesComingSoon() {
+  const copy = useSurfaceCopy().templates;
+  return (
+    <article data-handbook-page="templates" aria-label={copy.title}>
+      <MiniIdentity />
+      <AccentLabel as="h2">{copy.title}</AccentLabel>
+      <p className={`mt-3 ${WORKBOOK_BODY}`}>{copy.comingSoon}</p>
+    </article>
+  );
+}
+
 function MiniIdentity() {
   const { answer } = useIdentityAnswer(IDENTITY_ANSWER_KEY);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
@@ -398,6 +411,18 @@ function SummaryPageBody({
   );
 }
 
+/** Growing workbook page declared on the Level Up payload. */
+function WeeklyFocusPage({ silver }: { silver: HandbookPageView["silver"] }) {
+  for (const bronze of silver.bronzes)
+    for (const task of bronze.tasks)
+      for (const screen of task.screens)
+        if (screen.type === "level-up") {
+          const title = screen.content.workbookPages?.find((item) => item.id === "weekly-focus")?.title;
+          if (title) return <WeeklyFocusSheet content={screen.content} title={title} />;
+        }
+  return null;
+}
+
 /** Every other completed silver: its title, then its finished bronzes as tag chips. */
 function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
   const s = useSurfaceCopy();
@@ -468,6 +493,8 @@ export function HandbookPage({
         <SalesWorkbookPage sheet={page.sheet} />
       ) : page.sheet === "budget-split" ? (
         <ScriptedSheetPage sheet={budgetSplitSheet()} />
+      ) : page.sheet === "weekly-focus" ? (
+        <WeeklyFocusPage silver={page.silver} />
       ) : page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (

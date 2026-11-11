@@ -281,6 +281,11 @@ export const LAUNCHPAD_SURFACE_COPY = {
    * Rooftop finish. Every line is a Storybird placeholder.
    * This screen replaces the earlier rooftop finish.
    */
+  templates: {
+    label: "Templates",
+    title: "Templates",
+    comingSoon: "Templates coming soon.",
+  },
   buildComplete: {
     greeting: "Congratulations!",
     headline: "You built your business!",

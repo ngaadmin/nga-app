@@ -300,6 +300,15 @@ function checkLevelUp(screen: Obj, where: string): void {
     text(grow[field], `${where} grow ${field}`);
   }
   if (!String(grow.checkIn).includes("{date}")) fail(`${where} grow checkIn must include {date}.`);
+  if (content.workbookPages !== undefined) {
+    const seen = new Set<string>();
+    list(content.workbookPages, `${where} workbook pages`).forEach((page, i) => {
+      const pw = `${where} workbook page ${i + 1}`;
+      if (!isObj(page) || typeof page.id !== "string" || !NODE_ID_RE.test(page.id) || seen.has(page.id)) fail(`${pw} has no valid id.`);
+      seen.add(page.id);
+      text(page.title, `${pw} title`);
+    });
+  }
   const ideas = list(grow.ideas, `${where} ideas`, GROW_IDEA_IDS.length, GROW_IDEA_IDS.length);
   const ideaIds = new Set<string>();
   const optionIds = new Set<string>();

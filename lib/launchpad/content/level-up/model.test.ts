@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate } from "@/lib/launchpad/content/level-up/model";
+import { addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 
@@ -26,6 +26,16 @@ describe("Level Up check-in date", () => {
     expect(improve.planHeader).toBe("You've selected your focus areas.");
     expect(improve.planContext).toBe("You can't give all your focus areas equal attention at once, so we suggest one focus per week. Choose the order you want to tackle them.");
     expect(improve.weekLabels).toEqual(["Week 1", "Week 2", "Week 3", "Week 4"]);
+    expect(levelUpContent().workbookPages).toEqual([{ id: "weekly-focus", title: "My weekly focus areas" }]);
+    const rows = weeklyFocusRows(levelUpContent(), [
+      { statementId: "brought-everything", week: 4 },
+      { statementId: "confirmed", week: 1 },
+      { statementId: "missing", week: 2 },
+    ]);
+    expect(rows).toEqual([
+      { weekLabel: "Week 1", line: "Confirming each job with the customer beforehand" },
+      { weekLabel: "Week 4", line: "Always bringing everything I need" },
+    ]);
     expect("startOptions" in improve).toBe(false);
   });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useMemo, useState } from "react";
 import type { FundingAnswer, FundingRepayUnit, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { costsOf, fundingOf } from "@/lib/launchpad/content/answers";
@@ -37,6 +38,7 @@ export function FundingFlow({
   onFinish?: (answer: FundingAnswer) => void;
   onGoToCosts?: () => void;
 }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const answers = answersProp ?? ctx?.answers ?? {};
   const persist = setAnswerProp ?? ((key, answer) => ctx?.setAnswer(key, answer));
@@ -93,12 +95,12 @@ export function FundingFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="funding-start" data-funding-step={step}>
-      <nav aria-label="Breadcrumb" className="mx-5 mt-2 text-[16px] text-[#9AA3B5]">Planning · Funding</nav>
+      <nav aria-label={s.chrome.breadcrumb} className="mx-5 mt-2 text-[16px] text-[#9AA3B5]">{s.funding.crumb}</nav>
       <div className="mx-5 mt-2 flex items-center gap-1">
-        <button type="button" aria-label="Back" onClick={() => (step === "choose" ? onExit() : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
+        <button type="button" aria-label={s.chrome.back} onClick={() => (step === "choose" ? onExit() : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
-        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>Get the money you need to start</h1>
+        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.funding.title}</h1>
       </div>
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
         {step === "choose" && (
@@ -106,9 +108,9 @@ export function FundingFlow({
             <p className="font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.context}</p>
             {known ? (
               <div className="mt-4 rounded-2xl bg-[#F4FBFE] px-4 py-5 text-center" data-startup-total="">
-                <p className="text-[16px] text-[#6B7280]">Your start-up cost is</p>
+                <p className="text-[16px] text-[#6B7280]">{s.funding.startupIs}</p>
                 <p className="font-heading text-[40px] font-extrabold leading-none text-[#19347D]">{money}</p>
-                <p className="mt-1 text-[16px] text-[#9AA3B5]">From Know your cost</p>
+                <p className="mt-1 text-[16px] text-[#9AA3B5]">{s.funding.fromCosts}</p>
               </div>
             ) : (
               <div className="mt-4 rounded-2xl border border-dashed border-[#D9DEE8] px-4 py-6 text-center">
@@ -163,10 +165,10 @@ export function FundingFlow({
               {mode === "fixed_over_time" && (
                 <div className="mt-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-[18px] text-[#19347D]">Pay back over</span>
-                    <button type="button" aria-label="Fewer periods" className="flex size-9 items-center justify-center rounded-lg shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setCount(Math.max(1, count - 1))}>−</button>
+                    <span className="text-[18px] text-[#19347D]">{s.funding.payBackOver}</span>
+                    <button type="button" aria-label={s.funding.fewerPeriods} className="flex size-9 items-center justify-center rounded-lg shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setCount(Math.max(1, count - 1))}>−</button>
                     <span className="w-6 text-center font-heading font-bold" data-repay-count="">{count}</span>
-                    <button type="button" aria-label="More periods" className="flex size-9 items-center justify-center rounded-lg shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setCount(count + 1)}>+</button>
+                    <button type="button" aria-label={s.funding.morePeriods} className="flex size-9 items-center justify-center rounded-lg shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setCount(count + 1)}>+</button>
                   </div>
                   <div className="mt-2 flex gap-2">
                     {(["weeks", "months"] as const).map((item) => (
@@ -176,10 +178,10 @@ export function FundingFlow({
                     ))}
                   </div>
                   <div className="mt-3 rounded-xl bg-[#F4FBFE] px-3 py-3">
-                    <p className="text-[16px] font-semibold uppercase tracking-wide text-[#0A8FA8]">{unit === "weeks" ? "Each week" : "Each month"}</p>
+                    <p className="text-[16px] font-semibold uppercase tracking-wide text-[#0A8FA8]">{unit === "weeks" ? s.funding.eachWeek : s.funding.eachMonth}</p>
                     <p className="font-heading text-[28px] font-extrabold text-[#19347D]" data-period-payment="">{formatMoney(payment, currency)}</p>
                     <p className="text-[18px] text-[#19347D]">
-                      You will pay about {formatMoney(payment, currency)} each {unitWord(unit, 1)} for {count} {unitWord(unit, count)}.
+                      {s.funding.youWillPay} {formatMoney(payment, currency)} each {unitWord(unit, 1)} for {count} {unitWord(unit, count)}.
                     </p>
                     <p className="text-[16px] text-[#6B7280]">{money} / {count} = {formatMoney(payment, currency)}</p>
                   </div>
@@ -194,16 +196,16 @@ export function FundingFlow({
               {mode === "weekly_amount" && (
                 <div className="mt-3">
                   <label className="flex items-center gap-2 text-[18px] text-[#19347D]">
-                    I will pay
-                    <input aria-label="Weekly amount" inputMode="decimal" value={weeklyText} onChange={(event) => setWeeklyText(event.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"))} className="h-10 w-16 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
-                    a week
+                    {s.funding.iWillPay}
+                    <input aria-label={s.funding.weeklyAmount} inputMode="decimal" value={weeklyText} onChange={(event) => setWeeklyText(event.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"))} className="h-10 w-16 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
+                    {s.funding.aWeek}
                   </label>
                   {weeks !== null && (
                     <div className="mt-3 rounded-xl bg-[#F4FBFE] px-3 py-3">
-                      <p className="text-[16px] font-semibold uppercase tracking-wide text-[#0A8FA8]">Paid back in about</p>
+                      <p className="text-[16px] font-semibold uppercase tracking-wide text-[#0A8FA8]">{s.funding.paidBack}</p>
                       <p className="font-heading text-[28px] font-extrabold text-[#19347D]" data-weeks-to-repay="">{weeks} {unitWord("weeks", weeks)}</p>
                       <p className="text-[18px] text-[#19347D]">
-                        At {formatMoney(weekly, currency)} a week, it will take about {weeks} {unitWord("weeks", weeks)} to pay back {money}.
+                        At {formatMoney(weekly, currency)} {s.funding.atAWeek} {weeks} {unitWord("weeks", weeks)} {s.funding.toPayBack} {money}.
                       </p>
                     </div>
                   )}

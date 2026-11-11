@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useEffect, useState } from "react";
 import type { LaunchpadPictureScreen } from "@/lib/launchpad/content/types";
 import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
@@ -41,6 +42,7 @@ export function PictureFlow({
   onExit: () => void;
   onFinish: () => void;
 }) {
+  const s = useSurfaceCopy();
   const [page, setPage] = useState(0);
   const [split, setSplit] = useState<readonly number[] | null>(null);
   const total = screen.pages.length;
@@ -84,14 +86,14 @@ export function PictureFlow({
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <LessonSurface
-        title={current.split ? "Set your own split" : screen.title}
+        title={current.split ? s.price.splitTitle : screen.title}
         onBack={() => (page === 0 ? leave(onExit) : show(page - 1))}
         progress={total > 1 ? { index: page + 1, total } : undefined}
         progressClassName={current.split ? "mt-8" : undefined}
         showMute={screen.voice === true}
         creditSlot={screen.pages.some((item) => pageCredit(item))}
         aboveFooter={pageAudio(current) ? <StoryAudioPlayer inline clip={pageAudio(current)} preloadSrc={pageAudio(screen.pages[page + 1])?.src} /> : null}
-        footer={<LessonContinue disabled={!canContinue} onClick={() => (current.split ? finish() : last ? leave(onFinish) : show(page + 1))}>{current.split ? "Lock in my split" : "Continue"}</LessonContinue>}
+        footer={<LessonContinue disabled={!canContinue} onClick={() => (current.split ? finish() : last ? leave(onFinish) : show(page + 1))}>{current.split ? s.price.lockSplit : "Continue"}</LessonContinue>}
       >
         {pageCredit(current) ? <LessonCredit credit={pageCredit(current) ?? ""} /> : null}
         <div data-task-screen="picture" data-picture-page={current.id}>

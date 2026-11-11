@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { ReactNode } from "react";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
@@ -65,11 +66,12 @@ export function WorkbookFrame({
   marks?: ReactNode;
   children: ReactNode;
 }) {
+  const s = useSurfaceCopy();
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-white text-[#111827]" data-workbook-frame="">
       <header className="flex h-14 flex-none items-center gap-2 px-3">
         <div className="min-w-0">
-          <h1 className="font-heading text-[17px] font-semibold leading-tight text-[#111827]">My workbook</h1>
+          <h1 className="font-heading text-[17px] font-semibold leading-tight text-[#111827]">{s.workbook.title}</h1>
           <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
         </div>
       </header>
@@ -85,7 +87,7 @@ export function WorkbookFrame({
         </div>
       </div>
       <div className="relative z-raised -mt-1.5 flex flex-none items-end gap-2 px-3 pb-1">
-        <div className="grid w-1/2 grid-cols-7 gap-1" aria-label="Workbook floors">
+        <div className="grid w-1/2 grid-cols-7 gap-1" aria-label={s.workbook.floors}>
           {[1, 2, 3, 4, 5, 6, 7].map((n) => {
             const selected = n === level;
             const muted = n > level;
@@ -103,10 +105,10 @@ export function WorkbookFrame({
           })}
         </div>
         <div className="flex gap-1">
-          <button type="button" aria-label="Previous page" disabled={!canBack} onClick={onBack} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.previous} disabled={!canBack} onClick={onBack} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
             <Arrow dir="left" />
           </button>
-          <button type="button" aria-label="Next page" disabled={!canForward} onClick={onForward} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.next} disabled={!canForward} onClick={onForward} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
             <Arrow dir="right" />
           </button>
         </div>

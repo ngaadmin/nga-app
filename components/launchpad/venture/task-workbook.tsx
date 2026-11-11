@@ -1,3 +1,4 @@
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer";
 import { identityTaskKind, LogoBuilder, NameForm } from "@/components/launchpad/venture/identity/picker-screens";
@@ -37,6 +38,7 @@ export function TaskWorkbook(props: {
   /** Optional last goal (Final J11): "Skip for now" saves nothing and moves on. */
   onSkip?: () => void;
 }) {
+  const s = useSurfaceCopy();
   const { tasks, index } = props;
   const task = tasks[index];
   if (!task) return null;
@@ -69,7 +71,7 @@ export function TaskWorkbook(props: {
         )}
       </div>
       {!single && (
-      <div className="mb-0.5 mt-2.5 flex items-center justify-center gap-2.5" role="group" aria-label="Tasks">
+      <div className="mb-0.5 mt-2.5 flex items-center justify-center gap-2.5" role="group" aria-label={s.chrome.tasks}>
         {tasks.map((t, i) => {
           const cur = i === index;
           const tone = cur ? "bg-nga-secondary text-white" : t.done ? "bg-nga-panel text-nga-ink" : "bg-nga-mist text-nga-slate";
@@ -135,7 +137,7 @@ export function TaskWorkbook(props: {
             className="min-h-11 px-3 font-sans text-[16px] font-semibold leading-[23px] text-nga-slate underline underline-offset-4"
             data-skip-for-now=""
           >
-            Skip for now
+            {s.chrome.skipForNow}
           </button>
         </div>
       )}

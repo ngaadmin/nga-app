@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState, type ReactNode } from "react";
 import type { LaunchpadPickerOption } from "@/lib/launchpad/content/types";
 import {
@@ -82,9 +83,10 @@ export function ShapeChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const s = useSurfaceCopy();
   const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo shape" className="flex w-full justify-center gap-2">
+    <Group label={s.identity.logoShape} className="flex w-full justify-center gap-2">
       {options.map((o) => (
         <LogoTile key={o.id} on={answer.shape === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("shape", o.id)}>
           <LogoMark shape={o.id} color={base} icon={answer.icon} size={60} />
@@ -104,10 +106,11 @@ export function ColorChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const s = useSurfaceCopy();
   const picked = options.find((o) => o.hex.toUpperCase() === answer.color?.toUpperCase());
   return (
     <div>
-      <Group label="Logo color" className="flex justify-center gap-7">
+      <Group label={s.identity.logoColor} className="flex justify-center gap-7">
         {options.map((o) => {
           const on = picked?.id === o.id;
           return (
@@ -143,9 +146,10 @@ export function IconChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const s = useSurfaceCopy();
   const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo icon" className="flex w-full justify-center gap-2">
+    <Group label={s.identity.logoIcon} className="flex w-full justify-center gap-2">
       {options.map((o) => (
         <LogoTile key={o.id} on={answer.icon === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("icon", o.id)}>
           <LogoMark shape={answer.shape ?? "circle"} color={base} icon={o.id} size={60} />
@@ -383,16 +387,7 @@ export function Segmented<T extends string>({
   );
 }
 
-const LOGO_TABS = [
-  { id: "shape", label: "Shape" },
-  { id: "color", label: "Color" },
-  { id: "icon", label: "Icon" },
-] as const;
-const NAME_TABS = [
-  { id: "name", label: "Name" },
-  { id: "font", label: "Font" },
-  { id: "nameColor", label: "Font color" },
-] as const;
+const LOGO_TAB_IDS = ["shape", "color", "icon"] as const;
 
 /**
  * Change any identity pick in place: a Logo row (Shape, Color, Icon) and a
@@ -412,15 +407,26 @@ export function IdentityEditor({
   idPrefix: string;
   initial?: IdentityField;
 }) {
+  const s = useSurfaceCopy();
+  const logoTabs = [
+    { id: "shape" as const, label: s.identity.shape },
+    { id: "color" as const, label: s.identity.color },
+    { id: "icon" as const, label: s.identity.icon },
+  ];
+  const nameTabs = [
+    { id: "name" as const, label: s.identity.name },
+    { id: "font" as const, label: s.identity.font },
+    { id: "nameColor" as const, label: s.identity.fontColor },
+  ];
   const [field, setField] = useState<IdentityField>(initial);
   const panelId = `${idPrefix}-panel`;
-  const logo = LOGO_TABS.some((t) => t.id === field);
+  const logo = LOGO_TAB_IDS.some((id) => id === field);
   return (
     <div data-identity-editor="">
       <p className="mb-1.5 text-[16px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Logo</p>
-      <Segmented label="Change your logo" items={LOGO_TABS} value={logo ? (field as (typeof LOGO_TABS)[number]["id"]) : null} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
+      <Segmented label={s.identity.changeLogo} items={logoTabs} value={logo ? (field as (typeof logoTabs)[number]["id"]) : null} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
       <p className="mb-1.5 mt-3 text-[16px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Name</p>
-      <Segmented label="Change your name" items={NAME_TABS} value={logo ? null : (field as (typeof NAME_TABS)[number]["id"])} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
+      <Segmented label={s.identity.changeName} items={nameTabs} value={logo ? null : (field as (typeof nameTabs)[number]["id"])} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
       <div id={panelId} role="tabpanel" aria-labelledby={`${idPrefix}-tab-${field}`} className="mt-5" data-editor={field}>
         <IdentityFieldEditor field={field} choices={choices} answer={answer} update={update} nameInputId={`${idPrefix}-name`} />
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
@@ -200,6 +201,7 @@ function CoverPageBody({
   editable: boolean;
   iconVentureId: string;
 }) {
+  const s = useSurfaceCopy();
   const wrapUp =
     page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
   const answerKey = wrapUp?.answerKey ?? "";
@@ -230,7 +232,7 @@ function CoverPageBody({
         >
           <RocketDoodle />
           <span className="px-1 text-[9.5px] leading-tight text-[#9AA3B5]">
-            Your logo goes here
+            {s.workbook.logoHere}
           </span>
         </div>
       )}
@@ -245,7 +247,7 @@ function CoverPageBody({
           data-cover-name="empty"
           className="font-heading text-[16px] font-semibold text-[#9AA3B5]"
         >
-          Your business name
+          {s.workbook.businessName}
         </p>
       )}
       </div>
@@ -259,7 +261,7 @@ function CoverPageBody({
         >
           <EditPencil />
           {editing ? "Close" : "Edit"}
-          <span className="sr-only"> logo and name</span>
+          <span className="sr-only">{s.workbook.logoAndName}</span>
         </button>
       )}
       {editable && editing && (
@@ -337,6 +339,7 @@ function SummaryPageBody({
   editable: boolean;
   iconVentureId: string;
 }) {
+  const s = useSurfaceCopy();
   const sectionList = silverHandbookSections(page.silver);
   const sections = useSectionLines(sectionList);
   const templates = useTemplateBlanks();
@@ -386,7 +389,7 @@ function SummaryPageBody({
             <HandRule />
             <AccentLabel>{section.label}</AccentLabel>
             <p className={`mt-2 ${WORKBOOK_HINT}`}>
-              Not answered yet
+              {s.chrome.notAnswered}
             </p>
           </div>
         ),
@@ -397,12 +400,13 @@ function SummaryPageBody({
 
 /** Every other completed silver: its title, then its finished bronzes as tag chips. */
 function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
+  const s = useSurfaceCopy();
   return (
     <>
       <AccentLabel as="h2">{page.silver.title}</AccentLabel>
       <HandRule />
-      <AccentLabel>What I did</AccentLabel>
-      <ul className="mt-3 flex flex-col gap-2" aria-label="What I did">
+      <AccentLabel>{s.workbook.whatIDid}</AccentLabel>
+      <ul className="mt-3 flex flex-col gap-2" aria-label={s.workbook.whatIDid}>
         {page.bronzeTitles.map((t, i) => (
           <li key={t} className={WORKBOOK_BODY}>{partLabel(t, i)}</li>
         ))}
@@ -431,6 +435,7 @@ export function HandbookPage({
   /** Opens the cost sheet for the start-up list or one service. */
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
+  const s = useSurfaceCopy();
   return (
     <article
       className="relative"
@@ -440,7 +445,7 @@ export function HandbookPage({
         page.kind === "cover"
           ? `Page ${page.number}`
           : page.kind === "costs"
-            ? `Page ${page.number}: My costs`
+            ? `Page ${page.number}: ${s.workbook.myCosts}`
             : `Page ${page.number}: ${page.silver.title}`
       }
     >
@@ -521,6 +526,7 @@ function CostsPageBody({
   part?: "all" | "startup" | "rest";
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const templates = useTemplateBlanks();
   const screen = silver.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)).find((s) => s.type === "know-your-cost");
@@ -529,7 +535,7 @@ function CostsPageBody({
     if (!templates || !screen || screen.type !== "know-your-cost") return null;
     return (
       <>
-        <AccentLabel as="h2">My costs</AccentLabel>
+        <AccentLabel as="h2">{s.workbook.myCosts}</AccentLabel>
         <p className={`mt-3 ${WORKBOOK_BODY}`}>{screen.copy.starterLabel} <BlankSlot /></p>
         <p className={`mt-2 ${WORKBOOK_BODY}`}>{screen.copy.marketingLabel} <BlankSlot /></p>
       </>

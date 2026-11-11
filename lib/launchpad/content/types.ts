@@ -1,6 +1,7 @@
 import type { LaunchpadReadableSchemaVersion } from "@/lib/launchpad/content/schema-version";
 import type { LogoIconId, LogoShapeId, NameColorId, NameFontId } from "@/lib/launchpad/content/identity";
 import type { LaunchpadLevelUpContent } from "@/lib/launchpad/content/level-up/model";
+import type { LaunchpadSurfaceCopy } from "@/lib/launchpad/content/surface-copy";
 
 /**
  * Launchpad venture content. One payload per venture, stored as one row in
@@ -767,5 +768,7 @@ export type LaunchpadFloor = {
 export type LaunchpadVenturePayload = {
   schemaVersion: LaunchpadReadableSchemaVersion;
   ventureId: string;
+  /** Shared learner-facing strings. Required on schema 4. */
+  surface?: LaunchpadSurfaceCopy;
   floors: readonly LaunchpadFloor[];
 };

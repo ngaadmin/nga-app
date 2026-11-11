@@ -1,5 +1,5 @@
 /** Payload shape version stored in launchpad_venture_versions.payload. Bump on a shape change. */
-export const LAUNCHPAD_PAYLOAD_SCHEMA_VERSION = 3;
+export const LAUNCHPAD_PAYLOAD_SCHEMA_VERSION = 4;
 
 /**
  * Versions this app can read. v2 adds the capture templates (context,
@@ -7,9 +7,10 @@ export const LAUNCHPAD_PAYLOAD_SCHEMA_VERSION = 3;
  * wrap-up and the gold completion screen; a v1 payload is a valid v2 one
  * without them, so it still reads. v3 puts Level Up statements and Reflect,
  * Improve, and Grow copy on the level-up screen. A v1 or v2 payload still
- * reads when it has no level-up screen.
+ * reads when it has no level-up screen. v4 adds surface, the shared
+ * learner-facing strings. Older payloads still read without it.
  */
-export const LAUNCHPAD_READABLE_SCHEMA_VERSIONS = [1, 2, 3] as const;
+export const LAUNCHPAD_READABLE_SCHEMA_VERSIONS = [1, 2, 3, 4] as const;
 export type LaunchpadReadableSchemaVersion = (typeof LAUNCHPAD_READABLE_SCHEMA_VERSIONS)[number];
 
 /**

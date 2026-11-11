@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import { customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -43,6 +44,7 @@ function joinLabels(ids: readonly string[]): string {
  * Chips open the same menu inline. The only pencil is the own-words time line.
  */
 export function ProductHandbook({ editable }: { editable: boolean }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const offer = offerOf(ctx?.answers, OFFER_ANSWER_KEY);
   const customer = customerOf(ctx?.answers, CUSTOMER_ANSWER_KEY);
@@ -51,13 +53,13 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
   const [also, setAlso] = useState(offer?.availabilityExtra ?? "");
   const templates = useTemplateBlanks();
   if (!offer) {
-    if (!templates) return <p className={WORKBOOK_HINT}>Not answered yet</p>;
+    if (!templates) return <p className={WORKBOOK_HINT}>{s.chrome.notAnswered}</p>;
     return (
       <div data-module2-handbook="product">
-        <AccentLabel as="h2">The product and its buyers</AccentLabel>
-        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
+        <AccentLabel as="h2">{s.sheets.product}</AccentLabel>
+        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>{s.sheets.selling}</h3>
         <p className={WORKBOOK_BODY}><BlankSlot /></p>
-        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>When and who might want it</h3>
+        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>{s.sheets.whenWho}</h3>
         <p className={WORKBOOK_BODY}><BlankSlot /></p>
       </div>
     );
@@ -68,8 +70,8 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
   };
   return (
     <div data-module2-handbook="product">
-      <AccentLabel as="h2">The product and its buyers</AccentLabel>
-      <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
+      <AccentLabel as="h2">{s.sheets.product}</AccentLabel>
+      <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>{s.sheets.selling}</h3>
       {offer.offerings.map((row) => {
         const catalog = catalogFor(row.serviceId);
         const label = services.find((service) => service.id === row.serviceId)?.label ?? row.serviceId;
@@ -77,7 +79,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         return (
           <div key={row.serviceId} className="mb-3">
             <button type="button" className={WORKBOOK_ANSWER} disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
-              {label === "dog walking" ? "Dog walking" : label === "dog training" ? "Dog Training" : label === "grooming" ? "Grooming" : label}
+              {label === "dog walking" ? s.sheets.dogWalking : label === "dog training" ? s.sheets.dogTraining : label === "grooming" ? "Grooming" : label}
             </button>
             <p className={`mt-1 ${WORKBOOK_BODY}`}>
               <ChosenValue>{joinLabels(row.packages)}</ChosenValue>
@@ -105,7 +107,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
                     ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, addons } : entry) });
                   }} />
                 ))}
-                <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">+ Add another</p>
+                <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">{s.sheets.addAnother}</p>
                 <button type="button" className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]" onClick={() => setEditing(null)}>Done</button>
               </div>
             )}
@@ -118,7 +120,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
       </p>
       <div className={`mt-2 flex items-center gap-2 ${WORKBOOK_BODY}`}>
         {editable && (
-          <button type="button" aria-label="Edit your own time" data-pencil="" onClick={() => setEditing(editing === "also" ? null : "also")} className="text-[#6B7280]">✎</button>
+          <button type="button" aria-label={s.sheets.editTime} data-pencil="" onClick={() => setEditing(editing === "also" ? null : "also")} className="text-[#6B7280]">✎</button>
         )}
         <span>
           Also:{" "}
@@ -127,16 +129,16 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
       </div>
       {editing === "also" && (
         <div className="mt-2" data-inline-editor="also">
-          <input aria-label="Your own time" maxLength={80} value={also} onChange={(event) => setAlso(event.target.value)} className="h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
+          <input aria-label={s.sheets.ownTime} maxLength={80} value={also} onChange={(event) => setAlso(event.target.value)} className="h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
           <button type="button" className={`${BTN_CYAN_COMPACT} mt-2`} onClick={saveAlso}>Done</button>
         </div>
       )}
       {customer && (
         <>
-          <h3 className={`mb-2 mt-4 ${WORKBOOK_SUB}`}>Who might want it</h3>
+          <h3 className={`mb-2 mt-4 ${WORKBOOK_SUB}`}>{s.sheets.whoWants}</h3>
           <p className={`${WORKBOOK_BODY}`}>
-            I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They said <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>. They were interested in <ChosenValue>{joinLabels(customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)))}</ChosenValue>.
-            {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
+            {s.sheets.iAsked} <ChosenValue>{customer.numberAsked}</ChosenValue> {s.sheets.peopleSaid} <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>{s.sheets.interestedIn} <ChosenValue>{joinLabels(customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)))}</ChosenValue>.
+            {customer.times && customer.times.length > 0 ? <> {s.sheets.wantedWalks} <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
           </p>
         </>
       )}

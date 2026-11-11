@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { ScriptedPart, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, WORKBOOK_BODY, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
@@ -8,10 +9,11 @@ import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/han
 import { BudgetSplit } from "@/components/launchpad/venture/handbook/budget-split";
 
 function Part({ part }: { part: ScriptedPart }) {
+  const s = useSurfaceCopy();
   const templates = useTemplateBlanks();
   if (typeof part === "string") return <span>{part}</span>;
   if (part.value) return <ChosenValue>{part.value}</ChosenValue>;
-  return templates ? <BlankSlot /> : <span>Not answered yet</span>;
+  return templates ? <BlankSlot /> : <span>{s.chrome.notAnswered}</span>;
 }
 
 /** Shared workbook page for a scripted sheet. Level content stays in the payload. */

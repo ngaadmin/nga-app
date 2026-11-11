@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { CompetitorAnswer, CustomerAnswer, LaunchpadAnswers, OfferAnswer, ServiceOffering } from "@/lib/launchpad/content/answers";
@@ -93,6 +94,7 @@ export function OfferLoopFlow({
   const answers = answersProp ?? ctx?.answers ?? {};
   const persist = setAnswerProp ?? ((key, answer) => ctx?.setAnswer(key, answer));
   const services = chosenServices(floors, answers, screen.servicesFrom);
+  const s = useSurfaceCopy();
   const saved = offerOf(answers, screen.answerKey);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OfferAnswer>(
@@ -125,13 +127,13 @@ export function OfferLoopFlow({
       <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-3">
         <p className={LESSON_HINT}>
-          {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? "this service")}
+          {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? s.offer.thisService)}
         </p>
         {!onWhen && offering && catalog && (
           <>
             <p className="mt-3 rounded-2xl bg-[#F7FAFD] px-3 py-3 text-[18px] leading-snug text-[#19347D]">
-              I offer {offering.packages.map((id) => chipLabel(id)).join(", ") || "…"}.
-              {(offering.addons.length > 0 || offering.addonsExtra) && ` Extras I can add: ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
+              {s.offer.iOffer} {offering.packages.map((id) => chipLabel(id)).join(", ") || "…"}.
+              {(offering.addons.length > 0 || offering.addonsExtra) && ` ${s.offer.extrasLead} ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
             </p>
             <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
               <ScreenPrompt tone="section" flush>{screen.copy.packagesHeading}</ScreenPrompt>
@@ -144,7 +146,7 @@ export function OfferLoopFlow({
             </div>
             <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "package" ? null : "package")}>{screen.copy.addPackage}</button>
             {extraOpen === "package" && (
-              <input aria-label="Your own package" maxLength={40} value={offering.packagesExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, packagesExtra: event.target.value }))} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type your own package" />
+              <input aria-label={s.offer.ownPackage} maxLength={40} value={offering.packagesExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, packagesExtra: event.target.value }))} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder={s.offer.typePackage} />
             )}
             <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
               <ScreenPrompt tone="section" flush>{screen.copy.extrasHeading}</ScreenPrompt>
@@ -158,8 +160,8 @@ export function OfferLoopFlow({
             <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "addon" ? null : "addon")}>{screen.copy.addExtra}</button>
             {extraOpen === "addon" && (
               <label className="mt-2 block text-[16px] text-[#6B7280]">
-                Add another extra (optional)
-                <input aria-label="Your own extra" maxLength={40} value={offering.addonsExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, addonsExtra: event.target.value }))} className="mt-1 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type your own extra" />
+                {s.offer.addExtra}
+                <input aria-label={s.offer.ownExtra} maxLength={40} value={offering.addonsExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, addonsExtra: event.target.value }))} className="mt-1 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder={s.offer.typeExtra} />
               </label>
             )}
           </>
@@ -180,7 +182,7 @@ export function OfferLoopFlow({
             />
           </>
         )}
-        {services.length === 0 && <p className={`mt-4 ${LESSON_HINT}`}>Pick a service in Level 1 first.</p>}
+        {services.length === 0 && <p className={`mt-4 ${LESSON_HINT}`}>{s.offer.pickService}</p>}
       </div>
       <div className="px-5 pb-[18px]">
         <LessonContinue
@@ -214,6 +216,7 @@ export function CustomerCheckFlow({
   const answers = answersProp ?? ctx?.answers ?? {};
   const persist = setAnswerProp ?? ((key, answer) => ctx?.setAnswer(key, answer));
   const offer = offerOf(answers, screen.offerFrom);
+  const s = useSurfaceCopy();
   const saved = customerOf(answers, screen.answerKey);
   const chips: LaunchpadChip[] = [];
   for (const row of offer?.offerings ?? []) {
@@ -260,7 +263,7 @@ export function CustomerCheckFlow({
                       key={index}
                       appearance="inline"
                       idPrefix={screen.id}
-                      field={{ name: "numberAsked", label: "Number of people asked", input: "integer", min: 1, max: 20 }}
+                      field={{ name: "numberAsked", label: s.offer.numberAsked, input: "integer", min: 1, max: 20 }}
                       value={draft.numberAsked}
                       onChange={(value) => {
                         const n = typeof value === "number" ? value : Number(value);
@@ -278,7 +281,7 @@ export function CustomerCheckFlow({
                       idPrefix={screen.id}
                       field={{
                         name: "yesNo",
-                        label: "Yes or no",
+                        label: s.offer.yesOrNo,
                         input: "choice",
                         options: [
                           { id: "yes", label: screen.yesLabel },
@@ -345,6 +348,7 @@ export function CompetitorFlow({
       if (found && !packages.some((item) => item.id === id)) packages.push(found);
     }
   }
+  const s = useSurfaceCopy();
   const saved = competitorOf(answers, screen.answerKey);
   const [step, setStep] = useState<1 | 2>(1);
   const [ideasOpen, setIdeasOpen] = useState(false);
@@ -371,7 +375,7 @@ export function CompetitorFlow({
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={step}>
       <LessonTopBar
-        title="What others charge"
+        title={s.competitor.title}
         onBack={() => (step === 2 ? setStep(1) : onExit())}
         trailing={<span className="text-[18px] font-semibold text-[#0A8FA8]">{step} of 2</span>}
       />
@@ -380,28 +384,28 @@ export function CompetitorFlow({
           <>
             <p className={LESSON_HINT}>{screen.copy.pricesIntro}</p>
             <p className={`mt-3 ${LESSON_BODY}`}>
-              I checked{" "}
-              <input aria-label="Walkers checked" inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
-              {" "}other dog walkers. For a{" "}
-              <select aria-label="Job compared" value={draft.jobComparedId ?? ""} onChange={(event) => write({ ...draft, jobComparedId: event.target.value || undefined })} className="mx-1 h-9 rounded-lg bg-white px-2 font-semibold shadow-[inset_0_0_0_1.5px_#0CC1E0]">
-                <option value="">Choose a job</option>
+              {s.competitor.iChecked}{" "}
+              <input aria-label={s.competitor.walkersChecked} inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
+              {" "}{s.competitor.otherWalkersFor}{" "}
+              <select aria-label={s.competitor.jobCompared} value={draft.jobComparedId ?? ""} onChange={(event) => write({ ...draft, jobComparedId: event.target.value || undefined })} className="mx-1 h-9 rounded-lg bg-white px-2 font-semibold shadow-[inset_0_0_0_1.5px_#0CC1E0]">
+                <option value="">{s.competitor.chooseJob}</option>
                 {packages.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
-              {" "}they charge from $
-              <input aria-label="Lowest price" inputMode="numeric" value={String(draft.priceLow)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceLow: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
+              {" "}{s.competitor.theyCharge}
+              <input aria-label={s.competitor.lowest} inputMode="numeric" value={String(draft.priceLow)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceLow: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
               to $
-              <input aria-label="Highest price" inputMode="numeric" value={String(draft.priceHigh)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceHigh: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
+              <input aria-label={s.competitor.highest} inputMode="numeric" value={String(draft.priceHigh)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceHigh: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
               .
             </p>
             <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setJobExtraOpen((open) => !open)}>{screen.copy.addJob}</button>
             {jobExtraOpen && (
-              <input aria-label="Another job" maxLength={40} value={draft.jobComparedExtra ?? ""} onChange={(event) => write({ ...draft, jobComparedExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type the job you compared" />
+              <input aria-label={s.competitor.anotherJob} maxLength={40} value={draft.jobComparedExtra ?? ""} onChange={(event) => write({ ...draft, jobComparedExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder={s.competitor.typeJob} />
             )}
           </>
         ) : (
           <>
             <p className={LESSON_HINT}>{screen.copy.extrasIntro}</p>
-            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>They often include</h2>
+            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{s.competitor.oftenInclude}</h2>
             <div className="flex flex-wrap gap-2">
               {screen.addons.map((item) => (
                 <Chip key={item.id} tone="package" label={item.label} selected={draft.addons.includes(item.id)} onClick={() => write({ ...draft, addons: toggle(draft.addons, item.id) })} />
@@ -426,7 +430,7 @@ export function CompetitorFlow({
                 </div>
                 <p className="mt-2 text-[16px] text-[#6B7280]">{screen.copy.elseHint}</p>
                 {draft.doDifferently === SOMETHING_ELSE_ID && (
-                  <input aria-label="Your own idea" maxLength={80} value={draft.doDifferentlyExtra ?? ""} onChange={(event) => write({ ...draft, doDifferentlyExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
+                  <input aria-label={s.competitor.ownIdea} maxLength={80} value={draft.doDifferentlyExtra ?? ""} onChange={(event) => write({ ...draft, doDifferentlyExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
                 )}
                 <button type="button" className={`${BTN_PRIMARY} mt-3`} onClick={() => setIdeasOpen(false)}>Done</button>
               </div>

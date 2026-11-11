@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import type { LaunchpadFloor, LaunchpadSummarySection, LaunchpadSummarySource, LaunchpadSummaryWrapUp } from "@/lib/launchpad/content/types";
 import { fieldsAnswer, fieldsOf, selectionAnswer, selectionOf, type LaunchpadAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
@@ -53,6 +54,7 @@ function InlineEditor({
   onSave: (answer: LaunchpadAnswer) => void;
   onCancel: () => void;
 }) {
+  const s = useSurfaceCopy();
   const [draft, setDraft] = useState<Draft>(() => draftFor(edit, answers, source.answerKey));
   const valid = isSummaryDraftValid(edit, draft);
   return (
@@ -87,7 +89,7 @@ function InlineEditor({
       )}
       {!valid && (
         <p className="text-[12.5px] text-nga-slate" data-edit-hint="">
-          {edit.kind === "selection" ? (edit.screen.mode === "single" ? "Pick one to save." : "Pick at least one to save.") : "Fill in each box to save."}
+          {edit.kind === "selection" ? (edit.screen.mode === "single" ? s.price.pickOne : s.price.pickAtLeast) : s.price.fillBoxes}
         </p>
       )}
       <div className="flex gap-2.5">
@@ -201,6 +203,7 @@ export function BinderSection({
   setEditing: (key: string | null) => void;
   setAnswer: (answerKey: string, answer: LaunchpadAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const sources = orderedSources(section.sources, answers, catalog);
   const rows = sources.map((src) => ({ src, lines: sourceLinesOf(section, src, answers, catalog), edit: summaryEdit(src, catalog) }));
   const empty = rows.every((r) => !r.lines.length);
@@ -239,7 +242,7 @@ export function BinderSection({
           <PencilButton label={`Edit ${section.label}`} expanded={picking} onClick={() => setEditing(picking ? null : pickKey)} />
         )}
       </div>
-      {empty && <p className={`mt-2 italic ${WORKBOOK_HINT}`}>Not answered yet</p>}
+      {empty && <p className={`mt-2 italic ${WORKBOOK_HINT}`}>{s.chrome.notAnswered}</p>}
       {perLine ? (
         <ul className="flex flex-col">
           {rows.flatMap((r) =>

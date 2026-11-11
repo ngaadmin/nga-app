@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
@@ -164,9 +165,10 @@ export function GettingReadyFlow({
   onSave?: (answer: ReadyAnswer) => void;
   onFinish: (answer: ReadyAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const services = useMemo(() => {
     const chosen = chosenServices(floors, answers, "l1-offer");
-    return chosen.length ? chosen : [{ id: "dog-walking", label: "Dog walking" }];
+    return chosen.length ? chosen : [{ id: "dog-walking", label: s.costs.dogWalking }];
   }, [floors, answers]);
 
   if (screen.step === "find") return <FindStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
@@ -549,15 +551,16 @@ function PracticeStep({
   onExit: () => void;
   onFinish: (answer: PracticeRunAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const saved = practiceRunOf(answers, screen.answerKey);
   const [who, setWho] = useState(saved?.who);
   const [service, setService] = useState(saved?.service);
   const [when, setWhen] = useState(saved?.when);
   const ready = !!who && !!service && !!when;
   const stems = [
-    { lead: screen.practiceWhoLead, label: "Who you will practice with", value: who, options: screen.practiceWho ?? [], onPick: setWho },
-    { lead: screen.practiceServiceLead, label: "Which service", value: service, options: services.map((row) => ({ id: row.id, label: row.label })), onPick: setService },
-    { lead: screen.practiceWhenLead, label: "When you will practice", value: when, options: screen.practiceWhen ?? [], onPick: setWhen },
+    { lead: screen.practiceWhoLead, label: s.ready.who, value: who, options: screen.practiceWho ?? [], onPick: setWho },
+    { lead: screen.practiceServiceLead, label: s.ready.whichService, value: service, options: services.map((row) => ({ id: row.id, label: row.label })), onPick: setService },
+    { lead: screen.practiceWhenLead, label: s.ready.when, value: when, options: screen.practiceWhen ?? [], onPick: setWhen },
   ];
   return (
     <LessonSurface

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { CostsAnswer } from "@/lib/launchpad/content/answers";
 import {
   formatStartupMoney,
@@ -55,14 +56,15 @@ export function CostWorkbookBody({
   onEditStartup?: () => void;
   onEditService?: (serviceId: string) => void;
 }) {
+  const s = useSurfaceCopy();
   const view = workbookView(answer);
   const money = (amount: number) => formatStartupMoney(amount, currency);
   const job = (amount: number) => formatWorkbookMoney(amount, currency);
   const startupHead = (
     <div className="mb-1.5 flex items-center justify-between gap-2">
-      <h3 className="font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">Start-up costs</h3>
+      <h3 className="font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">{s.costs.startupTitle}</h3>
       {editable && onEditStartup && (
-        <button type="button" aria-label="Edit start-up costs" onClick={onEditStartup} className="flex size-11 items-center justify-center rounded-lg" data-pencil="">
+        <button type="button" aria-label={s.costs.editStartup} onClick={onEditStartup} className="flex size-11 items-center justify-center rounded-lg" data-pencil="">
           <Pencil />
         </button>
       )}
@@ -70,7 +72,7 @@ export function CostWorkbookBody({
   );
   return (
     <div data-cost-workbook="">
-      <AccentLabel as="h2">My costs</AccentLabel>
+      <AccentLabel as="h2">{s.workbook.myCosts}</AccentLabel>
       {part !== "rest" && (
         <div className="mt-3.5">
           {startupHead}
@@ -97,11 +99,11 @@ export function CostWorkbookBody({
             ))}
           </div>
           <div className={`${WORKBOOK_PRICE_ROW} mt-2.5 ${WORKBOOK_BODY}`}>
-            <span>Start-up total</span>
+            <span>{s.costs.startupTotal}</span>
             <span className="text-left tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
           <HandRule />
-          <h3 className={`mb-1.5 ${WORKBOOK_GROUP}`}>Ongoing · cost per job</h3>
+          <h3 className={`mb-1.5 ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>
           <div className="flex flex-col gap-1">
             {view.ongoing.map((service) => (
               <div key={service.serviceId} className={`${WORKBOOK_PRICE_ROW} ${WORKBOOK_BODY}`}>

@@ -12,6 +12,7 @@ import {
   identitySilver,
 } from "@/lib/launchpad/content/seed/identity-silver";
 import { LAUNCHPAD_PAYLOAD_SCHEMA_VERSION } from "@/lib/launchpad/content/schema-version";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import {
   BUDGETING_ROOFTOP_NOTE,
   SERVICE_FLOOR_STRUCTURE,
@@ -184,6 +185,7 @@ export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID)
   return {
     schemaVersion: LAUNCHPAD_PAYLOAD_SCHEMA_VERSION,
     ventureId,
+    surface: LAUNCHPAD_SURFACE_COPY,
     floors: [
       floor(1, [
         {

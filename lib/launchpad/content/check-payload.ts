@@ -91,6 +91,14 @@ export function checkLaunchpadVenturePayload(value: unknown, expectedVentureId?:
   }
 }
 
+function checkSurfaceCopy(value: Obj, where: string): void {
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item === "string") text(item, `${where} ${key}`);
+    else if (isObj(item)) checkSurfaceCopy(item, `${where} ${key}`);
+    else fail(`${where} ${key} is missing.`);
+  }
+}
+
 function checkOrThrow(value: unknown, expectedVentureId?: string): void {
   if (!isObj(value)) fail("Payload is not an object.");
   if (!(LAUNCHPAD_READABLE_SCHEMA_VERSIONS as readonly unknown[]).includes(value.schemaVersion)) {
@@ -100,6 +108,10 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
   if (typeof ventureId !== "string" || !LAUNCHPAD_VENTURE_ID_RE.test(ventureId)) fail("ventureId is missing.");
   if (expectedVentureId !== undefined && ventureId !== expectedVentureId) {
     fail(`Payload is venture ${ventureId}, expected ${expectedVentureId}.`);
+  }
+  if (value.schemaVersion === 4) {
+    if (!isObj(value.surface)) fail("surface copy is missing.");
+    checkSurfaceCopy(value.surface, "surface");
   }
   const ids = new Set<string>();
   const id = (raw: unknown, where: string) => {

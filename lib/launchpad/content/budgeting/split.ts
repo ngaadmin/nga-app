@@ -3,10 +3,10 @@ import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 
 /** Default jars until screen 7 ("Now set your own split") exists. */
 export const BUDGET_JARS = [
-  { id: "giving", label: "Giving", icon: "/launchpad/budgeting/jar-giving.webp" },
-  { id: "emergencies", label: "Emergencies", icon: "/launchpad/budgeting/jar-emergencies.webp" },
-  { id: "pay", label: "Pay yourself", icon: "/launchpad/budgeting/jar-pay-yourself.webp" },
-  { id: "grow", label: "Grow your business", icon: "/launchpad/budgeting/jar-grow.webp" },
+  { id: "giving", icon: "/launchpad/budgeting/jar-giving.webp" },
+  { id: "emergencies", icon: "/launchpad/budgeting/jar-emergencies.webp" },
+  { id: "pay", icon: "/launchpad/budgeting/jar-pay-yourself.webp" },
+  { id: "grow", icon: "/launchpad/budgeting/jar-grow.webp" },
 ] as const;
 
 export type BudgetJarId = (typeof BUDGET_JARS)[number]["id"];

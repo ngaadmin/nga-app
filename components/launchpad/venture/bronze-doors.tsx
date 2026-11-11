@@ -1,3 +1,4 @@
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_PRIMARY, Heading, LockIcon, SubLine, TickBadge, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
@@ -27,6 +28,7 @@ function Door({
   comeBack?: boolean;
   onOpen: () => void;
 }) {
+  const s = useSurfaceCopy();
   const doorColor = state === "done" ? VT.panel : state === "current" ? VT.secondary : VT.lockDot;
   const knob = state === "current" ? VT.cta : "#fff";
   const surface =
@@ -53,7 +55,7 @@ function Door({
           {state === "done" && <span className="inline-flex items-center gap-1.5 font-heading text-[13px] font-semibold text-nga-ink"><TickBadge size={16} /> Done</span>}
           {state === "current" && comeBack && <ComeBackMarker />}
           {state === "current" && !comeBack && (
-            <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">Up next</span>
+            <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">{s.chrome.upNext}</span>
           )}
           {state === "locked" && (
             <span className="font-heading text-[13px] font-semibold text-[#8a9bb0]">
@@ -98,11 +100,12 @@ export function BronzeDoors(props: {
   /** Shown once every door is done or open and the silver has a wrap-up, e.g. "See your logo". */
   wrapUp?: { label: string; onOpen: () => void };
 }) {
+  const s = useSurfaceCopy();
   return (
     <section className="flex flex-1 flex-col">
       <TrailCrumb level={props.level} current={props.silverTitle} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
       <Heading>{props.silverTitle}</Heading>
-      <SubLine className="mb-4">{props.lockedNote ?? "Open a door to see its tasks."}</SubLine>
+      <SubLine className="mb-4">{props.lockedNote ?? s.chrome.openDoor}</SubLine>
       {props.bronzes.map((b) => (
         <Door key={b.id} label={neutralTitle(b.title)} subtitle={b.subtitle} state={b.state} comeBack={b.comeBack} onOpen={() => props.onOpenBronze(b.id)} />
       ))}

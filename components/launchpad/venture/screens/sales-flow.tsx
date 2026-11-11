@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useMemo, useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/content/types";
@@ -48,6 +49,7 @@ function ChannelsStep({
   onExit: () => void;
   onFinish: (answer: SalesChannelsAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const saved = salesChannelsOf(answers, screen.answerKey);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<string[]>(saved ? [...saved.selected] : []);
@@ -110,7 +112,7 @@ function ChannelsStep({
                   </div>
                   {picked.includes("own") ? (
                     <input
-                      aria-label={`${group.heading} own place`}
+                      aria-label={`${group.heading} ${s.sales.ownPlace}`}
                       value={extra[id] ?? ""}
                       onChange={(event) => setExtra({ ...extra, [id]: event.target.value.slice(0, 80) })}
                       className="mt-2 h-11 w-full rounded-xl px-3 font-sans text-[18px] leading-[26px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none"
@@ -140,6 +142,7 @@ function MaterialsStep({
   onExit: () => void;
   onFinish: (answer: MarketingMaterialsAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const saved = marketingOf(answers, screen.answerKey);
   const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
   const services = chosenServices(floors, answers, "l1-offer");
@@ -205,10 +208,10 @@ function MaterialsStep({
             {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
             {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
             {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
-            {select(screen.serviceLabels?.main ?? "Your main service", mainService, services.map((row) => ({ id: row.id, label: row.label })), setMain)}
-            {select(screen.serviceLabels?.second ?? "Second service to list", secondService, services.filter((row) => row.id !== mainService).map((row) => ({ id: row.id, label: row.label })), setSecond)}
-            {select("What's the hook?", hook, screen.hooks ?? [], setHook)}
-            {select("What's your proof?", proof, screen.proofs ?? [], setProof)}
+            {select(screen.serviceLabels?.main ?? s.sales.mainService, mainService, services.map((row) => ({ id: row.id, label: row.label })), setMain)}
+            {select(screen.serviceLabels?.second ?? s.sales.secondService, secondService, services.filter((row) => row.id !== mainService).map((row) => ({ id: row.id, label: row.label })), setSecond)}
+            {select(s.sales.hook, hook, screen.hooks ?? [], setHook)}
+            {select(s.sales.proof, proof, screen.proofs ?? [], setProof)}
           </>
         ) : (
           fields.map((field) => (
@@ -233,17 +236,18 @@ function TargetsStep({
   onExit: () => void;
   onFinish: (answer: TellPeopleAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
   const selected = new Set(sales?.selected ?? []);
   const friends = sales?.where.friends ?? [];
   const lines = [
-    selected.has("flyers") ? { id: "flyers", before: "I will print and distribute", after: "flyers." } : null,
-    selected.has("friends") && friends.includes("see") ? { id: "see", before: "I will tell", after: "people in person." } : null,
-    selected.has("friends") && friends.includes("message") ? { id: "message", before: "I will send the message to", after: "people." } : null,
-    selected.has("online") ? { id: "days", before: "I will share the post", after: "days in advance." } : null,
-    selected.has("online") ? { id: "ask", before: "I will ask", after: "friends to share it." } : null,
-    selected.has("noticeboard") ? { id: "board", before: "I will put up", after: "posters on a noticeboard." } : null,
-  ].filter((row): row is { id: string; before: string; after: string } => !!row);
+    selected.has("flyers") ? { id: "flyers", before: s.sales.printAndDistribute, after: s.sales.flyers } : null,
+    selected.has("friends") && friends.includes("see") ? { id: "see", before: s.sales.tellPeople, after: s.sales.inPerson } : null,
+    selected.has("friends") && friends.includes("message") ? { id: "message", before: s.sales.sendMessage, after: s.sales.people } : null,
+    selected.has("online") ? { id: "days", before: s.sales.sharePost, after: s.sales.daysInAdvance } : null,
+    selected.has("online") ? { id: "ask", before: s.sales.askFriends, after: s.sales.friendsShare } : null,
+    selected.has("noticeboard") ? { id: "board", before: s.sales.putUp, after: s.sales.posters } : null,
+  ].flatMap((row) => (row ? [row] : []));
   const cards = selected.has("cards");
   const [counts, setCounts] = useState<Record<string, string>>({});
   const ids = [...lines.map((line) => line.id), ...(cards ? ["cards", "stores"] : [])];
@@ -267,7 +271,7 @@ function TargetsStep({
             <p key={line.id} className={LESSON_BODY}>{line.before} {field(line.id)} {line.after}</p>
           ))}
           {cards ? (
-            <p className={LESSON_BODY}>I will print {field("cards")} business cards and ask {field("stores")} stores if I can leave them there for their customers.</p>
+            <p className={LESSON_BODY}>{s.sales.iWillPrint} {field("cards")} {s.sales.businessCards} {field("stores")} {s.sales.storesLeave}</p>
           ) : null}
         </div>
         {screen.permission ? <p className={`mt-4 ${LESSON_HINT}`}>{screen.permission}</p> : null}

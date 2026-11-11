@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { StoryCreditSlotContext } from "@/components/academy/lesson/academy-lesson-shell";
 import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 
 /** Navy Inter 400, 18px, line-height 1.44. Body, context, statements, and playback. */
 export const LESSON_BODY = "font-sans text-[18px] font-normal leading-[26px] text-[#19347D]";
@@ -43,10 +44,11 @@ export function LessonTopBar({
   /** Gap under the title. Only a screen that needs more air passes this. */
   progressClassName?: string;
 }) {
+  const s = useSurfaceCopy();
   return (
     <div className="px-5 pt-[34px]" data-lesson-top-bar="">
       <div className="flex items-center gap-3.5">
-        <button type="button" onClick={onBack} aria-label="Back" className="-ml-3 flex size-11 shrink-0 items-center justify-center text-[#19347D]">
+        <button type="button" onClick={onBack} aria-label={s.chrome.back} className="-ml-3 flex size-11 shrink-0 items-center justify-center text-[#19347D]">
           <svg width="12" height="20" viewBox="0 0 12 20" fill="none" aria-hidden="true">
             <path d="M10 2 3 10l7 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

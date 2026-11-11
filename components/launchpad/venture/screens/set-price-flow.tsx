@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useMemo, useState } from "react";
 import type { ComparedToOthers, LaunchpadAnswers, PriceAnswer, ServicePrice } from "@/lib/launchpad/content/answers";
 import { competitorOf, priceOf } from "@/lib/launchpad/content/answers";
@@ -34,6 +35,7 @@ export function SetPriceFlow({
   onExit?: (answer: PriceAnswer) => void;
   onFinish?: (answer: PriceAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const floors = floorsProp ?? ctx?.floors ?? [];
   const answers = answersProp ?? ctx?.answers ?? {};
@@ -83,7 +85,7 @@ export function SetPriceFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price">
-      <LessonTopBar title="Set the price" onBack={() => onExit(answer)} />
+      <LessonTopBar title={s.price.title} onBack={() => onExit(answer)} />
       <div className={`mx-5 mt-1 ${SCROLL}`}>
         <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
         <p className={`mt-1 ${LESSON_HINT}`}>{screen.copy.context}</p>
@@ -113,7 +115,7 @@ export function SetPriceFlow({
                     </span>
                     <input
                       inputMode="numeric"
-                      aria-label={`Price for ${service.label}`}
+                      aria-label={`${s.price.priceFor} ${service.label}`}
                       value={drafts[service.serviceId] ?? ""}
                       onChange={(event) => {
                         const next = event.target.value.replace(/\D/g, "").slice(0, 4);
@@ -125,9 +127,9 @@ export function SetPriceFlow({
                 </div>
                 {rangedService === service.serviceId && competitor ? (
                   <p className="mt-1 text-[18px] text-[#19347D]">
-                    Others charge ${competitor.priceLow} to ${competitor.priceHigh}. Mine is{" "}
+                    {s.price.othersChargeDollar}{competitor.priceLow} to ${competitor.priceHigh}{s.price.mineIs}{" "}
                     <select
-                      aria-label={`Compared with others for ${service.label}`}
+                      aria-label={`${s.price.comparedFor} ${service.label}`}
                       value={compared[service.serviceId] ?? ""}
                       onChange={(event) => {
                         const value = event.target.value as ComparedToOthers | "";
@@ -136,13 +138,13 @@ export function SetPriceFlow({
                       className="h-8 rounded-lg bg-white px-1 font-semibold shadow-[inset_0_0_0_1.5px_#D9DEE8]"
                     >
                       <option value="">Choose</option>
-                      <option value="lower than">lower than others</option>
-                      <option value="about the same as">about the same as others</option>
-                      <option value="higher than">higher than others</option>
+                      <option value="lower than">{s.price.lower}</option>
+                      <option value="about the same as">{s.price.same}</option>
+                      <option value="higher than">{s.price.higher}</option>
                     </select>
                   </p>
                 ) : (
-                  <p className="mt-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">Others range: not checked yet</p>
+                  <p className="mt-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">{s.price.notChecked}</p>
                 )}
                 {low && <p className="mt-1 text-[18px] text-[#B45309]">{screen.copy.lowKeep}</p>}
               </article>

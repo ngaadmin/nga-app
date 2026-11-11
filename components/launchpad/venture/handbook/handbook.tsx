@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
@@ -30,10 +31,11 @@ function paperLabel(page: { sheet?: string; number: number; silver: { id: string
 
 /** 44x44 book button that opens the handbook (home In Progress cards and the building screen). */
 export function HandbookButton({ onClick }: { onClick: () => void }) {
+  const s = useSurfaceCopy();
   return (
     <button
       type="button"
-      aria-label="Open workbook"
+      aria-label={s.workbook.open}
       onClick={onClick}
       className="flex size-11 flex-none items-center justify-center rounded-full bg-nga-panel shadow-[0_3px_0_#099fb8]"
       data-handbook-button=""
@@ -103,6 +105,7 @@ export function Handbook({
   /** Label for the back control. The floor shortcut keeps "Back to the lift". */
   backLabel?: string;
 }) {
+  const s = useSurfaceCopy();
   const pages = scopeLevel != null
     ? handbookScopePages(progress, floors, scopeLevel)
     : initialLevel == null
@@ -164,7 +167,7 @@ export function Handbook({
         <button
           ref={closeRef}
           type="button"
-          aria-label="Close workbook"
+          aria-label={s.workbook.close}
           onClick={onClose}
           className="flex size-11 flex-none items-center justify-center rounded-[10px]"
         >
@@ -174,13 +177,13 @@ export function Handbook({
         </button>
         <div className="min-w-0 flex-1">
           <h1 id="handbook-title" className="font-heading text-lg font-semibold leading-tight text-[#111827]">
-            My workbook
+            {s.workbook.title}
           </h1>
           <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
         </div>
         {entry === "home" && (
           <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-[11px] font-medium text-[#374151]" data-read-only="">
-            Read only
+            {s.workbook.readOnly}
           </span>
         )}
       </header>
@@ -198,7 +201,7 @@ export function Handbook({
       <div className="relative min-h-0 flex-1">
         {isLast && ghost && (
           <div
-            aria-label={`Next page, locked: ${ghost.silverTitle}`}
+            aria-label={`${s.chrome.nextPageLocked} ${ghost.silverTitle}`}
             role="img"
             className="absolute bottom-[62px] right-[64px] top-[14px] w-9 rounded-r-[14px] border border-l-0 border-[#EDE7DC] bg-[#FDFBF7]"
             data-handbook-ghost=""
@@ -239,7 +242,7 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-7 gap-1" data-workbook-chrome="folder">
+        <nav aria-label={s.workbook.floors} className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-7 gap-1" data-workbook-chrome="folder">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
@@ -259,7 +262,7 @@ export function Handbook({
                   key={t.level}
                   type="button"
                   disabled
-                  aria-label={`${label}, not earned yet`}
+                  aria-label={`${label}${s.chrome.notEarnedYet}`}
                   aria-current={viewing ? "true" : undefined}
                   className={`${base} border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#9CA3AF]`}
                   data-tab-state={t.state}
@@ -294,10 +297,10 @@ export function Handbook({
           </div>
         </div>
         <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
-          <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.previous} disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="left" />
           </button>
-          <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.next} disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="right" />
           </button>
         </div>

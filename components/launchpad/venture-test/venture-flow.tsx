@@ -64,6 +64,8 @@ import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
+import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import type { LevelCohort } from "@/lib/launchpad/content/level-up/model";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 import { primeStoryAudioFromGesture } from "@/lib/academy/lessons/story-audio/playback";
@@ -845,7 +847,9 @@ export function VentureFlow({
     }
   }
 
+  const surface = content?.ok && content.payload.surface ? content.payload.surface : LAUNCHPAD_SURFACE_COPY;
   return (
+    <SurfaceCopyProvider value={surface}>
     <VentureTestShell focus={view.screen === "workbook"}>
       <div className="flex min-h-0 flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
@@ -883,5 +887,6 @@ export function VentureFlow({
         )}
       </div>
     </VentureTestShell>
+    </SurfaceCopyProvider>
   );
 }

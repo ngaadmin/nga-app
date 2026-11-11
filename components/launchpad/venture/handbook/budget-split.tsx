@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
@@ -37,10 +38,11 @@ export function BudgetSplit({
 }) {
   const ctx = useLaunchpadAnswers();
   const shares = percents ?? readBudgetSplit() ?? budgetPercentsFor(ctx?.floors ?? [], ctx?.answers);
+  const s = useSurfaceCopy();
   const [raw, setRaw] = useState(() => {
-    if (typeof window === "undefined") return "100";
+    if (typeof window === "undefined") return s.workbook.earnedPlaceholder;
     const saved = window.localStorage.getItem(EARNED_KEY);
-    return saved == null ? "100" : earnedDigits(saved);
+    return saved == null ? s.workbook.earnedPlaceholder : earnedDigits(saved);
   });
   const currency = readCurrencyPreference();
   const amounts = splitDollars(earnedAmount(raw), shares);
@@ -49,7 +51,7 @@ export function BudgetSplit({
       <AccentLabel as="h2">{heading}</AccentLabel>
       <div className="mt-4 flex items-center justify-between gap-3">
         <h3 className={WORKBOOK_SUB}>{earnedLabel}</h3>
-        <button type="button" aria-label="Edit money I earned" className="flex size-11 items-center justify-center" onClick={() => document.getElementById("budget-earned")?.focus()}>
+        <button type="button" aria-label={s.workbook.editEarned} className="flex size-11 items-center justify-center" onClick={() => document.getElementById("budget-earned")?.focus()}>
           <Pencil />
         </button>
       </div>
@@ -60,7 +62,7 @@ export function BudgetSplit({
           aria-label={earnedLabel}
           inputMode="numeric"
           autoComplete="off"
-          placeholder="100"
+          placeholder={s.workbook.earnedPlaceholder}
           value={raw}
           onChange={(event) => {
             const next = earnedDigits(event.target.value);
@@ -75,7 +77,7 @@ export function BudgetSplit({
           <li key={jar.id} className="grid grid-cols-[minmax(0,1fr)_3.25rem_4.25rem] items-center gap-x-3">
             <span className="flex min-w-0 items-center gap-2.5">
               <img src={jar.icon} alt="" width={32} height={32} className="h-8 w-8 flex-none object-contain" />
-              <span className={WORKBOOK_BODY}>{jar.label}</span>
+              <span className={WORKBOOK_BODY}>{s.jars[jar.id]}</span>
             </span>
             <span className={`text-right ${WORKBOOK_ANSWER}`}>{shares[index] ?? 0}%</span>
             <span className={`text-right ${WORKBOOK_ANSWER}`} data-budget-amount={jar.id}>{formatWholeMoney(amounts[index] ?? 0, currency)}</span>

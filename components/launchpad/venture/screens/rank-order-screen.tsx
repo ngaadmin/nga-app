@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { rankingAnswer, rankingOf } from "@/lib/launchpad/content/answers";
@@ -99,6 +100,7 @@ type Drag = {
  * authored order stands (saved on Next). At least one reason must stay above.
  */
 export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }) {
+  const s = useSurfaceCopy();
   const { answers, save } = useCaptureAnswer(screen.answerKey);
   const saved = rankingOf(answers, screen.answerKey);
   const ids = screen.items.map((i) => i.id);
@@ -208,7 +210,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
       }}
       tabIndex={0}
       aria-roledescription="draggable reason"
-      aria-label={`${n !== null ? `Number ${n}: ` : ""}${label(id)}${n === null ? ", doesn't apply to me" : ""}. Drag to move, or use the up and down arrow keys.`}
+      aria-label={`${n !== null ? `Number ${n}: ` : ""}${label(id)}${n === null ? ", doesn't apply to me" : ""}${s.rank.drag}`}
       onKeyDown={(e) => onKey(id, e)}
       onPointerDown={(e) => onPointerDown(id, e)}
       style={{ touchAction: "none" }}
@@ -237,7 +239,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
       {screen.context && <ScreenIntro context={screen.context} guidance={RANK_GUIDANCE} />}
       <ScreenPrompt>{screen.prompt}</ScreenPrompt>
       {!screen.context && <ScreenGuidance>{RANK_GUIDANCE}</ScreenGuidance>}
-      <ol className="mx-5 mt-3 flex flex-col gap-1.5 short:mt-2" aria-label="Your ranking">
+      <ol className="mx-5 mt-3 flex flex-col gap-1.5 short:mt-2" aria-label={s.rank.yourRanking}>
         {above.map((id, i) => tile(id, i + 1))}
       </ol>
       <section
@@ -271,7 +273,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
       </p>
       {above.length === 0 && total > 0 && (
         <p className="sr-only" role="status">
-          Move at least one reason back above the line to keep going.
+          {s.rank.moveOne}
         </p>
       )}
       {ghostId && drag && (

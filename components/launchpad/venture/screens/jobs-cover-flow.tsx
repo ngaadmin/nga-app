@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useMemo, useState } from "react";
 import type { JobsAnswer, LaunchpadAnswers, TypicalWeekRow } from "@/lib/launchpad/content/answers";
 import { costsOf, priceOf } from "@/lib/launchpad/content/answers";
@@ -15,11 +16,12 @@ import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-m
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
 function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (next: number) => void }) {
+  const s = useSurfaceCopy();
   return (
-    <div className="flex shrink-0 items-center gap-1" role="group" aria-label={`Jobs per week for ${label}`}>
+    <div className="flex shrink-0 items-center gap-1" role="group" aria-label={`${s.jobs.perWeekFor} ${label}`}>
       <button
         type="button"
-        aria-label={`Fewer ${label} jobs`}
+        aria-label={`${s.jobs.fewer} ${label} ${s.jobs.jobsWord}`}
         disabled={value <= 0}
         onClick={() => onChange(value - 1)}
         className="flex size-9 items-center justify-center rounded-lg text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8] disabled:text-[#D9DEE8]"
@@ -31,7 +33,7 @@ function Stepper({ label, value, onChange }: { label: string; value: number; onC
       </span>
       <button
         type="button"
-        aria-label={`More ${label} jobs`}
+        aria-label={`${s.jobs.more} ${label} ${s.jobs.jobsWord}`}
         disabled={value >= 7}
         onClick={() => onChange(value + 1)}
         className="flex size-9 items-center justify-center rounded-lg text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8] disabled:text-[#D9DEE8]"
@@ -61,6 +63,7 @@ export function JobsCoverFlow({
   onExit?: () => void;
   onFinish?: (answer: JobsAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const floors = floorsProp ?? ctx?.floors ?? [];
   const answers = answersProp ?? ctx?.answers ?? {};
@@ -118,7 +121,7 @@ export function JobsCoverFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
-      <LessonTopBar title="Jobs to cover your costs" onBack={page === 1 ? onExit : () => setPage(1)} />
+      <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} />
       {page === 1 ? (
         <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
           <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
@@ -144,8 +147,8 @@ export function JobsCoverFlow({
         {pricesReady && mode === "single" && single && needed !== null && (
           <div className="mt-4">
             <p className="font-sans text-[18px] leading-[26px] text-[#19347D]">
-              You need <b data-jobs-needed="">{needed}</b> {needed === 1 ? "job" : "jobs"} to cover {formatStartupMoney(startup, currency)} of start-up costs. You keep{" "}
-              {formatOngoingMoney(single.keptPerJob, currency)} on each one.
+              {s.jobs.youNeed} <b data-jobs-needed="">{needed}</b> {needed === 1 ? "job" : "jobs"} {s.jobs.toCover} {formatStartupMoney(startup, currency)} {s.jobs.ofStartup}{" "}
+              {formatOngoingMoney(single.keptPerJob, currency)} {s.jobs.onEach}
             </p>
             <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{screen.copy.singlePrompt}</h2>
             <div className="flex flex-col gap-2" role="radiogroup" aria-label={screen.copy.singlePrompt}>

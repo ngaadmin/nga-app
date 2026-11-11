@@ -1,3 +1,4 @@
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { ReactNode } from "react";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
@@ -10,6 +11,7 @@ import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
 
 function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void; /** Tighter padding when the level-done heading is above the plaques. */ compact?: boolean }) {
+  const s = useSurfaceCopy();
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
   const surface =
     state === "current"
@@ -29,7 +31,7 @@ function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; 
         )}
       </span>
       <span className="mt-0.5 block text-xs font-medium opacity-95">
-        {state === "current" ? "Tap to start" : state === "done" ? "Tap to review" : "Tap to look inside"}
+        {state === "current" ? s.chrome.tapToStart : state === "done" ? s.chrome.tapToReview : s.chrome.tapToLookInside}
       </span>
       {(["top", "bottom"] as const).flatMap((v) =>
         (["left", "right"] as const).map((h) => (
@@ -65,7 +67,7 @@ function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; 
   return (
     <div className="relative mx-auto w-[236px]">
       {plaque}
-      <button type="button" onClick={onComeBack} className="absolute -left-3 -top-3" aria-label={`${COME_BACK_LATER_COPY.marker}: finish a step in ${label}`}>
+      <button type="button" onClick={onComeBack} className="absolute -left-3 -top-3" aria-label={`${COME_BACK_LATER_COPY.marker}${s.chrome.finishStepIn} ${label}`}>
         <ComeBackMarker className="block shadow-[0_2px_0_#c88202]" />
       </button>
     </div>
@@ -87,6 +89,7 @@ function Sparkle() {
 
 /** Level done on the lift wall: aqua "Congratulations!" with its swash and orange sparkles, then the level line. */
 function LevelDone({ level }: { level: number }) {
+  const s = useSurfaceCopy();
   return (
     <div className="mt-4 flex flex-col items-center text-center" role="status" data-level-done={level}>
       <div className="flex items-center justify-center gap-1.5">
@@ -99,7 +102,7 @@ function LevelDone({ level }: { level: number }) {
         </span>
         <Sparkle />
       </div>
-      <p className="mt-2.5 font-heading text-[17px] font-semibold text-[#19347D]">You&apos;ve completed Level {level}</p>
+      <p className="mt-2.5 font-heading text-[17px] font-semibold text-[#19347D]">{s.chrome.completedLevel} {level}</p>
     </div>
   );
 }
@@ -125,6 +128,7 @@ export type CorridorProps = {
 };
 
 export function CorridorFloor(props: CorridorProps) {
+  const s = useSurfaceCopy();
   const { level, floorName, goal, silvers, entering, note, complete, workbook, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
     <Plaque
@@ -138,7 +142,7 @@ export function CorridorFloor(props: CorridorProps) {
   ));
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="lp-corridor-title">
-      <BackCrumb label="Back to building" onClick={onBack} />
+      <BackCrumb label={s.chrome.backToBuilding} onClick={onBack} />
       <Heading>
         <span id="lp-corridor-title">
           Level {level} · {floorName}
@@ -173,7 +177,7 @@ export function CorridorFloor(props: CorridorProps) {
           <div className="absolute inset-x-[26px] top-[490px] flex items-center justify-center gap-[14px]" data-corridor-continue="">
             {complete?.onLift && complete.nextLevel !== null && (
               <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
-                Go to Level {complete.nextLevel}
+                {s.chrome.goToLevel} {complete.nextLevel}
               </button>
             )}
             {workbook && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { isIdentityFieldSet, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
@@ -52,6 +53,7 @@ function LogoStepChoices({
  * picked yet. The workbook's forward button stays off until all three are set.
  */
 export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPickerScreen[] }) {
+  const s = useSurfaceCopy();
   const answerKey = screens[0]!.answerKey;
   const { answer, update, iconVentureId } = useIdentityAnswer(answerKey);
   const [tab, setTab] = useState<LogoStep>(() => screens.find((s) => !isIdentityFieldSet(answer, s.step))?.step ?? screens[0]!.step);
@@ -69,7 +71,7 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
       </p>
       <div
         role="group"
-        aria-label="Logo preview"
+        aria-label={s.identity.logoPreview}
         className="mt-5 flex h-[248px] items-center short:mt-3 short:h-[196px] justify-center rounded-3xl bg-[#F9FAFB]"
         data-logo-hero=""
       >
@@ -77,7 +79,7 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
       </div>
       <div className="mt-6 short:mt-4">
         <Segmented
-          label="Logo parts"
+          label={s.identity.logoParts}
           items={screens.map((s) => ({ id: s.step, label: TAB_LABEL[s.step] }))}
           value={tab}
           onChange={setTab}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { CostLine, CostsAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadKnowYourCostScreen } from "@/lib/launchpad/content/types";
@@ -52,8 +53,9 @@ function Crumb({
   onBuilding: () => void;
   onCorridor: () => void;
 }) {
+  const s = useSurfaceCopy();
   return (
-    <nav aria-label="Breadcrumb" className="mx-5 mt-2 truncate text-[16px] font-medium text-[#9AA3B5]">
+    <nav aria-label={s.chrome.breadcrumb} className="mx-5 mt-2 truncate text-[16px] font-medium text-[#9AA3B5]">
       <button type="button" onClick={onBuilding} className="text-[#9AA3B5]">
         ‹ Building
       </button>
@@ -67,9 +69,10 @@ function Crumb({
 }
 
 function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
+  const s = useSurfaceCopy();
   return (
     <div className="mx-5 mt-6 flex items-center gap-1">
-      <button type="button" onClick={onBack} aria-label="Back" className="flex size-11 items-center justify-center text-[#19347D]">
+      <button type="button" onClick={onBack} aria-label={s.chrome.back} className="flex size-11 items-center justify-center text-[#19347D]">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M15 5l-7 7 7 7" />
         </svg>
@@ -107,6 +110,7 @@ function MoneyField({
   symbol: string;
   onCommit: (amount: number) => void;
 }) {
+  const s = useSurfaceCopy();
   const shown = cents ? ongoingInputText(amount) : String(amount);
   const [draft, setDraft] = useState<string | null>(null);
   const value = draft ?? shown;
@@ -117,7 +121,7 @@ function MoneyField({
       </span>
       <input
         inputMode={cents ? "decimal" : "numeric"}
-        aria-label={`Amount for ${label}`}
+        aria-label={`${s.costs.amountFor} ${label}`}
         value={value}
         onChange={(event) => {
           const next = cents ? event.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1") : event.target.value.replace(/\D/g, "");
@@ -181,6 +185,7 @@ export function KnowYourCostFlow({
   onExit?: (answer: CostsAnswer) => void;
   onFinish?: (answer: CostsAnswer) => void;
 }) {
+  const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const floors = floorsProp ?? ctx?.floors ?? [];
   const answers = answersProp ?? ctx?.answers ?? {};
@@ -218,7 +223,7 @@ export function KnowYourCostFlow({
   const businessLabel = identity?.name?.trim() || businessName?.trim() || "";
 
   const crumb = (
-    <Crumb floorName={floorName} silverTitle={plaque} current={screen.heading ?? "Know your cost"} onBuilding={onBuilding} onCorridor={onCorridor} />
+    <Crumb floorName={floorName} silverTitle={plaque} current={screen.heading ?? s.costs.knowYourCost} onBuilding={onBuilding} onCorridor={onCorridor} />
   );
 
   const lineRows = (lines: readonly CostLine[], cents: boolean, onAmount: (id: string, amount: number) => void, onRemove: (id: string) => void, onRename?: (id: string, label: string) => void) =>
@@ -226,9 +231,9 @@ export function KnowYourCostFlow({
       <div key={line.id} className="flex items-center gap-2 border-b border-[#F3F4F6] py-1.5 last:border-b-0">
         {line.custom && onRename ? (
           <input
-            aria-label="Item name"
+            aria-label={s.costs.itemName}
             value={drafts[line.id] ?? line.label}
-            placeholder="Item name"
+            placeholder={s.costs.itemName}
             maxLength={80}
             onChange={(event) => {
               const label = event.target.value;
@@ -240,14 +245,14 @@ export function KnowYourCostFlow({
         ) : (
           <span className="min-w-0 flex-1 font-medium text-[18px] leading-snug text-[#19347D]">{line.label}</span>
         )}
-        <MoneyField label={line.label || "New item"} amount={line.amount} cents={cents} symbol={symbol} onCommit={(amount) => onAmount(line.id, amount)} />
+        <MoneyField label={line.label || s.costs.newItem} amount={line.amount} cents={cents} symbol={symbol} onCommit={(amount) => onAmount(line.id, amount)} />
         <RemoveButton label={line.label} onRemove={() => onRemove(line.id)} />
       </div>
     ));
 
   const addButton = (onAdd: () => void) => (
     <button type="button" onClick={onAdd} className={`${GHOST} mt-2`}>
-      <span aria-hidden="true">+</span> Add another item
+      <span aria-hidden="true">+</span> {s.costs.addItem}
     </button>
   );
 
@@ -257,7 +262,7 @@ export function KnowYourCostFlow({
     const dropBlank = (lines: readonly CostLine[]) => lines.filter((line) => line.label.trim() || !line.custom);
     body = (
       <>
-        <BackTitle title="Start-up costs" onBack={() => setStep({ name: "hub" })} />
+        <BackTitle title={s.costs.startupTitle} onBack={() => setStep({ name: "hub" })} />
         <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
@@ -292,7 +297,7 @@ export function KnowYourCostFlow({
           )}
         </div>
         <div className="mx-5 mt-2 flex items-center justify-between rounded-xl bg-[#F7FAFC] px-3 py-2.5">
-          <span className="text-[16px] text-[#6B7280]">Start-up total</span>
+          <span className="text-[16px] text-[#6B7280]">{s.costs.startupTotal}</span>
           <span className="font-heading text-xl font-bold tabular-nums text-[#19347D]" data-startup-total="">
             {formatStartupMoney(startupTotal(ref.current), currency)}
           </span>
@@ -324,7 +329,7 @@ export function KnowYourCostFlow({
     if (!service) {
       body = (
         <>
-          <BackTitle title="Ongoing costs" onBack={() => setStep({ name: "ongoing" })} />
+          <BackTitle title={s.costs.ongoingTitle} onBack={() => setStep({ name: "ongoing" })} />
         </>
       );
     } else {
@@ -360,7 +365,7 @@ export function KnowYourCostFlow({
             )}
           </div>
           <div className="mx-5 mt-2 flex items-center justify-between rounded-xl bg-[#F7FAFC] px-3 py-2.5">
-            <span className="text-[16px] text-[#6B7280]">This job costs</span>
+            <span className="text-[16px] text-[#6B7280]">{s.costs.thisJobCosts}</span>
             <span className="font-heading text-xl font-bold tabular-nums text-[#19347D]" data-job-total="">
               {formatOngoingMoney(serviceTotal(ref.current.ongoing.find((row) => row.serviceId === service.serviceId)?.lines ?? []), currency)}
             </span>
@@ -397,12 +402,12 @@ export function KnowYourCostFlow({
     const allDone = services.length === 0 || services.every((row) => row.done);
     body = (
       <>
-        <BackTitle title="Ongoing costs" onBack={() => setStep({ name: "hub" })} />
+        <BackTitle title={s.costs.ongoingTitle} onBack={() => setStep({ name: "hub" })} />
         <div className={`mx-5 mt-1 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
           <div className="mt-4 flex flex-col gap-2">
-            {services.length === 0 && <p className="text-[16px] text-[#6B7280]">You have not chosen a service yet. You can still mark this done.</p>}
+            {services.length === 0 && <p className="text-[16px] text-[#6B7280]">{s.costs.noService}</p>}
             {services.map((service) => (
               <article
                 key={service.serviceId}
@@ -415,7 +420,7 @@ export function KnowYourCostFlow({
                   {service.done ? (
                     <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
                   ) : (
-                    "Not calculated yet"
+                    s.costs.notCalculated
                   )}
                 </p>
                 {service.done ? (
@@ -428,14 +433,14 @@ export function KnowYourCostFlow({
                     className="inline-flex h-8 shrink-0 items-center rounded-[10px] bg-[#0CC1E0] px-2.5 font-heading text-[18px] font-bold text-white"
                     onClick={() => setStep({ name: "service", serviceId: service.serviceId })}
                   >
-                    Calculate the cost
+                    {s.costs.calculate}
                   </button>
                 )}
                 {service.done && <TickBadge size={22} />}
               </article>
             ))}
           </div>
-          {!allDone && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">Done stays off until every service has a cost.</p>}
+          {!allDone && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">{s.costs.doneStaysOff}</p>}
         </div>
         <Footer>
           <button
@@ -459,15 +464,15 @@ export function KnowYourCostFlow({
         {crumb}
         <div className={`mx-5 mt-6 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>Your costs</h1>
+          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.costs.yourCosts}</h1>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
           <div className="mt-5 flex flex-col gap-3">
             <div className="flex items-baseline justify-between">
-              <span className="font-sans text-[18px] font-medium leading-[26px] text-[#19347D]">Start-up total</span>
+              <span className="font-sans text-[18px] font-medium leading-[26px] text-[#19347D]">{s.costs.startupTotal}</span>
               <span className="font-heading text-lg font-bold tabular-nums text-[#19347D]">{formatStartupMoney(startupTotal(view), currency)}</span>
             </div>
             <div>
-              <p className="font-sans text-[16px] font-medium leading-[23px] text-[#4A5568]">Ongoing · per job</p>
+              <p className="font-sans text-[16px] font-medium leading-[23px] text-[#4A5568]">{s.costs.ongoingPerJob}</p>
               <div className="mt-1.5 flex flex-col gap-1.5">
                 {view.ongoing.map((service) => (
                   <div key={service.serviceId} className="flex justify-between font-sans text-[18px] font-medium leading-[26px] text-[#19347D]">
@@ -481,7 +486,7 @@ export function KnowYourCostFlow({
               <path d="M2 6C30 2.5 52 8.5 84 5.2S140 2.8 170 6.4S226 8 252 4.6" fill="none" stroke="#D9D1C3" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
             <div className="flex flex-col gap-1 rounded-[14px] bg-[#F0FBFE] px-4 py-3.5">
-              <span className="font-sans text-[16px] font-semibold leading-[23px] text-[#0CC1E0]">Grand total to start</span>
+              <span className="font-sans text-[16px] font-semibold leading-[23px] text-[#0CC1E0]">{s.costs.grandTotal}</span>
               <span className="font-heading text-[28px] font-extrabold leading-none tabular-nums text-[#19347D]" data-grand-total="">
                 {formatStartupMoney(startupTotal(view), currency)}
               </span>
@@ -500,13 +505,13 @@ export function KnowYourCostFlow({
     body = (
       <>
         <header className="flex h-14 flex-none items-center gap-2 px-3">
-          <button type="button" aria-label="Close" onClick={() => onFinish(ref.current)} className="flex size-11 items-center justify-center text-[#19347D]">
+          <button type="button" aria-label={s.chrome.close} onClick={() => onFinish(ref.current)} className="flex size-11 items-center justify-center text-[#19347D]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
           <div className="min-w-0">
-            <h1 className="font-heading text-base font-semibold text-[#19347D]">My handbook</h1>
+            <h1 className="font-heading text-base font-semibold text-[#19347D]">{s.workbook.myHandbook}</h1>
             {businessLabel && <p className="truncate text-[16px] text-[#9AA3B5]">{businessLabel}</p>}
           </div>
         </header>
@@ -554,29 +559,29 @@ export function KnowYourCostFlow({
         </div>
         <div className={`mx-5 mt-4 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>Know your cost</h1>
+          <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.costs.knowYourCost}</h1>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
           <div className="mt-4 flex flex-col gap-3.5">
             <HubCard
-              title="Start-up costs"
+              title={s.costs.startupTitle}
               body={screen.copy.startupCard}
               done={startupDone}
-              meta={startupDone ? `${formatStartupMoney(startupTotal(ref.current), currency)} total` : "Not started"}
-              action={startupDone ? "Edit" : "Add costs"}
+              meta={startupDone ? `${formatStartupMoney(startupTotal(ref.current), currency)} total` : s.costs.notStarted}
+              action={startupDone ? "Edit" : s.costs.addCosts}
               onOpen={() => setStep({ name: "startup" })}
             />
             <HubCard
-              title="Ongoing costs"
+              title={s.costs.ongoingTitle}
               body={screen.copy.ongoingCard}
               done={ongoingDone}
               meta={
                 ongoingDone
-                  ? "Every service calculated"
+                  ? s.costs.everyCalculated
                   : doneCount > 0
                     ? `${doneCount} of ${ref.current.ongoing.length} services`
-                    : "Not started"
+                    : s.costs.notStarted
               }
-              action={startupDone && doneCount > 0 ? "Edit" : ongoingDone ? "Edit" : "Add costs"}
+              action={startupDone && doneCount > 0 ? "Edit" : ongoingDone ? "Edit" : s.costs.addCosts}
               onOpen={() => setStep({ name: "ongoing" })}
             />
           </div>

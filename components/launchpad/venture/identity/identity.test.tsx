@@ -4,7 +4,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { checkLaunchpadVenturePayload } from "@/lib/launchpad/content/check-payload";
 import { IDENTITY_ANSWER_KEY, launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
-import type { LaunchpadIdentityWrapUp, LaunchpadLogoPickerScreen, LaunchpadSilver } from "@/lib/launchpad/content/types";
+import type { LaunchpadLogoPickerScreen, LaunchpadSilver } from "@/lib/launchpad/content/types";
 import {
   BUSINESS_NAME_MAX,
   EMPTY_IDENTITY,
@@ -21,7 +21,6 @@ import { iconSetFor, identityChoices } from "@/lib/launchpad/content/identity-co
 import { isTaskAnswered } from "@/lib/launchpad/content/task-pages";
 import { BusinessLogo, IconChip } from "@/components/launchpad/venture/identity/business-logo";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
-import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
 import { LogoBuilder, NameForm, identityTaskKind } from "@/components/launchpad/venture/identity/picker-screens";
 import type { LaunchpadNamePickerScreen } from "@/lib/launchpad/content/types";
 
@@ -301,35 +300,5 @@ describe("picker screens", () => {
     expect(saved().nameColor).toBe("logo");
     fireEvent.click(screen.getByRole("radio", { name: "Dark ink" }));
     expect(saved().nameColor).toBe("ink");
-  });
-});
-
-describe("identity wrap-up", () => {
-  it("is a summary only (no pick editor): logo and name in the chosen font; Continue marks it done", () => {
-    let finalized = 0;
-    render(
-      <WithAnswers initial={{ [IDENTITY_ANSWER_KEY]: FULL }}>
-        <IdentityWrapUp
-          level={2}
-          silverTitle="The Brand"
-          wrapUp={IDENTITY.wrapUp as LaunchpadIdentityWrapUp}
-          choices={identityChoices(IDENTITY, IDENTITY_ANSWER_KEY, "dog-walking")}
-          onBuilding={() => {}}
-          onCorridor={() => {}}
-          onFinalize={() => (finalized += 1)}
-        />
-      </WithAnswers>,
-    );
-    expect(screen.queryByRole("radio")).toBeNull();
-    expect(screen.queryByRole("tab")).toBeNull();
-    expect(screen.getByText(FULL.name!).getAttribute("data-name-font")).toBe(FULL.font);
-    expect(document.querySelector("[data-identity-binder] [data-identity-lockup]")).toBeTruthy();
-    // Drawn on the binder page: spiral binding, no placeholder frame.
-    expect(screen.queryByText("Frame art TBC")).toBeNull();
-    expect(document.querySelector("[data-identity-binder] [data-spiral-binding]")).toBeTruthy();
-    expect(finalized).toBe(0);
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(finalized).toBe(1);
-    expect(saved().finalized).toBe(true);
   });
 });

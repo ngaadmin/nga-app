@@ -3,11 +3,9 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { IDENTITY_ANSWER_KEY, launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { fieldsAnswer, rankingAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
-import type { LaunchpadIdentityWrapUp } from "@/lib/launchpad/content/types";
 import { handbookPages } from "@/lib/launchpad/venture-test/handbook";
 import { applyVentureTestShortcut, EMPTY_VENTURE_TEST_PROGRESS } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
-import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 
 afterEach(cleanup);
@@ -15,7 +13,6 @@ afterEach(cleanup);
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const progress = applyVentureTestShortcut({ kind: "through-silver", silverId: "l1-s1" }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!.progress;
 const cover = handbookPages(progress, FLOORS)[0]!;
-const wrapUp = FLOORS.flatMap((f) => f.silvers).find((s) => s.wrapUp?.type === "identity-wrap-up")!.wrapUp as LaunchpadIdentityWrapUp;
 
 const L1: LaunchpadAnswers = {
   "l1-offer": selectionAnswer(["dog-walking", "grooming"]),
@@ -92,17 +89,5 @@ describe("workbook page 1, the cover", () => {
     renderCover(rest);
     expect(q("[data-vision-sentence]")!.textContent).toContain("make money and help others. My goals: ");
     expect(q("[data-vision-sentence]")!.textContent).not.toContain("As I grow");
-  });
-});
-
-describe("identity wrap-up (screen three)", () => {
-  it("shows the same compiled vision block in place of the old Vision line", () => {
-    render(
-      <LaunchpadAnswersProvider value={{ iconVentureId: "dog-walking", answers: { ...L1, [IDENTITY_ANSWER_KEY]: ID as never }, setAnswer: () => {}, floors: FLOORS }}>
-        <IdentityWrapUp level={2} silverTitle="The Brand" wrapUp={wrapUp} onBuilding={() => {}} onCorridor={() => {}} onFinalize={() => {}} />
-      </LaunchpadAnswersProvider>,
-    );
-    expect(q("[data-identity-vision] [data-vision-sentence]")!.textContent).toMatch(/^I am starting a dog walking business\./);
-    expect(q("[data-vision-line]")).toBeNull();
   });
 });

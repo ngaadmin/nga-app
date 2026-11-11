@@ -19,7 +19,8 @@ import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-valu
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
-import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
+import { SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { WeeklyFocusSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
@@ -27,7 +28,8 @@ import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/ven
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
-import { costsOf, practiceRunOf, selectionOf } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsOf, practiceRunOf, selectionOf } from "@/lib/launchpad/content/answers";
+import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
@@ -308,6 +310,115 @@ export function TemplatesComingSoon() {
       <MiniIdentity />
       <AccentLabel as="h2">{copy.title}</AccentLabel>
       <p className={`mt-3 ${WORKBOOK_BODY}`}>{copy.comingSoon}</p>
+    </article>
+  );
+}
+
+const TEMPLATE_HINT = "font-sans text-[16px] font-normal leading-[26px] text-[#4A5568]";
+const TEMPLATE_LINE = "border-b-[1.5px] border-[#8390AF] bg-transparent font-sans text-[16px] leading-[26px] text-[#19347D] outline-none";
+
+function templateScribble(name: string): ScribbleName | undefined {
+  if (name === "beagle" || name === "wallet" || name === "calendar" || name === "growth" || name === "star" || name === "sparkle") return name;
+  return undefined;
+}
+
+function TemplateWriteIn({
+  field,
+  value,
+  editable,
+  compact,
+  onChange,
+}: {
+  field: WorkbookTemplateField;
+  value: string;
+  editable: boolean;
+  compact?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className={field.wide ? (compact ? "mb-1.5 block" : "mb-2.5 block") : compact ? "mb-1.5 flex items-end gap-2" : "mb-2.5 flex items-end gap-2"}>
+      <span className={field.wide ? `block ${WORKBOOK_SUB}` : `shrink-0 ${WORKBOOK_SUB}`}>{field.label}</span>
+      <input
+        value={value}
+        disabled={!editable}
+        onChange={(event) => onChange(event.target.value)}
+        className={field.wide ? `mt-0.5 block w-full ${TEMPLATE_LINE}` : `min-w-9 flex-1 ${TEMPLATE_LINE}`}
+      />
+    </label>
+  );
+}
+
+/** One paperclip page. Strings, fields, and ticks come from the payload. */
+export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplatePage; editable: boolean }) {
+  const templates = useSurfaceCopy().templates;
+  const ctx = useLaunchpadAnswers();
+  const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
+  const text = (id: string) => {
+    const value = saved[id];
+    return typeof value === "string" ? value : value == null ? "" : String(value);
+  };
+  const write = (id: string, value: string) => {
+    if (!editable || !ctx) return;
+    const values = { ...saved, [id]: value };
+    if (!value.trim()) delete values[id];
+    ctx.setAnswer(templates.answerKey, { kind: "fields", version: 1, values });
+  };
+  const scribble = templateScribble(page.scribble);
+  const compact = Boolean(page.ticks?.length);
+  const art = scribble ? (
+    <img src={SCRIBBLE_SRC[scribble]} alt="" width={80} height={80} draggable={false} data-scribble-large={scribble} className="h-auto w-20 mix-blend-multiply" />
+  ) : null;
+  return (
+    <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} aria-label={page.title}>
+      <MiniIdentity />
+      <div className="relative">
+        <AccentLabel as="h2">{page.title}</AccentLabel>
+        <img src={SCRIBBLE_SRC.sparkle} alt="" width={18} height={18} draggable={false} className="pointer-events-none absolute right-1 top-0 size-[18px] rotate-[10deg] mix-blend-multiply" />
+      </div>
+      {page.lead ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.lead}</p> : null}
+      {page.subhead ? <h3 className={`mt-1 ${WORKBOOK_SUB}`}>{page.subhead}</h3> : null}
+      {page.intro ? <p className={TEMPLATE_HINT}>{page.intro}</p> : null}
+      {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
+      {page.jobTitle ? <h3 className={`${FREDOKA_HEADING_CLASS} mt-3 text-[18px] font-bold leading-6 text-[#0CC1E0]`}>{page.jobTitle}</h3> : null}
+      <div className="mt-2">
+        {page.fields.map((field) => (
+          <TemplateWriteIn key={field.id} field={field} value={text(field.id)} editable={editable} compact={compact} onChange={(value) => write(field.id, value)} />
+        ))}
+      </div>
+      {page.wrapTitle && page.wrapFields ? (
+        <div className="mt-3 border-t-[1.5px] border-dashed border-[rgba(27,46,107,0.25)] pt-3">
+          <h3 className={`${FREDOKA_HEADING_CLASS} text-[18px] font-bold leading-6 text-[#0CC1E0]`}>{page.wrapTitle}</h3>
+          <div className="mt-2">
+            {page.wrapFields.map((field) => (
+              <TemplateWriteIn key={field.id} field={field} value={text(field.id)} editable={editable} compact={compact} onChange={(value) => write(field.id, value)} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {page.ticks?.length ? (
+        <div className="mt-2 flex items-end justify-between gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5" data-template-ticks="">
+            {page.ticks.map((tick) => (
+              <label key={tick.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={saved[tick.id] === "yes"}
+                  disabled={!editable}
+                  onChange={(event) => write(tick.id, event.target.checked ? "yes" : "")}
+                  className="size-[18px] flex-none rounded-[3px] border-[1.5px] border-[#8390AF]"
+                />
+                <span className={WORKBOOK_SUB}>{tick.label}</span>
+              </label>
+            ))}
+          </div>
+          {art}
+        </div>
+      ) : (
+        <div className="relative">
+          <img src={SCRIBBLE_SRC.star} alt="" width={18} height={18} draggable={false} className="pointer-events-none absolute bottom-3 left-0 size-[18px] rotate-[8deg] mix-blend-multiply" />
+          {art ? <div className="mt-6 flex justify-end pr-2">{art}</div> : null}
+        </div>
+      )}
     </article>
   );
 }

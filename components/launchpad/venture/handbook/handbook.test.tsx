@@ -603,6 +603,52 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
     expect(tab.getAttribute("aria-current")).toBe("true");
   });
+
+  it("pages the payload templates and keeps a write-in on the learner", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      templates: {
+        ...LAUNCHPAD_SURFACE_COPY.templates,
+        pages: LAUNCHPAD_SURFACE_COPY.templates.pages.map((page, index) =>
+          index === 0
+            ? { ...page, title: "Order sheet", fields: page.fields.map((field) => (field.id === "name" ? { ...field, label: "Owner name" } : field)) }
+            : page,
+        ),
+      },
+    };
+    const { unmount } = render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <Harness entry="building" initial={WITH_IDENTITY} />
+      </SurfaceCopyProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    const sheet = document.querySelector("[data-workbook-templates]") as HTMLElement;
+    expect(within(sheet).getByRole("heading", { name: "Order sheet" })).toBeTruthy();
+    expect(within(sheet).queryByRole("heading", { name: "Taking a customer order" })).toBeNull();
+    fireEvent.change(within(sheet).getByRole("textbox", { name: "Owner name" }), { target: { value: "Ada" } });
+    expect((within(sheet).getByRole("textbox", { name: "Owner name" }) as HTMLInputElement).value).toBe("Ada");
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "Wrap-up" })).toBeTruthy();
+    expect(screen.getByText("Things to know about the dog")).toBeTruthy();
+    expect(screen.getByText("Cost")).toBeTruthy();
+    expect(document.querySelector("[data-template-page]")?.getAttribute("data-template-page")).toBe("taking-order-2");
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "My order booking form" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Job 1" })).toBeTruthy();
+    const ticks = document.querySelector("[data-template-ticks]") as HTMLElement;
+    expect(ticks.className).toContain("flex-col");
+    expect(within(ticks).getByRole("checkbox", { name: "Reminder set?" })).toBeTruthy();
+    fireEvent.click(within(ticks).getByRole("checkbox", { name: "Paid?" }));
+    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect((screen.getByRole("textbox", { name: "Owner name" }) as HTMLInputElement).value).toBe("Ada");
+    expect((screen.getByRole("button", { name: "Previous page" }) as HTMLButtonElement).disabled).toBe(true);
+    unmount();
+    render(<Harness entry="home" initial={WITH_IDENTITY} />);
+    fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    expect((screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement).disabled).toBe(true);
+  });
 });
 
 describe("<LaunchpadHome> book button", () => {

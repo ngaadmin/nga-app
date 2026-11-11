@@ -92,9 +92,41 @@ export function checkLaunchpadVenturePayload(value: unknown, expectedVentureId?:
 function checkSurfaceCopy(value: Obj, where: string): void {
   for (const [key, item] of Object.entries(value)) {
     if (typeof item === "string") text(item, `${where} ${key}`);
+    else if (Array.isArray(item) && where.endsWith("templates") && key === "pages") checkTemplatePages(item, `${where} ${key}`);
     else if (isObj(item)) checkSurfaceCopy(item, `${where} ${key}`);
     else fail(`${where} ${key} is missing.`);
   }
+}
+
+function checkTemplateLines(value: unknown, where: string): void {
+  const seen = new Set<string>();
+  list(value, where).forEach((row, i) => {
+    const lw = `${where} ${i + 1}`;
+    if (!isObj(row) || typeof row.id !== "string" || !FIELD_NAME_RE.test(row.id) || seen.has(row.id)) fail(`${lw} has no valid id.`);
+    seen.add(row.id);
+    text(row.label, `${lw} label`);
+    if (row.wide !== undefined) bool(row.wide, `${lw} wide`);
+  });
+}
+
+function checkTemplatePages(value: unknown[], where: string): void {
+  const seen = new Set<string>();
+  list(value, where).forEach((page, i) => {
+    const pw = `${where} ${i + 1}`;
+    if (!isObj(page) || typeof page.id !== "string" || !NODE_ID_RE.test(page.id) || seen.has(page.id)) fail(`${pw} has no valid id.`);
+    seen.add(page.id);
+    text(page.title, `${pw} title`);
+    text(page.scribble, `${pw} scribble`);
+    for (const field of ["lead", "subhead", "intro", "tip", "jobTitle", "wrapTitle"] as const) {
+      text(page[field], `${pw} ${field}`, true);
+    }
+    checkTemplateLines(page.fields, `${pw} fields`);
+    if (page.wrapFields !== undefined) {
+      text(page.wrapTitle, `${pw} wrap title`);
+      checkTemplateLines(page.wrapFields, `${pw} wrap fields`);
+    }
+    if (page.ticks !== undefined) checkTemplateLines(page.ticks, `${pw} ticks`);
+  });
 }
 
 function checkOrThrow(value: unknown, expectedVentureId?: string): void {
@@ -305,6 +337,9 @@ function checkLevelUp(screen: Obj, where: string): void {
   text(grow.startLabel, `${where} grow start label`, true);
   text(grow.checkInLabel, `${where} grow check-in label`, true);
   text(grow.successFieldLabel, `${where} grow success field`, true);
+  text(grow.joinWord, `${where} grow join word`, true);
+  text(grow.dateLine, `${where} grow date line`, true);
+  if (typeof grow.dateLine === "string" && !grow.dateLine.includes("{date}")) fail(`${where} grow date line must include {date}.`);
   const choiceIds = (raw: unknown, label: string, withMonths: boolean) => {
     if (raw === undefined) return;
     const seen = new Set<string>();
@@ -338,6 +373,13 @@ function checkLevelUp(screen: Obj, where: string): void {
     if (ideaIds.has(raw.id)) fail(`${iw} repeats ${raw.id}.`);
     ideaIds.add(raw.id);
     text(raw.label, `${iw} label`);
+    text(raw.context, `${iw} context`, true);
+    text(raw.statement, `${iw} statement`, true);
+    if (typeof raw.statement === "string") {
+      for (const token of ["{offer}", "{start}", "{count}", "{checkIn}"]) {
+        if (!raw.statement.includes(token)) fail(`${iw} statement must include ${token}.`);
+      }
+    }
     text(raw.successLine, `${iw} success line`, true);
     if (typeof raw.successLine === "string" && !raw.successLine.includes("{count}")) fail(`${iw} success line must include {count}.`);
     list(raw.options, `${iw} options`).forEach((option, oi) => {
@@ -346,6 +388,7 @@ function checkLevelUp(screen: Obj, where: string): void {
       if (optionIds.has(option.id)) fail(`${ow} repeats ${option.id}.`);
       optionIds.add(option.id);
       text(option.label, `${ow} label`);
+      text(option.sentence, `${ow} sentence`, true);
       if (option.cohorts !== undefined) {
         const cohorts = list(option.cohorts, `${ow} cohorts`);
         const cohortSeen = new Set<string>();

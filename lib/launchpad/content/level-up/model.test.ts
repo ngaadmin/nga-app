@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 
@@ -52,6 +52,22 @@ describe("Level Up check-in date", () => {
       "Add a new dog service",
       "Expand beyond dog walking",
     ]);
+    expect(grow.ideas.map((idea) => idea.context)).toEqual([
+      "Reward customers who send a new owner your way, so your best customers help find the next ones.",
+      "You get cash upfront. In return, you offer a discount, typically ten to twenty percent of the total.",
+      "Combine two or three services in one booking, with a small discount for taking the lot.",
+      "A new service means new income from the same dogs and the same route.",
+      "Grow past the core job into the homes on your route.",
+    ]);
+    expect(grow.joinWord).toBe("and");
+    expect(grow.dateLine).toBe("That's {date}.");
+    expect(grow.startOptions?.map((option) => option.label)).toEqual(["this week", "in two weeks", "in a month"]);
+    const bundles = grow.ideas.find((idea) => idea.id === "bundle");
+    expect(bundles?.options.map((option) => [option.label, option.sentence])).toEqual([
+      ["Walk and wash", "a walk-and-wash bundle"],
+      ["Walk and manners", "a walk-and-manners bundle"],
+      ["Neighbor bundle", "a neighbor bundle"],
+    ]);
     expect(grow.ideas.map((idea) => idea.successLine)).toEqual([
       "{count} new customers book through a referral",
       "{count} customers sign up and pay upfront",
@@ -59,6 +75,12 @@ describe("Level Up check-in date", () => {
       "{count} customers book my new service",
       "{count} customers give me more to do",
     ]);
+  });
+
+  it("joins one, two, and three offer labels with no serial comma", () => {
+    expect(joinList(["dog sitting"], "and")).toBe("dog sitting");
+    expect(joinList(["dog sitting", "grooming"], "and")).toBe("dog sitting and grooming");
+    expect(joinList(["dog sitting", "grooming", "dog training"], "and")).toBe("dog sitting, grooming and dog training");
   });
 
   it("gates expand jobs by cohort", () => {

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { levelUpOf, parseLevelUpAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { checkLaunchpadVenturePayload } from "@/lib/launchpad/content/check-payload";
@@ -207,11 +207,24 @@ describe("Level Up screens", () => {
     expect(kept && "starts" in kept).toBe(false);
   });
 
+  function openList(name: string) {
+    fireEvent.click(screen.getByRole("button", { name }));
+  }
+
+  function pickListed(name: string) {
+    const list = document.querySelector("[data-grow-options]");
+    if (!list) throw new Error("option list is closed");
+    fireEvent.click(within(list as HTMLElement).getByRole("button", { name }));
+  }
+
   function fillIdea() {
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
-    fireEvent.click(screen.getByRole("button", { name: "This week" }));
+    openList("Select at least one.");
+    pickListed("A free walk");
+    openList("Start");
+    pickListed("this week");
     fireEvent.change(screen.getByRole("textbox", { name: "How many customers" }), { target: { value: "4" } });
-    fireEvent.click(screen.getByRole("button", { name: "one month" }));
+    openList("Check-in");
+    pickListed("one month");
   }
 
   it("shows a payload edit to the Grow question", () => {
@@ -220,6 +233,30 @@ describe("Level Up screens", () => {
     render(<LevelUpFlow screen={edited} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     expect(screen.getByText("Which experiment will you run?")).toBeTruthy();
     expect(screen.queryByText("What will you try, to grow your business?")).toBeNull();
+    expect(document.querySelector("[data-scribble='bulb']")).toBeTruthy();
+  });
+
+  it("shows a payload edit inside the statement and joins offers without a serial comma", () => {
+    const edited = structuredClone(grow);
+    const referral = edited.content.grow.ideas[0]!;
+    referral.context = "Payload context line.";
+    referral.statement = "Offer {offer} {start} for {count} in {checkIn}.";
+    referral.options[0]!.sentence = "a payload walk";
+    edited.content.grow.dateLine = "Due {date}.";
+    render(<LevelUpFlow screen={edited} today={new Date(2026, 10, 11)} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Payload context line.")).toBeTruthy();
+    expect(screen.queryByText("Reward customers who send a new owner your way, so your best customers help find the next ones.")).toBeNull();
+    openList("Select at least one.");
+    pickListed("A free walk");
+    expect(screen.getByText("a payload walk")).toBeTruthy();
+    pickListed("A discount");
+    pickListed("A free add-on");
+    expect(screen.getByText("a payload walk, a discount and a free add-on")).toBeTruthy();
+    openList("Check-in");
+    pickListed("two months");
+    expect(screen.getByText("Due January 11, 2027.")).toBeTruthy();
   });
 
   it("keeps the closer date and writes each idea check-in once", async () => {
@@ -232,11 +269,15 @@ describe("Level Up screens", () => {
     expect(screen.getByText("Section 1 of 3")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 2 of 3")).toBeTruthy();
-    expect(screen.getByText("Select at least one.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Select at least one." })).toBeTruthy();
+    expect(screen.getByText("Reward customers who send a new owner your way, so your best customers help find the next ones.")).toBeTruthy();
+    expect(document.querySelector("[data-scribble-large='growth']")).toBeTruthy();
     fillIdea();
+    expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 3")).toBeTruthy();
     expect(screen.getByText("Your next check-in: February 10, 2027")).toBeTruthy();
+    expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
     expect(screen.getByText("See you in three months.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
@@ -264,6 +305,7 @@ describe("Level Up screens", () => {
     fillIdea();
     fireEvent.click(cont());
     expect(screen.getByText("Expand beyond dog walking")).toBeTruthy();
+    openList("Select at least one.");
     expect(screen.queryByText("Grocery delivery")).toBeNull();
     expect(screen.getByText("Lawn mowing")).toBeTruthy();
   });
@@ -273,6 +315,7 @@ describe("Level Up screens", () => {
     const { unmount } = render(<LevelUpFlow screen={grow} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    openList("Select at least one.");
     expect((screen.getByRole("button", { name: "Dog sitting" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "Grooming" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "Dog training" }) as HTMLButtonElement).disabled).toBe(false);
@@ -281,6 +324,7 @@ describe("Level Up screens", () => {
     render(<LevelUpFlow screen={grow} cohort="explorer" onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Expand beyond dog walking" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    openList("Select at least one.");
     expect(screen.queryByText("Lawn mowing")).toBeNull();
     expect(screen.getByText("Curb painting")).toBeTruthy();
   });

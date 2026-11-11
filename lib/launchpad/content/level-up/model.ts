@@ -26,6 +26,8 @@ export type LevelStatement = {
 export type LevelUpOption = {
   id: string;
   label: string;
+  /** Words used inside the statement. The dropdown keeps `label`. */
+  sentence?: string;
   /** When set, only these cohorts see the option. Expand jobs use this. */
   cohorts?: readonly LevelCohort[];
 };
@@ -35,6 +37,13 @@ export type LevelUpIdea = {
   id: GrowIdeaId;
   label: string;
   options: readonly LevelUpOption[];
+  /** One line under the heading. Absent on a payload published before this screen. */
+  context?: string;
+  /**
+   * The experiment sentence. Tokens: `{offer}` `{start}` `{count}` `{checkIn}`.
+   * Absent on a payload published before this screen.
+   */
+  statement?: string;
   /** `{count}` is the whole-number blank. Absent on a payload published before this screen. */
   successLine?: string;
 };
@@ -70,6 +79,10 @@ export type LaunchpadLevelUpContent = {
     checkInLabel?: string;
     /** Accessible name of the success number blank. */
     successFieldLabel?: string;
+    /** Joins the last two offer picks. Absent on a payload published before the statement screen. */
+    joinWord?: string;
+    /** `{date}` is the experiment check-in date under the statement. */
+    dateLine?: string;
     startOptions?: readonly GrowChoice[];
     /** `months` is how far ahead the check-in date is written. */
     checkInOptions?: readonly GrowChoice[];
@@ -151,5 +164,14 @@ export function expandJobsFor(options: readonly LevelUpOption[], cohort: LevelCo
   return options
     .filter((option) => !option.cohorts || option.cohorts.includes(cohort))
     .map((option) => ({ id: option.id, label: option.label }));
+}
+
+/** X, then X and Y, then X, Y and Z. No serial comma. The joining word comes from the payload. */
+export function joinList(items: readonly string[], andWord: string): string {
+  const rows = items.filter((item) => item.trim().length > 0);
+  if (rows.length === 0) return "";
+  if (rows.length === 1) return rows[0]!;
+  if (rows.length === 2) return `${rows[0]} ${andWord} ${rows[1]}`;
+  return `${rows.slice(0, -1).join(", ")} ${andWord} ${rows[rows.length - 1]}`;
 }
 

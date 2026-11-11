@@ -17,7 +17,7 @@ import {
 } from "@/lib/launchpad/venture-test/handbook";
 import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
-import { HandbookPage, TemplatesComingSoon } from "@/components/launchpad/venture/handbook/handbook-page";
+import { HandbookPage, TemplatesComingSoon, WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
@@ -117,6 +117,10 @@ export function Handbook({
     .map((tab) => (scopeLevel == null ? tab : { ...tab, tappable: true }));
   // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [templatePage, setTemplatePage] = useState(0);
+  const templatePages = s.templates.pages ?? [];
+  const templateAt = Math.min(templatePage, Math.max(0, templatePages.length - 1));
+  const pagingTemplates = templatesOpen && templatePages.length > 0;
   const [index, setIndex] = useState(() => {
     if (initialSheet) {
       const found = pages.findIndex((item) => item.sheet === initialSheet);
@@ -220,28 +224,38 @@ export function Handbook({
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
             onPointerUp={(e) => {
-              if (templatesOpen || swipeX.current === null) return;
+              if (swipeX.current === null) return;
               const dx = e.clientX - swipeX.current;
               swipeX.current = null;
-              if (Math.abs(dx) > 60) go(at + (dx < 0 ? 1 : -1));
+              if (Math.abs(dx) <= 60) return;
+              if (pagingTemplates) {
+                setTemplatePage((current) => Math.min(templatePages.length - 1, Math.max(0, current + (dx < 0 ? 1 : -1))));
+                return;
+              }
+              if (templatesOpen) return;
+              go(at + (dx < 0 ? 1 : -1));
             }}
           >
             <SpiralBinding />
-            {!templatesOpen && page && (page.number === 2 || page.number === 6) && <Washi page={page.number === 6 ? 6 : 2} />}
+            {(pagingTemplates || (!templatesOpen && page && (page.number === 2 || page.number === 6))) && <Washi page={!templatesOpen && page?.number === 6 ? 6 : 2} />}
             <div ref={paperRef} className={`h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6 ${WORKBOOK_BODY}`} data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
                 <TemplateBlanks on={scopeLevel != null}>
                   {templatesOpen ? (
-                    <TemplatesComingSoon />
+                    pagingTemplates ? <WorkbookTemplatePage key={templatePages[templateAt]!.id} page={templatePages[templateAt]!} editable={entry === "building" && Boolean(setAnswer)} /> : <TemplatesComingSoon />
                   ) : page ? (
                     <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
                   ) : null}
                 </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
-            {!templatesOpen && page ? (
+            {pagingTemplates ? (
+              <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
+                {paperLabel({ number: templateAt + 1, sheet: templatePages[templateAt]!.id, silver: { id: "templates" } })}
+              </p>
+            ) : !templatesOpen && page ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel(page)}
               </p>
@@ -301,7 +315,10 @@ export function Handbook({
             aria-label={s.templates.label}
             aria-current={templatesOpen ? "true" : undefined}
             data-templates-tab=""
-            onClick={() => setTemplatesOpen(true)}
+            onClick={() => {
+              setTemplatePage(0);
+              setTemplatesOpen(true);
+            }}
             className={`flex h-[38px] w-full min-w-0 items-center justify-center rounded-b-[3px] rounded-t-none border font-sans text-[#19347D] ${templatesOpen ? "border-[#19347D] bg-white outline outline-2 outline-offset-2 outline-[#FFA503]" : "border-[#E7E1D6] bg-[#F3EFE6]"}`}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -319,10 +336,10 @@ export function Handbook({
           </div>
         </div>
         <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
-          <button type="button" aria-label={s.workbook.previous} disabled={templatesOpen || at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.previous} disabled={pagingTemplates ? templateAt === 0 : templatesOpen || at === 0} onClick={() => (pagingTemplates ? setTemplatePage(templateAt - 1) : go(at - 1))} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="left" />
           </button>
-          <button type="button" aria-label={s.workbook.next} disabled={templatesOpen || isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+          <button type="button" aria-label={s.workbook.next} disabled={pagingTemplates ? templateAt >= templatePages.length - 1 : templatesOpen || isLast} onClick={() => (pagingTemplates ? setTemplatePage(templateAt + 1) : go(at + 1))} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
             <Chevron dir="right" />
           </button>
         </div>

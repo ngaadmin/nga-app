@@ -156,6 +156,7 @@ export function LessonSurface({
   creditSlot = false,
   aboveFooter,
   progressClassName,
+  decoration,
 }: {
   title: string;
   onBack: () => void;
@@ -170,10 +171,12 @@ export function LessonSurface({
   aboveFooter?: ReactNode;
   /** Gap under the title, before the progress row. */
   progressClassName?: string;
+  /** Art pinned to the lesson frame, outside the scrolling copy. */
+  decoration?: ReactNode;
 }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const frame = (
-    <section className={`flex min-h-0 flex-1 flex-col bg-white ${showMute ? "relative" : ""}`} data-lesson-surface="">
+    <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-lesson-surface="">
       {showMute ? <MasterMuteButton /> : null}
       <LessonTopBar title={title} onBack={onBack} progress={progress} progressClassName={progressClassName} />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
@@ -182,6 +185,7 @@ export function LessonSurface({
         {creditSlot ? <div ref={setSlot} className="w-full" data-lesson-credit-slot="" /> : null}
         {footer}
       </div>
+      {decoration}
     </section>
   );
   if (!creditSlot) return frame;

@@ -4,6 +4,82 @@
  * shape when LAUNCHPAD_CONTENT_DB is on. Screens read it. They do not
  * repeat the words.
  */
+
+export type WorkbookTemplateField = { id: string; label: string; wide?: boolean };
+
+export type WorkbookTemplatePage = {
+  id: string;
+  title: string;
+  scribble: string;
+  lead?: string;
+  subhead?: string;
+  intro?: string;
+  tip?: string;
+  jobTitle?: string;
+  wrapTitle?: string;
+  fields: readonly WorkbookTemplateField[];
+  wrapFields?: readonly WorkbookTemplateField[];
+  ticks?: readonly WorkbookTemplateField[];
+};
+
+const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
+  {
+    id: "taking-order-1",
+    title: "Taking a customer order",
+    scribble: "beagle",
+    lead: "What you need to look after the dog and reach someone:",
+    subhead: "What information you'll collect from the owner",
+    fields: [
+      { id: "name", label: "Name" },
+      { id: "address", label: "Address" },
+      { id: "emergency", label: "Emergency contact" },
+      { id: "pickup", label: "Pickup and drop-off times", wide: true },
+      { id: "allergies", label: "The dog's allergies or fears", wide: true },
+      { id: "usualJob", label: "What a usual job looks like", wide: true },
+    ],
+  },
+  {
+    id: "taking-order-2",
+    title: "Taking a customer order",
+    scribble: "wallet",
+    wrapTitle: "Wrap-up",
+    fields: [
+      { id: "dog", label: "Things to know about the dog", wide: true },
+      { id: "whenWhere", label: "When and where" },
+      { id: "cost", label: "Cost" },
+      { id: "plansChange", label: "What happens if plans change", wide: true },
+    ],
+    wrapFields: [
+      { id: "proof", label: "How I'll show proof" },
+      { id: "payment", label: "How I'll collect payment" },
+      { id: "feedback", label: "How I'll ask for feedback" },
+    ],
+  },
+  {
+    id: "booking-form",
+    title: "My order booking form",
+    scribble: "calendar",
+    intro: "These are the fields to capture for each order.",
+    tip: "For easy tracking, keep your orders in a table. Put each order on its own row, and each field as a column.",
+    jobTitle: "Job 1",
+    fields: [
+      { id: "dateBooked", label: "Date booked" },
+      { id: "customer", label: "Customer (first name only)" },
+      { id: "service", label: "Service and package" },
+      { id: "dayTime", label: "Day and time" },
+      { id: "cadence", label: "One-off or regular" },
+      { id: "price", label: "Price" },
+      { id: "notes", label: "Notes" },
+    ],
+    ticks: [
+      { id: "reminder", label: "Reminder set?" },
+      { id: "done", label: "Done?" },
+      { id: "paid", label: "Paid?" },
+      { id: "asked", label: "Feedback asked?" },
+    ],
+  },
+];
+
 export const LAUNCHPAD_SURFACE_COPY = {
   chrome: {
     back: "Back",
@@ -285,6 +361,8 @@ export const LAUNCHPAD_SURFACE_COPY = {
     label: "Templates",
     title: "Templates",
     comingSoon: "Templates coming soon.",
+    answerKey: "workbook-templates",
+    pages: WORKBOOK_TEMPLATE_PAGES,
   },
   buildComplete: {
     greeting: "Congratulations!",

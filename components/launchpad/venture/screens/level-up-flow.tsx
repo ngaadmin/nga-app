@@ -10,6 +10,7 @@ import {
   expandJobsFor,
   fillToken,
   formatCheckInDate,
+  joinList,
   paceFor,
   pickedStatements,
   sectionLabel,
@@ -17,7 +18,9 @@ import {
   type LevelCohort,
   type LevelSectionId,
   type LevelUpIdea,
+  type LevelUpOption,
 } from "@/lib/launchpad/content/level-up/model";
+import { LargeScribble, SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { OrderedSlots } from "@/components/launchpad/venture/screens/rank-order-screen";
@@ -57,6 +60,40 @@ function Lined({ item, selected, muted, onClick }: { item: { id: string; label: 
   return <Chip variant="lined" label={item.label} selected={selected} muted={muted} onClick={onClick} />;
 }
 
+function PickChevron() {
+  return (
+    <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" className="ml-1 inline-block align-middle">
+      <path d="M1 1l4 4 4-4" fill="none" stroke="#0CC1E0" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const STATEMENT_SLOT = /\{(offer|start|count|checkIn)\}/g;
+
+function statementParts(template: string): { text: string; slot?: "offer" | "start" | "count" | "checkIn" }[] {
+  const parts: { text: string; slot?: "offer" | "start" | "count" | "checkIn" }[] = [];
+  let last = 0;
+  for (const match of template.matchAll(STATEMENT_SLOT)) {
+    const index = match.index ?? 0;
+    if (index > last) parts.push({ text: template.slice(last, index) });
+    const slot = match[1];
+    if (slot === "offer" || slot === "start" || slot === "count" || slot === "checkIn") parts.push({ text: "", slot });
+    last = index + match[0].length;
+  }
+  if (last < template.length) parts.push({ text: template.slice(last) });
+  return parts;
+}
+
+function offerWords(option: LevelUpOption): string {
+  return option.sentence?.trim() ? option.sentence : option.label;
+}
+
+function visibleOptions(idea: LevelUpIdea, cohort: LevelCohort): LevelUpOption[] {
+  if (idea.id !== "expand") return [...idea.options];
+  const allowed = new Set(expandJobsFor(idea.options, cohort).map((row) => row.id));
+  return idea.options.filter((option) => allowed.has(option.id));
+}
+
 function SectionBlock({ label, id, children }: { label: string; id: LevelSectionId; children: ReactNode }) {
   return (
     <div className="mt-[21px]" data-level-section={id}>
@@ -92,13 +129,26 @@ export function LevelUpFlow({
     ...(offerOf(answers, "l2-offer")?.offerings.map((row) => row.serviceId) ?? []),
   ]);
   const [page, setPage] = useState(0);
+  const [openSlot, setOpenSlot] = useState<"offer" | "start" | "checkIn" | null>(null);
+  const [slotPage, setSlotPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
+  if (slotPage !== page) {
+    setSlotPage(page);
+    setOpenSlot(null);
+  }
   const writtenDates = useRef(new Map(saved.growPlans.filter((row) => row.checkIn && row.checkInDate).map((row) => [row.idea, { checkIn: row.checkIn, checkInDate: row.checkInDate }])));
   const pickPages = sections.length;
   const weekLabels = content.improve.weekLabels ?? [];
   const planAvailable = Boolean(content.improve.planHeader && weekLabels.length > 0);
   const growIdeas = orderedIdeas(content.grow.ideas ?? [], draft.ideas);
-  const growDetail = Boolean(content.grow.startOptions?.length && content.grow.checkInOptions?.length && growIdeas.every((idea) => idea.successLine));
+  const statementMode = Boolean(
+    content.grow.joinWord &&
+      content.grow.dateLine?.includes("{date}") &&
+      content.grow.startOptions?.length &&
+      content.grow.checkInOptions?.length &&
+      growIdeas.every((idea) => idea.statement),
+  );
+  const growDetail = statementMode || Boolean(content.grow.startOptions?.length && content.grow.checkInOptions?.length && growIdeas.every((idea) => idea.successLine));
   const growTotal = 1 + (growDetail ? growIdeas.length : 0) + 1;
   const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : growTotal;
   const checkIn = addMonths(today, 3);
@@ -269,6 +319,108 @@ export function LevelUpFlow({
         </div>
       </>
     );
+  } else if (statementMode && currentIdea && currentPlan && currentIdea.statement) {
+    const visible = visibleOptions(currentIdea, cohort);
+    const blocked = new Set(currentIdea.id === "new-service" ? offered : []);
+    const chosen = visible.filter((option) => currentPlan.options.includes(option.id) && !blocked.has(option.id));
+    const joined = joinList(chosen.map(offerWords), content.grow.joinWord ?? "");
+    const start = (content.grow.startOptions ?? []).find((option) => option.id === currentPlan.when);
+    const period = (content.grow.checkInOptions ?? []).find((option) => option.id === currentPlan.checkIn);
+    const committed = writtenDates.current.get(currentIdea.id);
+    const experimentDate = period
+      ? committed && committed.checkIn === currentPlan.checkIn
+        ? committed.checkInDate
+        : period.months
+          ? formatCheckInDate(addMonths(today, period.months))
+          : ""
+      : "";
+    const patch = (plan: GrowPlan) => setDraft({ ...draft, growPlans: writePlan(draft.growPlans, plan) });
+    const toggleSlot = (slot: "offer" | "start" | "checkIn") => setOpenSlot((current) => (current === slot ? null : slot));
+    const pickClass = "mx-0.5 inline border-b-[1.5px] border-[#0CC1E0] align-baseline font-sans text-[18px] font-semibold leading-[26px] text-[#0CC1E0]";
+    const list = openSlot === "offer"
+      ? visible.map((option) => ({ ...option, blocked: blocked.has(option.id), selected: !blocked.has(option.id) && currentPlan.options.includes(option.id) }))
+      : openSlot === "start"
+        ? (content.grow.startOptions ?? []).map((option) => ({ ...option, blocked: false, selected: currentPlan.when === option.id }))
+        : openSlot === "checkIn"
+          ? (content.grow.checkInOptions ?? []).map((option) => ({ ...option, blocked: false, selected: currentPlan.checkIn === option.id }))
+          : [];
+    body = (
+      <div data-grow-statement={currentIdea.id}>
+        <ScreenPrompt tone="question" flush className="!mt-3">{currentIdea.label}</ScreenPrompt>
+        {currentIdea.context ? <p className={`mt-3 ${LESSON_HINT}`}>{currentIdea.context}</p> : null}
+        <p className={`mt-[21px] ${LESSON_BODY}`}>
+          {statementParts(currentIdea.statement).map((part, index) => {
+            if (part.slot === "offer") {
+              return (
+                <button key={index} type="button" aria-expanded={openSlot === "offer"} aria-label={joined ? undefined : content.grow.optionPrompt} onClick={() => toggleSlot("offer")} className={`${pickClass} ${joined ? "" : "min-w-8"}`}>
+                  {joined || "\u00a0"}
+                  <PickChevron />
+                </button>
+              );
+            }
+            if (part.slot === "start") {
+              return (
+                <button key={index} type="button" aria-expanded={openSlot === "start"} aria-label={start ? undefined : content.grow.startLabel} onClick={() => toggleSlot("start")} className={`${pickClass} ${start ? "" : "min-w-8"}`}>
+                  {start?.label || "\u00a0"}
+                  <PickChevron />
+                </button>
+              );
+            }
+            if (part.slot === "checkIn") {
+              return (
+                <button key={index} type="button" aria-expanded={openSlot === "checkIn"} aria-label={period ? undefined : content.grow.checkInLabel} onClick={() => toggleSlot("checkIn")} className={`${pickClass} ${period ? "" : "min-w-8"}`}>
+                  {period?.label || "\u00a0"}
+                  <PickChevron />
+                </button>
+              );
+            }
+            if (part.slot === "count") {
+              return (
+                <input
+                  key={index}
+                  aria-label={content.grow.successFieldLabel}
+                  inputMode="numeric"
+                  value={currentPlan.successCount ? String(currentPlan.successCount) : ""}
+                  onChange={(event) => {
+                    const digits = event.target.value.replace(/\D/g, "").slice(0, 3);
+                    patch({ ...currentPlan, successCount: digits ? Number(digits) : 0 });
+                  }}
+                  className="mx-1 inline-block w-10 border-b-[1.5px] border-[#0CC1E0] bg-transparent text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D] outline-none"
+                />
+              );
+            }
+            return <span key={index}>{part.text}</span>;
+          })}
+        </p>
+        {openSlot ? (
+          <div className="mt-2" data-grow-options={openSlot}>
+            {list.map((option) => (
+              <Lined
+                key={option.id}
+                item={option}
+                selected={option.selected}
+                muted={option.blocked}
+                onClick={() => {
+                  if (option.blocked) return;
+                  if (openSlot === "offer") {
+                    patch({
+                      ...currentPlan,
+                      options: option.selected ? currentPlan.options.filter((id) => id !== option.id) : [...currentPlan.options, option.id],
+                    });
+                    return;
+                  }
+                  if (openSlot === "start") patch({ ...currentPlan, when: option.id });
+                  if (openSlot === "checkIn") patch({ ...currentPlan, checkIn: option.id });
+                  setOpenSlot(null);
+                }}
+              />
+            ))}
+          </div>
+        ) : null}
+        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", experimentDate)}</p> : null}
+        <LargeScribble name="growth" />
+      </div>
+    );
   } else if (currentIdea && currentPlan) {
     const visible = currentIdea.id === "expand" ? expandJobsFor(currentIdea.options, cohort) : currentIdea.options;
     const [before, after] = (currentIdea.successLine ?? "").split("{count}");
@@ -342,6 +494,11 @@ export function LevelUpFlow({
       onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
       progress={{ index: page + 1, total }}
       footer={<LessonContinue disabled={!ready} onClick={go} />}
+      decoration={screen.step === "grow" && page === 0 ? (
+        <img src={SCRIBBLE_SRC.bulb} alt="" width={64} height={64} draggable={false} data-scribble="bulb" className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-16 mix-blend-multiply" />
+      ) : screen.step === "grow" && !currentIdea ? (
+        <img src={SCRIBBLE_SRC.calendar} alt="" width={80} height={80} draggable={false} data-scribble-large="calendar" className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-20 mix-blend-multiply" />
+      ) : null}
     >
       <div data-task-screen="level-up" data-level-step={screen.step} data-level-page={page + 1}>{body}</div>
     </LessonSurface>

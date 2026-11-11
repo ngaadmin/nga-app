@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { levelUpOf, offerOf, selectionOf, type GrowPlan, type LevelUpAnswer } from "@/lib/launchpad/content/answers";
-import type { LaunchpadLevelUpScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
+import type { LaunchpadFloor, LaunchpadLevelUpScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
+import { offerOptions } from "@/lib/launchpad/content/know-your-cost/logic";
 import {
   addMonths,
   checkInClipboard,
@@ -121,10 +122,21 @@ async function copyPlainText(text: string): Promise<boolean> {
   return ok;
 }
 
-function visibleOptions(idea: LevelUpIdea, cohort: LevelCohort): LevelUpOption[] {
-  if (idea.id !== "expand") return [...idea.options];
-  const allowed = new Set(expandJobsFor(idea.options, cohort).map((row) => row.id));
-  return idea.options.filter((option) => allowed.has(option.id));
+function visibleOptions(idea: LevelUpIdea, cohort: LevelCohort, floors?: readonly LaunchpadFloor[]): LevelUpOption[] {
+  const source = idea.optionsFrom && floors
+    ? offerOptions(floors, idea.optionsFrom).map((option) => ({ id: option.id, label: option.label }))
+    : [...idea.options];
+  if (idea.id !== "expand") return source;
+  const allowed = new Set(expandJobsFor(source, cohort).map((row) => row.id));
+  return source.filter((option) => allowed.has(option.id));
+}
+
+function blockedOptions(idea: LevelUpIdea, offered: ReadonlySet<string>): Set<string> {
+  const blocked = new Set(idea.alwaysOffered ?? []);
+  if (idea.optionsFrom || idea.id === "new-service") {
+    for (const id of offered) blocked.add(id);
+  }
+  return blocked;
 }
 
 function SectionBlock({ label, id, children }: { label: string; id: LevelSectionId; children: ReactNode }) {
@@ -141,6 +153,7 @@ export function LevelUpFlow({
   answers,
   cohort = "pathfinder",
   today = new Date(),
+  floors,
   onExit,
   onSave,
   onFinish,
@@ -149,6 +162,7 @@ export function LevelUpFlow({
   answers?: LaunchpadAnswers;
   cohort?: LevelCohort;
   today?: Date;
+  floors?: readonly LaunchpadFloor[];
   onExit: () => void;
   onSave: (answer: LevelUpAnswer) => void;
   onFinish: (answer: LevelUpAnswer) => void;
@@ -220,8 +234,8 @@ export function LevelUpFlow({
   if (screen.step === "improve" && page === pickPages) ready = chosenItems.length > 0 && chosenItems.every((item) => draft.improvePlan.some((row) => row.statementId === item.id)) && draft.improvePlan.length === chosenItems.length;
   if (screen.step === "grow" && page === 0) ready = growIdeas.length > 0;
   if (currentIdea && currentPlan) {
-    const visible = new Set((currentIdea.id === "expand" ? expandJobsFor(currentIdea.options, cohort) : currentIdea.options).map((option) => option.id));
-    const blocked = currentIdea.id === "new-service" ? offered : new Set<string>();
+    const visible = new Set(visibleOptions(currentIdea, cohort, floors).map((option) => option.id));
+    const blocked = blockedOptions(currentIdea, offered);
     const picked = currentPlan.options.filter((id) => visible.has(id) && !blocked.has(id));
     const starts = new Set((content.grow.startOptions ?? []).map((option) => option.id));
     const periods = new Set((content.grow.checkInOptions ?? []).map((option) => option.id));
@@ -342,8 +356,8 @@ export function LevelUpFlow({
     const full = growIdeas.length >= 3;
     body = (
       <>
-        <ScreenPrompt id="grow-question" tone="question" flush className="!mt-3">{content.grow.question}</ScreenPrompt>
-        {content.grow.context ? <p className={`mt-[21px] ${LESSON_BODY}`}>{content.grow.context}</p> : null}
+        {content.grow.context ? <p className={`mt-3 ${LESSON_HINT}`} data-grow-intro="">{content.grow.context}</p> : null}
+        <ScreenPrompt id="grow-question" tone="question" flush className="!mt-[21px]">{content.grow.question}</ScreenPrompt>
         <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
         <div className="mt-[21px]">
           {(content.grow.ideas ?? []).map((idea) => {
@@ -366,8 +380,8 @@ export function LevelUpFlow({
     );
   } else if (statementMode && currentIdea?.layout === "stacked" && currentIdea.stacked && currentPlan) {
     const slots = currentIdea.stacked;
-    const visible = visibleOptions(currentIdea, cohort);
-    const blocked = new Set(currentIdea.id === "new-service" ? offered : []);
+    const visible = visibleOptions(currentIdea, cohort, floors);
+    const blocked = blockedOptions(currentIdea, offered);
     const chosen = visible.filter((option) => currentPlan.options.includes(option.id) && !blocked.has(option.id));
     const joined = joinList(chosen.map(offerWords), content.grow.joinWord ?? "");
     const start = (content.grow.startOptions ?? []).find((option) => option.id === currentPlan.when);
@@ -478,8 +492,8 @@ export function LevelUpFlow({
       </div>
     );
   } else if (statementMode && currentIdea && currentPlan && currentIdea.statement) {
-    const visible = visibleOptions(currentIdea, cohort);
-    const blocked = new Set(currentIdea.id === "new-service" ? offered : []);
+    const visible = visibleOptions(currentIdea, cohort, floors);
+    const blocked = blockedOptions(currentIdea, offered);
     const chosen = visible.filter((option) => currentPlan.options.includes(option.id) && !blocked.has(option.id));
     const joined = joinList(chosen.map(offerWords), content.grow.joinWord ?? "");
     const start = (content.grow.startOptions ?? []).find((option) => option.id === currentPlan.when);
@@ -580,7 +594,8 @@ export function LevelUpFlow({
       </div>
     );
   } else if (currentIdea && currentPlan) {
-    const visible = currentIdea.id === "expand" ? expandJobsFor(currentIdea.options, cohort) : currentIdea.options;
+    const visible = visibleOptions(currentIdea, cohort, floors);
+    const blockedIds = blockedOptions(currentIdea, offered);
     const [before, after] = (currentIdea.successLine ?? "").split("{count}");
     const field: LaunchpadTextField = { name: "success", input: "integer", label: content.grow.successFieldLabel ?? "", min: 1, max: 999 };
     const patch = (plan: GrowPlan) => setDraft({ ...draft, growPlans: writePlan(draft.growPlans, plan) });
@@ -589,7 +604,7 @@ export function LevelUpFlow({
         <ScreenPrompt tone="section" flush className="!mt-3">{currentIdea.label}</ScreenPrompt>
         {content.grow.optionPrompt ? <ScreenGuidance flush>{content.grow.optionPrompt}</ScreenGuidance> : null}
         {visible.map((option) => {
-          const blocked = currentIdea.id === "new-service" && offered.has(option.id);
+          const blocked = blockedIds.has(option.id);
           const on = !blocked && currentPlan.options.includes(option.id);
           return (
             <Lined

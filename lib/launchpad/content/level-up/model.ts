@@ -37,6 +37,10 @@ export type LevelUpIdea = {
   id: GrowIdeaId;
   label: string;
   options: readonly LevelUpOption[];
+  /** When set, the choices are the options on this answer key (the Level 1 offer list). */
+  optionsFrom?: string;
+  /** Service ids that are already the core offer, so they stay gray. */
+  alwaysOffered?: readonly string[];
   /** One line under the heading. Absent on a payload published before this screen. */
   context?: string;
   /**

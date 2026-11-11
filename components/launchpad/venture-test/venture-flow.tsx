@@ -743,6 +743,7 @@ export function VentureFlow({
           <LevelUpFlow
             screen={levelUpScreen}
             answers={answers}
+            floors={floors}
             cohort={track}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
             onSave={(answer) => save(setProgressAnswer(progress, levelUpScreen.answerKey, answer))}

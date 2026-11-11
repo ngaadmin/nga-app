@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { levelUpOf, parseLevelUpAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { checkLaunchpadVenturePayload } from "@/lib/launchpad/content/check-payload";
+import { offerOptions } from "@/lib/launchpad/content/know-your-cost/logic";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
@@ -22,6 +23,7 @@ function levelUpScreens(payload = launchpadTestVentureSeed()) {
 }
 
 const { reflect, improve, grow } = levelUpScreens();
+const FLOORS = launchpadTestVentureSeed().floors;
 
 describe("Level Up screens", () => {
   it("shows one payload statement on both Reflect and Improve", () => {
@@ -298,6 +300,66 @@ describe("Level Up screens", () => {
     expect(screen.queryByText("I'll start offering")).toBeNull();
   });
 
+  it("puts the gray intro before the aqua question", () => {
+    render(<LevelUpFlow screen={grow} floors={FLOORS} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    const intro = screen.getByText(grow.content.grow.context!);
+    const question = document.getElementById("grow-question");
+    expect(question).toBeTruthy();
+    expect(intro.compareDocumentPosition(question!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("uses the Level 1 offer list for a new service, with dog walking already offered", () => {
+    render(<LevelUpFlow screen={grow} floors={FLOORS} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const offer = screen.getByRole("combobox", { name: "I'll start offering" });
+    const labels = within(offer).getAllByRole("option").map((option) => option.textContent).filter((label) => label && label !== "choose");
+    expect(labels).toEqual(offerOptions(FLOORS, "l1-offer").map((option) => option.label));
+    expect(labels).not.toContain("Holiday care");
+    expect((within(offer).getByRole("option", { name: "Dog walking" }) as HTMLOptionElement).disabled).toBe(true);
+    expect((within(offer).getByRole("option", { name: "Dog sitting" }) as HTMLOptionElement).disabled).toBe(false);
+  });
+
+  it("shows a payload edit of a Level 1 service on the new dog service screen", () => {
+    const floors = structuredClone(FLOORS);
+    const offer = floors.flatMap((floor) => floor.silvers.flatMap((silver) => silver.bronzes.flatMap((bronze) => bronze.tasks.flatMap((task) => task.screens)))).find((item) => item.type === "choice-capture" && item.answerKey === "l1-offer");
+    if (!offer || offer.type !== "choice-capture") throw new Error("offer list missing");
+    offer.options = offer.options.map((option) => option.id === "dog-sitting" ? { ...option, label: "House sitting" } : option);
+    render(<LevelUpFlow screen={grow} floors={floors} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const list = screen.getByRole("combobox", { name: "I'll start offering" });
+    expect(within(list).getByRole("option", { name: "House sitting" })).toBeTruthy();
+    expect(within(list).queryByRole("option", { name: "Dog sitting" })).toBeNull();
+  });
+
+  it("ignores a saved holiday care pick", () => {
+    render(
+      <LevelUpFlow
+        screen={grow}
+        floors={FLOORS}
+        answers={{
+          "l7-grow": {
+            kind: "level-up",
+            version: 1,
+            selected: [],
+            picks: {},
+            pace: {},
+            improvePlan: [],
+            ideas: ["new-service"],
+            growPlans: [{ idea: "new-service", options: ["holiday-care"], when: "this-week", successCount: 2, checkIn: "one-month", checkInDate: "December 11, 2026" }],
+          },
+        }}
+        onExit={() => {}}
+        onSave={() => {}}
+        onFinish={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByText("Holiday care")).toBeNull();
+    expect(screen.getByRole("option", { name: "Dog training" })).toBeTruthy();
+  });
+
   it("shows a payload edit to the Grow question", () => {
     const edited = structuredClone(grow);
     edited.content.grow.question = "Which experiment will you run?";
@@ -425,14 +487,15 @@ describe("Level Up screens", () => {
 
   it("grays services already chosen and hides expand jobs outside the cohort", () => {
     const answers: LaunchpadAnswers = { "l1-offer": selectionAnswer(["dog-sitting", "grooming"]) };
-    const { unmount } = render(<LevelUpFlow screen={grow} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    const { unmount } = render(<LevelUpFlow screen={grow} floors={FLOORS} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     const offer = screen.getByRole("combobox", { name: "I'll start offering" });
+    expect((within(offer).getByRole("option", { name: "Dog walking" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(offer).getByRole("option", { name: "Dog sitting" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(offer).getByRole("option", { name: "Grooming" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(offer).getByRole("option", { name: "Dog training" }) as HTMLOptionElement).disabled).toBe(false);
-    expect((within(offer).getByRole("option", { name: "Holiday care" }) as HTMLOptionElement).disabled).toBe(false);
+    expect(within(offer).queryByRole("option", { name: "Holiday care" })).toBeNull();
     expect(document.querySelector("[data-grow-options]")).toBeNull();
     unmount();
     render(<LevelUpFlow screen={grow} cohort="explorer" onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);

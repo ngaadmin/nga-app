@@ -391,6 +391,8 @@ function checkLevelUp(screen: Obj, where: string): void {
         for (const field of ["offerLead", "startLead", "countLead", "countAfter", "checkInLead", "emptyLabel"] as const) {
           text(raw.stacked[field], `${iw} stacked ${field}`);
         }
+        text(raw.stacked.offerNote, `${iw} stacked offer note`, true);
+        text(raw.stacked.startNote, `${iw} stacked start note`, true);
       }
     }
     list(raw.options, `${iw} options`).forEach((option, oi) => {

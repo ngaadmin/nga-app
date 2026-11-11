@@ -410,6 +410,7 @@ export function LevelUpFlow({
                 ))}
               </select>
             </div>
+            {slots.offerNote ? <p className={`mt-1 ${LESSON_BODY}`}>{slots.offerNote}</p> : null}
           </div>
           <div className="mb-4">
             <p className={`mb-1 ${LESSON_BODY}`}>{slots.startLead}</p>
@@ -430,6 +431,7 @@ export function LevelUpFlow({
                 ))}
               </select>
             </div>
+            {slots.startNote ? <p className={`mt-1 ${LESSON_BODY}`}>{slots.startNote}</p> : null}
           </div>
           <div className="mb-4">
             <p className={`mb-1 ${LESSON_BODY}`}>{slots.countLead}</p>

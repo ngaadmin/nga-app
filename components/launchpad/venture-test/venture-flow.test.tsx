@@ -430,13 +430,10 @@ describe("Come back to this later", () => {
     fireEvent.click(door("Grow"));
     fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "Select at least one." }));
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
-    fireEvent.click(screen.getByRole("button", { name: "this week" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "How many customers" }), { target: { value: "2" } });
-    fireEvent.click(screen.getByRole("button", { name: "Check-in" }));
-    fireEvent.click(screen.getByRole("button", { name: "one month" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "I'll start a referral program, offering" }), { target: { value: "free-walk" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "starting" }), { target: { value: "this-week" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "My experiment works if" }), { target: { value: "2" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "I'll check in on how it's going in" }), { target: { value: "one-month" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("You've completed Level 7")).toBeTruthy();

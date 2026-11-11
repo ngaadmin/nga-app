@@ -60,6 +60,10 @@ export type LevelUpIdea = {
     checkInLead: string;
     /** Shown in an empty pick, with the chevron. */
     emptyLabel: string;
+    /** Extra line under the offer field. */
+    offerNote?: string;
+    /** Extra line under the start field. */
+    startNote?: string;
   };
 };
 

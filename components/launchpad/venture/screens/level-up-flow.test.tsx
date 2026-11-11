@@ -207,24 +207,12 @@ describe("Level Up screens", () => {
     expect(kept && "starts" in kept).toBe(false);
   });
 
-  function openList(name: string) {
-    fireEvent.click(screen.getByRole("button", { name }));
-  }
-
-  function pickListed(name: string) {
-    const list = document.querySelector("[data-grow-options]");
-    if (!list) throw new Error("option list is closed");
-    fireEvent.click(within(list as HTMLElement).getByRole("button", { name }));
-  }
-
   function fillIdea() {
-    openList("Select at least one.");
-    pickListed("A free walk");
-    openList("Start");
-    pickListed("this week");
-    fireEvent.change(screen.getByRole("textbox", { name: "How many customers" }), { target: { value: "4" } });
-    openList("Check-in");
-    pickListed("one month");
+    const page = document.querySelector("[data-grow-layout='stacked']") as HTMLElement;
+    fireEvent.change(within(page).getByRole("combobox", { name: "I'll start a referral program, offering" }), { target: { value: "free-walk" } });
+    fireEvent.change(within(page).getByRole("combobox", { name: "starting" }), { target: { value: "this-week" } });
+    fireEvent.change(within(page).getByRole("textbox", { name: "My experiment works if" }), { target: { value: "4" } });
+    fireEvent.change(within(page).getByRole("combobox", { name: "I'll check in on how it's going in" }), { target: { value: "one-month" } });
   }
 
   function openBundles() {
@@ -260,6 +248,20 @@ describe("Level Up screens", () => {
     expect(page.querySelector("[data-grow-options]")).toBeNull();
   });
 
+  it("stacks every Grow idea from its own payload and leaves the tick list off", () => {
+    for (const idea of grow.content.grow.ideas) {
+      const { unmount } = render(<LevelUpFlow screen={grow} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+      fireEvent.click(screen.getByRole("button", { name: idea.label }));
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      const page = document.querySelector("[data-grow-layout='stacked']") as HTMLElement;
+      expect(page.getAttribute("data-grow-statement")).toBe(idea.id);
+      expect(within(page).getByText(idea.stacked!.offerLead)).toBeTruthy();
+      expect(within(page).getByText(idea.stacked!.countAfter)).toBeTruthy();
+      expect(page.querySelector("[data-grow-options]")).toBeNull();
+      unmount();
+    }
+  });
+
   it("shows a payload edit of a bundles lead-in", () => {
     const edited = structuredClone(grow);
     const bundles = edited.content.grow.ideas.find((idea) => idea.id === "bundle");
@@ -292,15 +294,15 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Payload context line.")).toBeTruthy();
     expect(screen.queryByText("Reward customers who send a new owner your way, so your best customers help find the next ones.")).toBeNull();
-    openList("Select at least one.");
-    pickListed("A free walk");
+    const offer = screen.getByRole("combobox", { name: "I'll start a referral program, offering" });
+    fireEvent.change(offer, { target: { value: "free-walk" } });
     expect(screen.getByText("a payload walk")).toBeTruthy();
-    pickListed("A discount");
-    pickListed("A free add-on");
+    fireEvent.change(offer, { target: { value: "discount" } });
+    fireEvent.change(offer, { target: { value: "add-on" } });
     expect(screen.getByText("a payload walk, a discount and a free add-on")).toBeTruthy();
-    openList("Check-in");
-    pickListed("two months");
+    fireEvent.change(screen.getByRole("combobox", { name: "I'll check in on how it's going in" }), { target: { value: "two-months" } });
     expect(screen.getByText("Due January 11, 2027.")).toBeTruthy();
+    expect(document.querySelector("[data-grow-options]")).toBeNull();
   });
 
   it("keeps the closer date and writes each idea check-in once", async () => {
@@ -313,7 +315,8 @@ describe("Level Up screens", () => {
     expect(screen.getByText("Section 1 of 3")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 2 of 3")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Select at least one." })).toBeTruthy();
+    expect(screen.getAllByText("choose").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelector("[data-grow-options]")).toBeNull();
     expect(screen.getByText("Reward customers who send a new owner your way, so your best customers help find the next ones.")).toBeTruthy();
     expect(document.querySelector("[data-scribble-large='growth']")).toBeTruthy();
     fillIdea();
@@ -390,9 +393,9 @@ describe("Level Up screens", () => {
     fillIdea();
     fireEvent.click(cont());
     expect(screen.getByText("Expand beyond dog walking")).toBeTruthy();
-    openList("Select at least one.");
-    expect(screen.queryByText("Grocery delivery")).toBeNull();
-    expect(screen.getByText("Lawn mowing")).toBeTruthy();
+    expect(screen.queryByRole("option", { name: "Grocery delivery" })).toBeNull();
+    expect(screen.getByRole("option", { name: "Lawn mowing" })).toBeTruthy();
+    expect(document.querySelector("[data-grow-options]")).toBeNull();
   });
 
   it("grays services already chosen and hides expand jobs outside the cohort", () => {
@@ -400,18 +403,19 @@ describe("Level Up screens", () => {
     const { unmount } = render(<LevelUpFlow screen={grow} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    openList("Select at least one.");
-    expect((screen.getByRole("button", { name: "Dog sitting" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Grooming" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Dog training" }) as HTMLButtonElement).disabled).toBe(false);
-    expect((screen.getByRole("button", { name: "Holiday care" }) as HTMLButtonElement).disabled).toBe(false);
+    const offer = screen.getByRole("combobox", { name: "I'll start offering" });
+    expect((within(offer).getByRole("option", { name: "Dog sitting" }) as HTMLOptionElement).disabled).toBe(true);
+    expect((within(offer).getByRole("option", { name: "Grooming" }) as HTMLOptionElement).disabled).toBe(true);
+    expect((within(offer).getByRole("option", { name: "Dog training" }) as HTMLOptionElement).disabled).toBe(false);
+    expect((within(offer).getByRole("option", { name: "Holiday care" }) as HTMLOptionElement).disabled).toBe(false);
+    expect(document.querySelector("[data-grow-options]")).toBeNull();
     unmount();
     render(<LevelUpFlow screen={grow} cohort="explorer" onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Expand beyond dog walking" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    openList("Select at least one.");
-    expect(screen.queryByText("Lawn mowing")).toBeNull();
-    expect(screen.getByText("Curb painting")).toBeTruthy();
+    const jobs = screen.getByRole("combobox", { name: "I'll start offering" });
+    expect(within(jobs).queryByRole("option", { name: "Lawn mowing" })).toBeNull();
+    expect(within(jobs).getByRole("option", { name: "Curb painting" })).toBeTruthy();
   });
 
   it("keeps an older Grow payload valid and ignores an old option id save", () => {

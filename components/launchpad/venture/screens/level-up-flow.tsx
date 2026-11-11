@@ -346,9 +346,9 @@ export function LevelUpFlow({
     const full = growIdeas.length >= 3;
     body = (
       <>
-        {content.grow.context ? <p className={`mt-3 ${LESSON_HINT}`} data-grow-intro="">{content.grow.context}</p> : null}
-        <ScreenPrompt id="grow-question" tone="question" flush className="!mt-[21px]">{content.grow.question}</ScreenPrompt>
+        {content.grow.context ? <p className={`mt-3 ${LESSON_BODY}`}>{content.grow.context}</p> : null}
         <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
+        <ScreenPrompt id="grow-question" tone="question" flush>{content.grow.question}</ScreenPrompt>
         <div className="mt-[21px]">
           {(content.grow.ideas ?? []).map((idea) => {
             const on = growIdeas.some((row) => row.id === idea.id);

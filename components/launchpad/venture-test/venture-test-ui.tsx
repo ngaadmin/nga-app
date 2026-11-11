@@ -21,6 +21,8 @@ const BTN_COMPACT_SHAPE =
 export const BTN_PRIMARY = `${BTN_COMPACT_SHAPE} ${PRIMARY_BUTTON_COLOR}`;
 /** The lift's "Go to Level N" (wrapup-binder-r5 screen D): compact aqua #0CC1E0, only as wide as its label. */
 export const BTN_LIFT = "inline-flex h-11 items-center justify-center rounded-full bg-nga-secondary px-6 font-heading text-[15px] font-bold leading-none text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-ink";
+/** Top floor of a finished building: the same lift pill, in primary navy at 16px. */
+export const BTN_ROOFTOP = "inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#19347D] px-6 font-heading text-[16px] font-bold leading-none text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-ink";
 /** Completed-step ticks: orange #FFA503 disc, white check (never gold). */
 export const TICK_COLOR = "#FFA503";
 export function TickBadge({ size = 16, className = "" }: { size?: number; className?: string }) {

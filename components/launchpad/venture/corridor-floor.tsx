@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import styles from "@/components/launchpad/venture-test/venture-test.module.css";
-import { BackCrumb, BTN_LIFT, CheckIcon, Heading, LockIcon, TICK_COLOR } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BackCrumb, BTN_LIFT, BTN_ROOFTOP, CheckIcon, Heading, LockIcon, TICK_COLOR } from "@/components/launchpad/venture-test/venture-test-ui";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
@@ -116,8 +116,8 @@ export type CorridorProps = {
   /** Play the lift-doors entry animation. */
   entering: boolean;
   note?: string;
-  /** Level done (wrapup-binder-r5 screen D): `nextLevel` is null on the top floor. */
-  complete?: { nextLevel: number | null; onLift: (() => void) | null };
+  /** Level done (wrapup-binder-r5 screen D): `nextLevel` is null on the top floor. `onRooftop` is set only when every floor is done. */
+  complete?: { nextLevel: number | null; onLift: (() => void) | null; onRooftop?: (() => void) | null };
   /**
    * Workbook shortcut beside the level continue pill. Always tappable.
    * `popIn`: a step was just finished, so it pops in.
@@ -172,12 +172,17 @@ export function CorridorFloor(props: CorridorProps) {
           </div>
         </div>
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
-        {(workbook || (complete?.onLift && complete.nextLevel !== null)) && (
+        {(workbook || (complete?.onLift && complete.nextLevel !== null) || complete?.onRooftop) && (
           // Same row on every floor, under the plaques: the continue pill, then the workbook 14px to its right.
           <div className="absolute inset-x-[26px] top-[490px] flex items-center justify-center gap-[14px]" data-corridor-continue="">
             {complete?.onLift && complete.nextLevel !== null && (
               <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
                 {s.chrome.goToLevel} {complete.nextLevel}
+              </button>
+            )}
+            {complete?.onRooftop && (
+              <button type="button" onClick={complete.onRooftop} className={BTN_ROOFTOP} data-go-to-rooftop="">
+                {s.lift.rooftopLabel}
               </button>
             )}
             {workbook && (

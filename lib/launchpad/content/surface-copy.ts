@@ -335,6 +335,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
   },
   lift: {
     goingUp: "Going up to Level",
+    rooftopLabel: "Go to the rooftop",
   },
   onboarding: {
     kitLabel: "Your business kit",

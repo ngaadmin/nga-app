@@ -468,6 +468,7 @@ export function VentureFlow({
               ? {
                   nextLevel: next ? next.level : null,
                   onLift: next ? () => go({ screen: "lift", from: floor.level }) : null,
+                  onRooftop: !next && isBuildingDone(progress, floors) ? () => go({ screen: "rooftop" }) : null,
                 }
               : undefined
           }
@@ -749,7 +750,7 @@ export function VentureFlow({
               const updated = completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId);
               save(updated);
               const landing = levelUpFinishLanding(levelUpScreen.step, advanceAfterTask(updated, floor, silver, bronze, index), isBuildingDone(updated, floors));
-              go(landing === "rooftop" ? { screen: "rooftop" } : { screen: "doors", level: floor.level, silverId: silver.id });
+              go(landing === "lift" ? { screen: "corridor", level: floor.level, entering: false } : { screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

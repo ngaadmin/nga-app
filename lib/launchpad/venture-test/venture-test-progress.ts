@@ -371,15 +371,16 @@ export function isBuildingDone(progress: VentureTestProgress, floors: readonly V
 
 /**
  * Where a Level Up bronze goes after its final button.
- * Grow on a finished building opens the rooftop celebration.
+ * Grow on a finished building returns to that floor's lift.
+ * The rooftop celebration opens from the button on that lift.
  * Anything else returns to the doors of that floor.
  */
 export function levelUpFinishLanding(
   step: "reflect" | "improve" | "grow",
   advance: WorkbookAdvance,
   buildingDone: boolean,
-): "rooftop" | "doors" {
-  return step === "grow" && advance.kind === "floor-done" && buildingDone ? "rooftop" : "doors";
+): "lift" | "doors" {
+  return step === "grow" && advance.kind === "floor-done" && buildingDone ? "lift" : "doors";
 }
 
 /**

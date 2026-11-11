@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LAUNCHPAD_FLOOR_TYPES, LAUNCHPAD_TASK_SCREEN_TYPES, type LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { EMPTY_VENTURE_TEST_PROGRESS, completeTask } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -14,6 +14,7 @@ import {
 import { VentureBuilding } from "@/components/launchpad/venture-test/venture-building";
 import { buildingFloors } from "@/components/launchpad/venture-test/venture-flow";
 import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
+import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
 import { OnboardingKit, OnboardingStack } from "@/components/launchpad/venture-test/venture-onboarding-art";
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 
@@ -87,6 +88,42 @@ describe("floor template", () => {
     expect(container.querySelector(".-translate-y-10")).toBeNull();
     expect(container.querySelector("[data-level-done='1']")).toBeTruthy();
     expect(container.querySelector("[data-corridor-plaques]")?.className).not.toMatch(/-translate-y/);
+  });
+});
+
+describe("Level 7 lift rooftop button", () => {
+  const silvers = [{ id: "s1", title: "Level Up", state: "done" as const }];
+  const floor = {
+    floorType: "corridor" as const,
+    level: 7,
+    floorName: "Growing",
+    goal: "Level up the business.",
+    entering: false,
+    silvers,
+    onBack: noop,
+    onOpenSilver: noop,
+  };
+
+  it("hides the rooftop button until every level is complete", () => {
+    render(<FloorTemplate {...floor} complete={{ nextLevel: null, onLift: null, onRooftop: null }} />);
+    expect(screen.getByText("You've completed Level 7")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Go to the rooftop" })).toBeNull();
+  });
+
+  it("shows a payload edit of the rooftop label and opens the celebration from that button", () => {
+    const onRooftop = vi.fn();
+    const copy = { ...LAUNCHPAD_SURFACE_COPY, lift: { ...LAUNCHPAD_SURFACE_COPY.lift, rooftopLabel: "Head up to the roof" } };
+    render(
+      <SurfaceCopyProvider value={copy}>
+        <FloorTemplate {...floor} complete={{ nextLevel: null, onLift: null, onRooftop }} />
+      </SurfaceCopyProvider>,
+    );
+    const button = screen.getByRole("button", { name: "Head up to the roof" });
+    expect(button.className).toContain("bg-[#19347D]");
+    expect(button.className).toContain("text-[16px]");
+    expect(screen.queryByRole("button", { name: "Go to the rooftop" })).toBeNull();
+    fireEvent.click(button);
+    expect(onRooftop).toHaveBeenCalledTimes(1);
   });
 });
 

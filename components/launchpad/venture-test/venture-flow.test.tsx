@@ -409,6 +409,43 @@ describe("Come back to this later", () => {
     expect(screen.queryByRole("button", { name: "Come back to this later" })).toBeNull();
   });
 
+  it("returns the Grow closer to the Level 7 lift, then the rooftop button opens the celebration", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
+    renderFlow({ kind: "level", level: 7 });
+    fireEvent.click(await screen.findByRole("button", { name: /Level Up, up next/ }));
+    expect(screen.queryByRole("button", { name: "Go to the rooftop" })).toBeNull();
+    fireEvent.click(door("Reflect"));
+    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(door("Improve"));
+    for (const name of [
+      "Using more than one way to get my name out",
+      "Keeping track of every job that comes in",
+      "Always showing up on time at each job",
+      "Asking every customer for feedback",
+    ]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(door("Grow"));
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select at least one." }));
+    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    fireEvent.click(screen.getByRole("button", { name: "this week" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "How many customers" }), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Check-in" }));
+    fireEvent.click(screen.getByRole("button", { name: "one month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("You've completed Level 7")).toBeTruthy();
+    const rooftop = screen.getByRole("button", { name: "Go to the rooftop" });
+    expect(rooftop.className).toContain("text-[16px]");
+    fireEvent.click(rooftop);
+    expect(document.querySelector('[data-placeholder="rooftop-finish"]')).toBeTruthy();
+  });
+
   it("the corridor marker and the home tile's Go open the open task", async () => {
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: define.bronzes.map((b) => b.tasks[0]!.id),

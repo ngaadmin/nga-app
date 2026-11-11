@@ -653,13 +653,20 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect((screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement).disabled).toBe(true);
   });
 
-  it("shows a payload edit of the draft poster and opens the Letter PDF", () => {
+  it("shows a payload edit of the draft poster and takes the blank PDF links from the payload", () => {
+    const poster = {
+      ...LAUNCHPAD_SURFACE_COPY.templates.poster,
+      heading: "Your poster draft",
+      openA4: "Open the A4 file",
+      downloadA4: "Save the A4 file",
+      a4Url: "https://files.example/posters/blank-poster-A4.pdf",
+      a4Download: "https://files.example/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf",
+      letterUrl: "https://files.example/posters/blank-poster-Letter.pdf",
+      letterDownload: "https://files.example/posters/blank-poster-Letter.pdf?download=blank-poster-Letter.pdf",
+    };
     const copy = {
       ...LAUNCHPAD_SURFACE_COPY,
-      templates: {
-        ...LAUNCHPAD_SURFACE_COPY.templates,
-        poster: { ...LAUNCHPAD_SURFACE_COPY.templates.poster, heading: "Your poster draft", letterSrc: "/launchpad/posters/blank-poster-Letter.pdf" },
-      },
+      templates: { ...LAUNCHPAD_SURFACE_COPY.templates, poster },
     };
     render(
       <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
@@ -670,12 +677,16 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
     expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
-    fireEvent.click(screen.getByRole("button", { name: copy.templates.poster.blankLink }));
-    const frame = document.querySelector("[data-poster-frame]") as HTMLIFrameElement;
-    expect(frame.getAttribute("data-poster-src")).toBe("/launchpad/posters/blank-poster-Letter.pdf");
-    fireEvent.click(screen.getByRole("button", { name: copy.templates.poster.close }));
-    expect(document.querySelector("[data-poster-viewer]")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
+    const openA4 = screen.getByRole("link", { name: "Open the A4 file" });
+    const saveA4 = screen.getByRole("link", { name: "Save the A4 file" });
+    expect(openA4.getAttribute("href")).toBe(poster.a4Url);
+    expect(openA4.getAttribute("target")).toBe("_blank");
+    expect(saveA4.getAttribute("href")).toBe(poster.a4Download);
+    expect(screen.getByRole("link", { name: poster.openLetter }).getAttribute("href")).toBe(poster.letterUrl);
+    expect(screen.getByRole("link", { name: poster.downloadLetter }).getAttribute("href")).toBe(poster.letterDownload);
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Url).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.letterUrl).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Download).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf");
   });
 });
 

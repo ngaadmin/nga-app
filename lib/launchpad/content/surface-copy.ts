@@ -364,16 +364,19 @@ export const LAUNCHPAD_SURFACE_COPY = {
     comingSoon: "Templates coming soon.",
     answerKey: "workbook-templates",
     pages: WORKBOOK_TEMPLATE_PAGES,
-    /** Storybird placeholder. The level for this page is still open. Letter is the test default. */
+    /** Storybird placeholder. Blank PDFs are the public Storage objects. */
     poster: {
       heading: "Here's your draft poster",
       blankLink: "Here's a blank one you can print, fill in, photocopy and hang up.",
-      close: "Close",
-      print: "Print",
+      openA4: "Open A4",
+      downloadA4: "Download A4",
+      openLetter: "Open Letter",
+      downloadLetter: "Download Letter",
       draftSrc: "/launchpad/posters/draft-poster.png",
-      letterSrc: "/launchpad/posters/blank-poster-Letter.pdf",
-      a4Src: "/launchpad/posters/blank-poster-A4.pdf",
-      blankPreviewSrc: "/launchpad/posters/blank-poster-preview.png",
+      a4Url: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf",
+      letterUrl: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf",
+      a4Download: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf",
+      letterDownload: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf?download=blank-poster-Letter.pdf",
     },
   },
   buildComplete: {

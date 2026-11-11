@@ -57,6 +57,8 @@ export type VentureTestProgress = {
   answers?: LaunchpadAnswers;
   /** Per-task state, only for tasks left open at some point. Absent in progress saved before "Come back later". */
   tasks?: Readonly<Record<string, TaskProgressEntry>>;
+  /** Set when the rooftop celebration is reached. The home then lists the business as complete. */
+  complete?: boolean;
 };
 
 export const EMPTY_VENTURE_TEST_PROGRESS: VentureTestProgress = {

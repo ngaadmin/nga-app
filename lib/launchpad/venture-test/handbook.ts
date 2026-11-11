@@ -15,6 +15,7 @@ import { keptPerJob, weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/con
 import { workbookView } from "@/lib/launchpad/content/know-your-cost/logic";
 import { AGREE_JOB_KEY, DELIVER_JOB_KEY, FIND_CUSTOMERS_KEY, POLISH_SERVICE_KEY, PRACTICE_RUN_KEY, WRAP_JOB_KEY } from "@/lib/launchpad/content/getting-ready/copy";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import { deliverySample } from "@/lib/launchpad/content/delivery/logic";
 import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
 import { SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
@@ -154,7 +155,7 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
     } else if (page.silver.id === "l5-s3") {
       out.push({ ...page, kind: "summary", sheet: "job-record" });
     } else if (page.silver.id === "l4-s1") {
-      const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
+      const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || LAUNCHPAD_SURFACE_COPY.workbook.fallbackName;
       const sheets = salesWorkbookSheets(progress.answers, name);
       if (sheets.length === 0 || (!templates && !salesChannelsOf(progress.answers, SALES_CHANNELS_KEY))) out.push(page);
       else for (const sheet of sheets) out.push({ ...page, kind: "summary", sheet: sheet.id });

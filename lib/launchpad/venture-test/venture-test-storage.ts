@@ -63,10 +63,12 @@ export function parseVentureTestProgress(raw: string | null): VentureTestProgres
       );
       const answers = parseLaunchpadAnswers((parsed as { answers?: unknown }).answers);
       const tasks = parseTaskEntries((parsed as { tasks?: unknown }).tasks, ids);
+      const complete = (parsed as { complete?: unknown }).complete === true;
       return {
         completedTaskIds: ids,
         ...(Object.keys(answers).length ? { answers } : {}),
         ...(Object.keys(tasks).length ? { tasks } : {}),
+        ...(complete ? { complete: true } : {}),
       };
     }
   } catch {

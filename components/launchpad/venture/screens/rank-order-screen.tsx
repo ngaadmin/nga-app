@@ -18,12 +18,6 @@ export function moveRankItem(order: readonly string[], id: string, dir: -1 | 1):
   return next;
 }
 
-/** Guidance on Find the why (Cath 4 Nov 10:05pm; arrows -> drag per AC3, 5 Nov). */
-export const RANK_GUIDANCE =
-  "Drag your reasons into order, with the most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to.";
-export const BELOW_LINE_TITLE = "Doesn't apply to me";
-export const BELOW_LINE_HINT = "Drag any reason that doesn't apply to you here. This is optional.";
-
 type Split = { above: string[]; below: string[] };
 
 /**
@@ -124,7 +118,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const describe = (next: readonly string[], id: string) => {
     const s = splitOf(next);
     const a = s.above.indexOf(id);
-    return a !== -1 ? `${label(id)} is now number ${a + 1}.` : `${label(id)} moved below the line: doesn't apply to me.`;
+    return a !== -1 ? `${label(id)} is now number ${a + 1}.` : `${label(id)} moved below the line: ${(screen.belowTitle ?? "").toLowerCase()}.`;
   };
 
   useEffect(() => {
@@ -236,7 +230,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const ghostRanked = ghostId ? splitOf(drag!.seq).above.indexOf(ghostId) : -1;
   return (
     <div className="flex flex-col" data-screen-type="rank-order" data-dragging={ghostId ? "" : undefined}>
-      <BronzeFirstLead order="context-first" question={screen.prompt} context={screen.context} guidance={RANK_GUIDANCE} />
+      <BronzeFirstLead order="context-first" question={screen.prompt} context={screen.context} guidance={screen.guidance} />
       <ol className="mx-5 mt-3 flex flex-col gap-1.5 short:mt-2" aria-label={s.rank.yourRanking}>
         {above.map((id, i) => tile(id, i + 1))}
       </ol>
@@ -254,11 +248,11 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
           className="font-heading text-[16px] font-bold text-nga-slate"
           data-rank-line=""
         >
-          {BELOW_LINE_TITLE}
+          {screen.belowTitle}
         </h3>
         {below.length === 0 ? (
           <p className="py-2 text-center text-[16px] text-[#9CA3AF] short:py-1 short:leading-[1.35]" data-below-line-hint="">
-            {BELOW_LINE_HINT}
+            {screen.belowHint}
           </p>
         ) : (
           <ul className="mt-1.5 flex flex-col gap-1.5" aria-labelledby="rank-below-title">

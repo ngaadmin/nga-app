@@ -172,6 +172,10 @@ export type LaunchpadRankOrderScreen = CaptureBase & {
   type: "rank-order";
   items: readonly LaunchpadPickerOption[];
   notApplicableLabel: string;
+  /** Heading of the zone under the line. */
+  belowTitle: string;
+  /** Hint shown while that zone is empty. */
+  belowHint: string;
 };
 
 /** Input kinds for a short-text field. */

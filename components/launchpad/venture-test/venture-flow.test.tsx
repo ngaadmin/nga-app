@@ -114,6 +114,27 @@ describe("bronze doors open their tasks directly (no task list)", () => {
 
 const next = () => fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish|Add this goal)/ }));
 
+describe("payload edits of shared hints", () => {
+  it("shows a payload edit of the choice hint", async () => {
+    const payload = structuredClone(PAYLOAD);
+    payload.surface = { ...payload.surface, chrome: { ...payload.surface.chrome, pickAtLeastOne: "Choose at least one." } };
+    render(
+      <VentureFlow
+        initialVentureId="dog-walking"
+        ventureTitles={{ "dog-walking": "Dog walking" }}
+        ventures={{ "dog-walking": { ok: true, payload, versionId: "seed", contentHash: "seed", source: "seed" } }}
+        reset={false}
+        shortcut={{ kind: "level", level: 1 }}
+      />,
+    );
+    const silver = payload.floors[0]!.silvers[0]!;
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
+    fireEvent.click(door(silver.bronzes[0]!.title));
+    expect(screen.getByText("Choose at least one.")).toBeTruthy();
+    expect(screen.queryByText("Pick at least one to keep going.")).toBeNull();
+  });
+});
+
 describe("Level 1 from the load: capture, goal loop, after-step message, level done", () => {
   it("walks L1: keyboard rank, goals with presets, the after-step message, logo before name, then Congratulations", async () => {
     renderFlow({ kind: "level", level: 1 });
@@ -139,10 +160,9 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     expect(finish.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Animals" }));
     next();
+    expect(document.querySelector("[data-handbook]")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close workbook" }));
     expect(document.querySelector("[data-wrap-up], [data-silver-done], [data-silver-complete]")).toBeNull();
-    expect(document.body.textContent).not.toMatch(/Nice work!|Keep going|See my (handbook|workbook)/);
-    const cue = screen.getByRole("button", { name: "Open your workbook" });
-    expect(cue.getAttribute("data-corridor-workbook")).toBe("pop-in");
     expect(document.querySelector("[data-gold-completion], [data-level-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
 
@@ -186,17 +206,10 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     fireEvent.change(screen.getByRole("textbox", { name: "My goal" }), { target: { value: "TEST half typed" } });
     expect((screen.getByRole("button", { name: "Add this goal" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    expect(screen.getByRole("button", { name: "Open your workbook" })).toBeTruthy();
+    expect(document.querySelector('[data-handbook-page="l1-s2"]')).toBeTruthy();
     // Skip saved nothing for the extra goal.
     expect(localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "").not.toContain("TEST half typed");
-    // Open your workbook opens it at this step's page; its Back to the lift lands on the corridor (button kept, no pop-in).
-    fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
-    // The workbook opens on page 1 (the cover); Next page walks forward to the goals page.
-    expect(document.querySelector('[data-handbook-page="cover"]')).toBeTruthy();
-    for (let i = 0; i < 5 && !document.querySelector('[data-handbook-page="l1-s2"]'); i++) fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    expect(document.querySelector('[data-handbook-page="l1-s2"]')).toBeTruthy();
-    const backs = document.querySelectorAll<HTMLElement>("[data-back-to-lift]");
-    fireEvent.click(backs[backs.length - 1]!);
+    fireEvent.click(screen.getByRole("button", { name: "Close workbook" }));
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
     expect(screen.getByRole("button", { name: "Open your workbook" }).getAttribute("data-corridor-workbook")).toBe("");
 
@@ -210,6 +223,7 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     fireEvent.click(screen.getByRole("radio", { name: "Rounded" }));
     fireEvent.click(screen.getByRole("radio", { name: "Logo color" }));
     fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Close workbook" }));
     expect(document.querySelector("[data-wrap-up], [data-silver-done], [data-silver-complete]")).toBeNull();
     const done = document.querySelector("[data-level-done='1']") as HTMLElement;
     expect(done.textContent).toBe("Congratulations!You've completed Level 1");
@@ -325,13 +339,13 @@ describe("finishing a step goes straight back to the corridor with the workbook 
     renderFlow({ kind: "level", level: 5 });
     const silver = PAYLOAD.floors[4]!.silvers[0]!;
     await finishSilver(silver);
+    expect(document.querySelector("[data-handbook-page]")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close workbook" }));
     expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 5/);
+    expect(screen.queryByRole("button", { name: "Go to Level 6" })).toBeNull();
     const cue = screen.getByRole("button", { name: "Open your workbook" });
-    expect(cue.className).toContain("size-14");
-    expect(cue.className).not.toContain("border-");
-    expect(cue.getAttribute("data-corridor-workbook")).toBe("pop-in");
-    expect(cue.querySelector("img")?.getAttribute("src")).toBe("/launchpad/workbook/workbook-icon-512.png");
+    expect(cue.getAttribute("data-corridor-workbook")).toBe("");
   });
 
   it("is not shown when re-entering and re-finishing finished work", async () => {
@@ -448,11 +462,19 @@ describe("Come back to this later", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "I'll check in on how it's going in" }), { target: { value: "one-month" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-handbook]")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close workbook" }));
     expect(screen.getByText("You've completed Level 7")).toBeTruthy();
     const rooftop = screen.getByRole("button", { name: "Go to the rooftop" });
     expect(rooftop.className).toContain("text-[16px]");
     fireEvent.click(rooftop);
-    expect(document.querySelector('[data-placeholder="rooftop-finish"]')).toBeTruthy();
+    expect(document.querySelector("[data-lift='rooftop']")).toBeTruthy();
+    expect(await screen.findByText("You built your business!", {}, { timeout: 4000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Back to Launchpad" }));
+    expect(document.querySelector("[data-my-business='dog-walking']")).toBeTruthy();
+    expect(document.querySelector("[data-in-progress='dog-walking']")).toBeNull();
+    expect(screen.getByRole("heading", { name: "My Businesses" })).toBeTruthy();
+    expect(screen.getByText("Complete")).toBeTruthy();
   });
 
   it("the corridor marker and the home tile's Go open the open task", async () => {

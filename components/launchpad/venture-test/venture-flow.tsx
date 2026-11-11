@@ -23,7 +23,6 @@ import {
   isBuildingDone,
   isFloorDone,
   isSilverDone,
-  levelUpFinishLanding,
   lockedDoorsNote,
   setProgressAnswer,
   silverStates,
@@ -86,22 +85,22 @@ function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly { type: st
   );
 }
 
-/** What the forward button is waiting for on a capture page. */
-function pageHint(page: TaskPage | undefined): string | undefined {
+/** What the forward button is waiting for on a capture page. Words come from the payload. */
+function pageHint(page: TaskPage | undefined, chrome: { pickAtLeastOne: string; makeChoice: string; fillBlanks: string; keepOneReason: string }): string | undefined {
   const screen = page?.screen;
   if (!screen) return undefined;
-  if (screen.type === "choice-capture") return screen.mode === "multi" ? "Pick at least one to keep going." : "Make a choice to keep going.";
-  if (screen.type === "short-text") return "Fill in each blank to keep going.";
-  if (screen.type === "rank-order") return "Keep at least one reason above the line to keep going.";
+  if (screen.type === "choice-capture") return screen.mode === "multi" ? chrome.pickAtLeastOne : chrome.makeChoice;
+  if (screen.type === "short-text") return chrome.fillBlanks;
+  if (screen.type === "rank-order") return chrome.keepOneReason;
   return undefined;
 }
 
 /** What the forward button is waiting for on an identity task. */
-function identityHint(task: LaunchpadTask | undefined): string {
+function identityHint(task: LaunchpadTask | undefined, chrome: { pickShape: string; addName: string; makeChoice: string }): string {
   const pickers = task?.screens.filter(isIdentityPicker) ?? [];
-  if (pickers.length > 1 && pickers.every((s) => s.type === "logo-picker")) return "Pick a shape, a color and an icon to keep going.";
-  if (pickers.length > 1 && pickers.every((s) => s.type === "name-picker")) return "Add a name, a font and a font color to save.";
-  return "Make a choice to keep going.";
+  if (pickers.length > 1 && pickers.every((s) => s.type === "logo-picker")) return chrome.pickShape;
+  if (pickers.length > 1 && pickers.every((s) => s.type === "name-picker")) return chrome.addName;
+  return chrome.makeChoice;
 }
 
 type View =
@@ -116,7 +115,7 @@ type View =
   | { screen: "doors"; level: number; silverId: string }
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number; costStep?: CostEditorStep }
-  | { screen: "lift"; from: number }
+  | { screen: "lift"; from: number; rooftop?: boolean }
   /** Business-build celebration, once every floor is done. */
   | { screen: "rooftop" };
 
@@ -179,6 +178,7 @@ function loadInProgress(
         total: silvers.length,
         hasHandbook: hasHandbook(p, floors),
         openTasks: openTasks(p, floors).map((t) => ({ taskId: t.taskId, title: t.title })),
+        complete: p.complete === true,
       },
     ];
   });
@@ -204,6 +204,7 @@ export function VentureFlow({
   openSheet = null,
   openWorkbookLevel = null,
   openBronze = null,
+  openSilverWorkbook = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -223,6 +224,8 @@ export function VentureFlow({
   openWorkbookLevel?: number | null;
   /** TEST-ONLY `?bronze=<id>`: open that door's task. */
   openBronze?: string | null;
+  /** TEST-ONLY `?silverWorkbook=<silver id>`: finish through that silver and open its workbook page. */
+  openSilverWorkbook?: string | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -295,13 +298,34 @@ export function VentureFlow({
         : null;
     const loaded = initialVentureId ? ventures[initialVentureId] : undefined;
     const bronzeLanding = openBronze && loaded?.ok ? bronzeTaskView(loaded.payload.floors, openBronze) : null;
+    if (openSilverWorkbook && initialVentureId && loaded?.ok) {
+      const through = applyVentureTestShortcut({ kind: "through-silver", silverId: openSilverWorkbook }, loaded.payload.floors, loadVentureTestProgress(initialVentureId));
+      const floor = loaded.payload.floors.find((item) => item.silvers.some((silver) => silver.id === openSilverWorkbook));
+      if (through && floor) {
+        const sampled = withShortcutSampleAnswers(
+          through.progress,
+          loaded.payload.floors,
+          iconSetOverride ?? initialVentureId,
+          tileName(initialVentureId) ?? ventureTitles[initialVentureId] ?? initialVentureId,
+        );
+        saveVentureTestProgress(initialVentureId, sampled);
+        markVentureTestOnboardingSeen(initialVentureId);
+        setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
+        setVentureId(initialVentureId);
+        setProgress(sampled);
+        go({ screen: "corridor", level: floor.level, entering: false });
+        setHandbook({ ventureId: initialVentureId, entry: "building", level: floor.level, openSilverId: openSilverWorkbook });
+        return;
+      }
+    }
     if (applied && initialVentureId && shortcutContent?.ok) {
-      const shortcutProgress = withShortcutSampleAnswers(
+      const sampled = withShortcutSampleAnswers(
         applied.progress,
         shortcutContent.payload.floors,
         iconSetOverride ?? initialVentureId,
         tileName(initialVentureId) ?? ventureTitles[initialVentureId] ?? initialVentureId,
       );
+      const shortcutProgress = applied.land.screen === "rooftop" ? { ...sampled, complete: true as const } : sampled;
       saveVentureTestProgress(initialVentureId, shortcutProgress);
       markVentureTestOnboardingSeen(initialVentureId);
       setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
@@ -329,9 +353,20 @@ export function VentureFlow({
 
   useEffect(() => {
     if (view.screen !== "lift") return;
-    const t = window.setTimeout(() => go({ screen: "corridor", level: view.from + 1, entering: true }), LIFT_MS);
+    const t = window.setTimeout(() => {
+      if (view.rooftop) {
+        if (ventureId) {
+          const next = { ...progress, complete: true as const };
+          saveVentureTestProgress(ventureId, next);
+          setProgress(next);
+        }
+        go({ screen: "rooftop" });
+        return;
+      }
+      go({ screen: "corridor", level: view.from + 1, entering: true });
+    }, LIFT_MS);
     return () => window.clearTimeout(t);
-  }, [view, go]);
+  }, [view, go, ventureId, progress]);
 
   if (view.screen === "home") {
     const homeVenture = ventures["dog-walking"]?.ok ? ventures["dog-walking"] : Object.values(ventures).find((item) => item.ok);
@@ -455,7 +490,7 @@ export function VentureFlow({
             <button
               type="button"
               className={`${BTN_PRIMARY} min-w-0`}
-              onClick={() => go(cta.kind === "rooftop" ? { screen: "rooftop" } : { screen: "corridor", level: cta.level, entering: true })}
+              onClick={() => go(cta.kind === "rooftop" ? { screen: "lift", from: floors.length, rooftop: true } : { screen: "corridor", level: cta.level, entering: true })}
             >
               {cta.label}
             </button>
@@ -503,7 +538,7 @@ export function VentureFlow({
               ? {
                   nextLevel: next ? next.level : null,
                   onLift: next ? () => go({ screen: "lift", from: floor.level }) : null,
-                  onRooftop: !next && isBuildingDone(progress, floors) ? () => go({ screen: "rooftop" }) : null,
+                  onRooftop: !next && isBuildingDone(progress, floors) ? () => go({ screen: "lift", from: floor.level, rooftop: true }) : null,
                 }
               : undefined
           }
@@ -544,7 +579,7 @@ export function VentureFlow({
             state: states[i] ?? "locked",
             comeBack: open && !b.placeholder && bronzeHasOpenTask(progress, b),
           }))}
-          lockedNote={pricing && !pricingBuilt ? "These doors aren't open yet." : lockedDoorsNote(progress, floors, floor, silverIndex)}
+          lockedNote={pricing && !pricingBuilt ? surface.chrome.doorsNotOpen : lockedDoorsNote(progress, floors, floor, silverIndex)}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => {
@@ -581,7 +616,7 @@ export function VentureFlow({
       const eyebrow = page?.goal
         ? `Goal ${goalPages.indexOf(page) + 1} of ${goalPages.length}`
         : current?.kind === "real-world"
-          ? "Real-world task"
+          ? surface.chrome.realWorld
           : current && current.screens.some(isIdentityPicker)
             ? silver.title
             : undefined;
@@ -589,6 +624,30 @@ export function VentureFlow({
       const lastPageOf = (i: number) => {
         const t = bronze.tasks[i];
         return t?.paged ? Math.max(0, taskPages(t, answers, floors).length - 1) : undefined;
+      };
+      /**
+       * After a bronze's last task is saved. The last bronze of a silver opens
+       * the workbook on that silver's page. Closing it shows the corridor.
+       * Any earlier bronze goes back to the doors.
+       */
+      const settle = (updated: VentureTestProgress) => {
+        save(updated);
+        const adv = advanceAfterTask(updated, floor, silver, bronze, index);
+        if (adv.kind === "task") {
+          go({ screen: "workbook", ...where, index: adv.taskIndex });
+          return;
+        }
+        const justSilver = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
+        if (justSilver) {
+          go({ screen: "corridor", level: floor.level, entering: false });
+          setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: silver.id });
+          return;
+        }
+        if (adv.kind === "bronze-done") {
+          go({ screen: "doors", level: floor.level, silverId: silver.id });
+          return;
+        }
+        go({ screen: "corridor", level: floor.level, entering: false });
       };
       /** Next / Finish (and Skip for now on the optional last goal): saves, then moves on. */
       const forward = (from: VentureTestProgress, withDefaults: boolean) => {
@@ -602,25 +661,7 @@ export function VentureFlow({
           go({ screen: "workbook", ...where, index, page: pageIndex + 1 });
           return;
         }
-        base = completeTask(base, task.id);
-        const updated = base;
-        save(updated);
-        const isLast = index === bronze.tasks.length - 1;
-        if (!isLast) {
-          go({ screen: "workbook", ...where, index: index + 1 });
-          return;
-        }
-        const adv = advanceAfterTask(updated, floor, silver, bronze, index);
-        // Finishing the step just now (not re-finishing finished work) goes straight back to the
-        // corridor with the workbook button popping in,
-        // unless it finished the level: then the corridor shows the level-done Congratulations.
-        const justCompleted = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
-        const at = { level: floor.level, silverId: silver.id };
-        if (adv.kind === "task") go({ screen: "workbook", ...where, index: adv.taskIndex });
-        else if (adv.kind === "bronze-done") go({ screen: "doors", ...at });
-        else if (justCompleted && !isFloorDone(updated, floor))
-          go({ screen: "corridor", level: floor.level, entering: false, workbookCue: { silverId: silver.id, popIn: true } });
-        else go({ screen: "corridor", level: floor.level, entering: false });
+        settle(completeTask(base, task.id));
       };
       // Final J11: the optional last goal reads "Add this goal" (on once something is typed) with "Skip for now".
       const costScreen = current?.screens.find((s) => s.type === "know-your-cost");
@@ -642,11 +683,7 @@ export function VentureFlow({
               save(setProgressAnswer(progress, costScreen.answerKey, answer));
               go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, costScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, costScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -663,11 +700,7 @@ export function VentureFlow({
               save(setProgressAnswer(progress, priceScreen.answerKey, answer));
               go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, priceScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, priceScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -681,12 +714,7 @@ export function VentureFlow({
             floors={floors}
             answers={answers}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, jobsScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-              setHandbook({ ventureId, entry: "building", level: floor.level, openSheet: "plan-1" });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, jobsScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -700,10 +728,7 @@ export function VentureFlow({
             floors={floors}
             answers={answers}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              save(completeTask(setProgressAnswer(progress, offerScreen.answerKey, answer), taskId));
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, offerScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -716,10 +741,7 @@ export function VentureFlow({
             screen={customerScreen}
             answers={answers}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              save(completeTask(setProgressAnswer(progress, customerScreen.answerKey, answer), taskId));
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, customerScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -732,10 +754,7 @@ export function VentureFlow({
             screen={competitorScreen}
             answers={answers}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              save(completeTask(setProgressAnswer(progress, competitorScreen.answerKey, answer), taskId));
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, competitorScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -759,12 +778,7 @@ export function VentureFlow({
                 index: found.taskIndex,
               });
             }}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, fundingScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "corridor", level: floor.level, entering: false });
-              setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, fundingScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -781,12 +795,7 @@ export function VentureFlow({
             cohort={track}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
             onSave={(answer) => save(setProgressAnswer(progress, levelUpScreen.answerKey, answer))}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId);
-              save(updated);
-              const landing = levelUpFinishLanding(levelUpScreen.step, advanceAfterTask(updated, floor, silver, bronze, index), isBuildingDone(updated, floors));
-              go(landing === "lift" ? { screen: "corridor", level: floor.level, entering: false } : { screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -798,10 +807,7 @@ export function VentureFlow({
           <PictureFlow
             screen={pictureScreen}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={() => {
-              save(completeTask(progress, taskId));
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={() => settle(completeTask(progress, taskId))}
           />
         );
         break;
@@ -814,9 +820,7 @@ export function VentureFlow({
             answers={answers}
             floors={floors}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              forward(setProgressAnswer(progress, deliveryScreen.answerKey, answer), false);
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, deliveryScreen.answerKey, answer), current.id))}
           />
         );
         break;
@@ -830,11 +834,7 @@ export function VentureFlow({
             answers={answers}
             floors={floors}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, salesScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, salesScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -850,11 +850,7 @@ export function VentureFlow({
             businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
             onSave={(answer) => save(setProgressAnswer(progress, readyScreen.answerKey, answer))}
-            onFinish={(answer) => {
-              const updated = completeTask(setProgressAnswer(progress, readyScreen.answerKey, answer), taskId);
-              save(updated);
-              go({ screen: "doors", level: floor.level, silverId: silver.id });
-            }}
+            onFinish={(answer) => settle(completeTask(setProgressAnswer(progress, readyScreen.answerKey, answer), taskId))}
           />
         );
         break;
@@ -884,7 +880,7 @@ export function VentureFlow({
               : go({ screen: "workbook", ...where, index: Math.max(0, index - 1), page: lastPageOf(Math.max(0, index - 1)) })
           }
           nextDisabled={!answered || !typedSomething}
-          nextHint={!typedSomething ? "Add your goal, or skip for now." : page ? pageHint(page) : identityHint(current)}
+          nextHint={!typedSomething ? surface.chrome.addGoalOrSkip : page ? pageHint(page, surface.chrome) : identityHint(current, surface.chrome)}
           eyebrow={eyebrow}
           onComeBackLater={
             current?.canComeBackLater && !progress.completedTaskIds.includes(current.id)
@@ -895,7 +891,7 @@ export function VentureFlow({
                 }
               : undefined
           }
-          forwardLabel={optionalLastGoal ? "Add this goal" : undefined}
+          forwardLabel={optionalLastGoal ? surface.chrome.addThisGoal : undefined}
           onSkip={
             lastGoal
               ? () => {
@@ -912,6 +908,10 @@ export function VentureFlow({
       break;
     }
     case "lift": {
+      if (view.rooftop) {
+        body = <VentureLift from={view.from} toName={surface.buildComplete.terrace} destination={surface.buildComplete.terrace} />;
+        break;
+      }
       const to = floorAt(floors, view.from + 1);
       body = <VentureLift from={view.from} to={to.level} toName={to.name} />;
       break;
@@ -933,6 +933,7 @@ export function VentureFlow({
             setAnswer={setAnswer}
             onClose={closeHandbook}
             initialSheet={handbook.openSheet}
+            initialSilverId={handbook.openSilverId}
             initialLevel={handbook.openLevel}
             initialTemplates={handbook.openTemplates}
             onEditCosts={(step) => {

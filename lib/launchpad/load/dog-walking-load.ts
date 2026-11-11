@@ -322,6 +322,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     prompt: rWhy.question,
     items: whyItems,
     notApplicableLabel: naLabel,
+    belowTitle: "Doesn't apply to me",
+    belowHint: "Drag any reason that doesn't apply to you here. This is optional.",
     ...(rWhy.workbookSection ? { handbookLabel: rWhy.workbookSection } : {}),
   };
 

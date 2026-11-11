@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach } from "vitest";
 afterEach(cleanup);
-import { moveAcrossLine, RankOrderScreen, BELOW_LINE_HINT, RANK_GUIDANCE } from "@/components/launchpad/venture/screens/rank-order-screen";
+import { moveAcrossLine, RankOrderScreen } from "@/components/launchpad/venture/screens/rank-order-screen";
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { isPageAnswered } from "@/lib/launchpad/content/task-pages";
 import { rankingAnswer } from "@/lib/launchpad/content/answers";
@@ -26,6 +26,9 @@ const SCREEN = {
   answerKey: "why",
   prompt: "Why?",
   notApplicableLabel: "Not applicable",
+  guidance: "Drag the reasons into order, most important at the top.",
+  belowTitle: "Doesn't apply to me",
+  belowHint: "Drag any reason that doesn't apply to you here. This is optional.",
   items: [
     { id: "a", label: "Alpha" },
     { id: "b", label: "Bravo" },
@@ -49,17 +52,18 @@ describe("moveAcrossLine", () => {
 describe("RankOrderScreen below the line", () => {
   const tileOf = (id: string) => document.querySelector(`[data-rank-item='${id}']`) as HTMLElement;
   it("shows the empty zone hint and drag guidance, no arrows or N/A chips; the keyboard moves tiles across the line", () => {
-    render(<RankOrderScreen screen={SCREEN} />);
-    expect(screen.getByText(BELOW_LINE_HINT)).toBeTruthy();
-    expect(screen.getByText(RANK_GUIDANCE)).toBeTruthy();
-    expect(RANK_GUIDANCE).toMatch(/^Drag/);
+    const edited = { ...SCREEN, guidance: "Order the reasons your way.", belowHint: "Park a reason here." };
+    render(<RankOrderScreen screen={edited} />);
+    expect(screen.getByText("Park a reason here.")).toBeTruthy();
+    expect(screen.getByText("Order the reasons your way.")).toBeTruthy();
+    expect(screen.queryByText(SCREEN.belowHint!)).toBeNull();
     expect(screen.queryByText("N/A")).toBeNull();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
     fireEvent.keyDown(tileOf("d"), { key: "ArrowDown" });
     expect(numbers()).toEqual(["a", "b", "c"]);
     expect(zone()).toEqual(["d"]);
     expect(document.querySelector("[data-rank-announce]")?.textContent).toBe("Delta moved below the line: doesn't apply to me.");
-    expect(screen.queryByText(BELOW_LINE_HINT)).toBeNull();
+    expect(screen.queryByText("Park a reason here.")).toBeNull();
     const muted = document.querySelector("[data-below-line] [data-rank-item='d'] span") as HTMLElement;
     expect(muted.className).not.toMatch(/line-through/);
     fireEvent.keyDown(tileOf("d"), { key: "ArrowUp" });

@@ -95,7 +95,7 @@ function LevelDone({ level }: { level: number }) {
       <div className="flex items-center justify-center gap-1.5">
         <Sparkle />
         <span className={`inline-flex flex-col gap-0.5 text-[24px] leading-[1.2] text-[#0CC1E0] ${FREDOKA_CLASS}`}>
-          Congratulations!
+          {s.buildComplete.greeting}
           <svg width="100%" height="7" viewBox="0 0 74 7" preserveAspectRatio="none" aria-hidden="true">
             <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke="#0CC1E0" strokeWidth="2.2" strokeLinecap="round" />
           </svg>

@@ -27,6 +27,8 @@ export type InProgressVenture = {
   hasHandbook: boolean;
   /** Tasks left open ("Come back to this later") across the business, in order. Absent or empty: none. */
   openTasks?: readonly OpenTaskLink[];
+  /** The rooftop celebration was reached. Shown under My Businesses, not In Progress. */
+  complete?: boolean;
 };
 
 /** One open task on the home tile: its name, and the id the Go link deep-links to. */
@@ -310,12 +312,31 @@ export function LaunchpadHome({
       </p>
 
       <h2 className={`mb-3 font-heading text-lg font-bold text-nga-ink ${lockedNote ? "mt-3" : "mt-[22px]"}`}>{home.inProgress}</h2>
-      {inProgress.length === 0 ? (
+      {inProgress.filter((v) => !v.complete).length === 0 ? (
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (
-        inProgress.map((v) => (
+        inProgress.filter((v) => !v.complete).map((v) => (
           <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
         ))
+      )}
+      {inProgress.some((v) => v.complete) && (
+        <>
+          <h2 className="mb-3 mt-[22px] font-heading text-lg font-bold text-nga-ink">{home.myBusinesses}</h2>
+          {inProgress.filter((v) => v.complete).map((v) => (
+            <div key={v.ventureId} className="mb-2 rounded-2xl border border-nga-mist bg-white px-2 py-1.5" data-my-business={v.ventureId}>
+              <div className="flex items-center gap-2">
+                <div className="flex w-[72px] flex-none flex-col items-center">
+                  <VentureThumb ventureId={v.ventureId} />
+                  <p className="mt-0.5 w-full truncate text-center font-heading text-[11px] font-bold leading-[14px] text-nga-ink">{v.name}</p>
+                </div>
+                <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink">{home.complete}</p>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-[3px] bg-nga-mist" role="progressbar" aria-label={home.complete} aria-valuenow={v.total} aria-valuemax={v.total} aria-valuemin={0}>
+                <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: "100%" }} />
+              </div>
+            </div>
+          ))}
+        </>
       )}
     </section>
   );

@@ -713,7 +713,7 @@ function OrderSystemWorkbook({ silver }: { silver: HandbookPageView["silver"] })
 
 function SalesWorkbookPage({ sheet }: { sheet: string }) {
   const ctx = useLaunchpadAnswers();
-  const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
+  const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || useSurfaceCopy().workbook.fallbackName;
   const page = salesWorkbookSheets(ctx?.answers, name).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
@@ -723,7 +723,7 @@ function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) 
   const templates = useTemplateBlanks();
   const practice = practiceRunOf(ctx?.answers, "practice_run");
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
-  const serviceLabel = services.find((row) => row.id === practice?.service)?.label ?? "Dog walking";
+  const serviceLabel = services.find((row) => row.id === practice?.service)?.label ?? useSurfaceCopy().costs.dogWalking;
   const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }

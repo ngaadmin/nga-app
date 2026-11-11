@@ -475,6 +475,8 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       options(screen.items, where);
       if ((screen.items as unknown[]).length < 2) fail(`${where} needs at least 2 items.`);
       text(screen.notApplicableLabel, `${where} notApplicableLabel`);
+      text(screen.belowTitle, `${where} belowTitle`);
+      text(screen.belowHint, `${where} belowHint`);
       saves(answers, screen, "ranking", where);
       return;
     case "short-text":

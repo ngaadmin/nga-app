@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { CostsAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadChoiceCaptureScreen, LaunchpadFundingScreen, LaunchpadGettingReadyScreen, LaunchpadLevelUpScreen, LaunchpadRankOrderScreen, LaunchpadSalesScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
-import { RANK_GUIDANCE } from "@/components/launchpad/venture/screens/rank-order-screen";
 import { ChoiceCaptureScreen } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { RankOrderScreen } from "@/components/launchpad/venture/screens/rank-order-screen";
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
@@ -88,7 +87,7 @@ describe("bronze first screens: question, then context, then guidance", () => {
   it("Find the why leads with context, then guidance, then the question", () => {
     const spec = firstScreen("Find the why") as LaunchpadRankOrderScreen;
     render(<RankOrderScreen screen={spec} />);
-    assertContextFirst(spec.context!, RANK_GUIDANCE, spec.prompt, document.querySelector("ol[aria-label='Your ranking']")!);
+    assertContextFirst(spec.context!, spec.guidance!, spec.prompt, document.querySelector("ol[aria-label='Your ranking']")!);
   });
 
   it("Know your impact leads with context, then guidance, then the question", () => {

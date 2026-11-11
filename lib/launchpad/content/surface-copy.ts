@@ -119,6 +119,17 @@ export const LAUNCHPAD_SURFACE_COPY = {
     unavailableBody: "Please try again in a few minutes.",
     breadcrumb: "Breadcrumb",
     notAnswered: "Not answered yet",
+    makeChoice: "Make a choice to keep going.",
+    pickAtLeastOne: "Pick at least one to keep going.",
+    fillBlanks: "Fill in each blank to keep going.",
+    keepOneReason: "Keep at least one reason above the line to keep going.",
+    pickShape: "Pick a shape, a color and an icon to keep going.",
+    addName: "Add a name, a font and a font color to save.",
+    realWorld: "Real-world task",
+    addGoalOrSkip: "Add your goal, or skip for now.",
+    addThisGoal: "Add this goal",
+    doorsNotOpen: "These doors aren't open yet.",
+    congratulations: "Congratulations!",
   },
   workbook: {
     open: "Open workbook",
@@ -136,6 +147,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     editEarned: "Edit money I earned",
     earnedPlaceholder: "100",
     myHandbook: "My handbook",
+    fallbackName: "My business",
   },
   identity: {
     logoShape: "Logo shape",
@@ -349,6 +361,8 @@ export const LAUNCHPAD_SURFACE_COPY = {
   home: {
     businessIdeas: "Business Ideas",
     inProgress: "In Progress",
+    myBusinesses: "My Businesses",
+    complete: "Complete",
   },
   lift: {
     goingUp: "Going up to Level",

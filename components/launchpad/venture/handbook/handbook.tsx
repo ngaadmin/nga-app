@@ -80,6 +80,7 @@ export function Handbook({
   onBackToLift,
   onEditCosts,
   initialSheet,
+  initialSilverId,
   initialLevel,
   initialTemplates = false,
   scopeLevel,
@@ -99,6 +100,8 @@ export function Handbook({
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
   /** Open on a named sheet, such as the Planning wrap after Jobs. */
   initialSheet?: string;
+  /** Open on the first page of this silver. */
+  initialSilverId?: string;
   /** Open on this floor's workbook section, including a read-only preview when it is still empty. */
   initialLevel?: number;
   /** Open the Templates tab. Used by the test route `?templates=1`. */
@@ -129,6 +132,12 @@ export function Handbook({
     if (initialSheet) {
       const found = pages.findIndex((item) => item.sheet === initialSheet);
       if (found !== -1) return found;
+    }
+    if (initialSilverId) {
+      const pageForSilver = pages.findIndex((item) => item.silver.id === initialSilverId && item.kind !== "cover");
+      if (pageForSilver !== -1) return pageForSilver;
+      const cover = pages.findIndex((item) => item.silver.id === initialSilverId);
+      if (cover !== -1) return cover;
     }
     if (initialLevel != null) {
       const found = pages.findIndex((item) => item.level === initialLevel);

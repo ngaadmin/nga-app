@@ -29,13 +29,21 @@ describe("Level Up check-in date", () => {
     expect("startOptions" in improve).toBe(false);
   });
 
-  it("keeps Grow start dates to the four planning choices", () => {
-    expect(levelUpContent().grow.startOptions.map((option) => option.label)).toEqual([
-      "by my next job",
-      "this week",
-      "in a month",
-      "by next quarter",
+  it("keeps the Grow picker to one question and the five idea headings", () => {
+    const grow = levelUpContent().grow;
+    expect(grow.question).toBe("What will you try?");
+    expect(grow.guidance).toBe("Tick one to three ideas to try.");
+    expect("context" in grow).toBe(false);
+    expect("salesLabel" in grow).toBe(false);
+    expect("startOptions" in grow).toBe(false);
+    expect(grow.ideas.map((idea) => idea.label)).toEqual([
+      "Start a referral program",
+      "Offer a prepaid pack",
+      "Build a bundle",
+      "Add a new dog service",
+      "Expand your services",
     ]);
+    expect(grow.ideas.every((idea) => !("context" in idea) && !("success" in idea) && !("start" in idea))).toBe(true);
   });
 
   it("gates expand jobs by cohort", () => {

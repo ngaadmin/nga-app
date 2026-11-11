@@ -266,12 +266,11 @@ export type LevelUpAnswer = {
   pace: Readonly<Record<string, "quick" | "longer">>;
   /** Improve week order. Old saves used `starts` instead; that field is ignored. */
   improvePlan: readonly { statementId: string; week: number }[];
-  /** Grow ideas in the order shown on screen 1. `idea` is the first of these. */
+  /**
+   * Grow option ids the learner ticked, in tick order (one to three).
+   * Old per-idea fields (`idea`, `option`, `success`, `start`) are ignored.
+   */
   ideas: readonly string[];
-  idea: string;
-  option: string;
-  success: string;
-  start: string;
 };
 
 export type LaunchpadAnswer =
@@ -573,7 +572,6 @@ function stringIdMap(value: unknown): Record<string, string> {
 
 export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
   if (!isRecord(value) || value.kind !== "level-up" || value.version !== 1) return null;
-  const text = (raw: unknown) => (typeof raw === "string" && (raw === "" || ID_RE.test(raw)) ? raw : "");
   return {
     kind: "level-up",
     version: 1,
@@ -581,11 +579,7 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     picks: stringIdMap(value.picks),
     pace: paceMap(value.pace),
     improvePlan: improvePlanOf(value.improvePlan),
-    ideas: idList(value.ideas).length ? idList(value.ideas) : text(value.idea) ? [text(value.idea)] : [],
-    idea: text(value.idea),
-    option: text(value.option),
-    success: text(value.success),
-    start: text(value.start),
+    ideas: idList(value.ideas),
   };
 }
 

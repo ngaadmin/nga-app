@@ -10,12 +10,10 @@ export type LevelSectionId = "customers" | "ready" | "job" | "happy";
 export type LevelPace = "quick" | "longer";
 export type GrowIdeaId = "referral" | "prepaid" | "bundle" | "new-service" | "expand";
 export type LevelCohort = "explorer" | "pathfinder" | "maverick";
-export type StartId = "next-job" | "this-week" | "in-a-month" | "next-quarter";
 
 export const LEVEL_SECTION_IDS: readonly LevelSectionId[] = ["customers", "ready", "job", "happy"];
 export const GROW_IDEA_IDS: readonly GrowIdeaId[] = ["referral", "prepaid", "bundle", "new-service", "expand"];
 export const LEVEL_COHORTS: readonly LevelCohort[] = ["explorer", "pathfinder", "maverick"];
-export const GROW_START_IDS: readonly StartId[] = ["next-job", "this-week", "in-a-month", "next-quarter"];
 
 export type LevelStatement = {
   id: string;
@@ -32,15 +30,11 @@ export type LevelUpOption = {
   cohorts?: readonly LevelCohort[];
 };
 
+/** One Grow heading and the options listed under it. */
 export type LevelUpIdea = {
   id: GrowIdeaId;
   label: string;
-  group: "sales" | "service";
-  context: string;
-  question: string;
   options: readonly LevelUpOption[];
-  success: readonly { id: string; label: string }[];
-  start: StartId;
 };
 
 /** Shared by the Reflect, Improve, and Grow screens of one Level Up silver. */
@@ -62,15 +56,8 @@ export type LaunchpadLevelUpContent = {
     weekLabels?: readonly string[];
   };
   grow: {
-    context: string;
     guidance: string;
     question: string;
-    salesLabel: string;
-    serviceLabel: string;
-    success: string;
-    tryStarting: string;
-    /** Closes the start sentence after the menu. */
-    period: string;
     closerHeadline: string;
     closerContext: string;
     calendarNote: string;
@@ -78,8 +65,6 @@ export type LaunchpadLevelUpContent = {
     checkIn: string;
     copyLabel: string;
     copyHint: string;
-    startFieldLabel: string;
-    startOptions: readonly { id: StartId; label: string }[];
     ideas: readonly LevelUpIdea[];
   };
 };
@@ -131,6 +116,3 @@ export function expandJobsFor(options: readonly LevelUpOption[], cohort: LevelCo
     .map((option) => ({ id: option.id, label: option.label }));
 }
 
-export function growIdea(ideas: readonly LevelUpIdea[], id: string) {
-  return ideas.find((idea) => idea.id === id);
-}

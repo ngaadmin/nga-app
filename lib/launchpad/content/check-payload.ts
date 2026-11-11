@@ -20,7 +20,6 @@ import {
 import { LAUNCHPAD_READABLE_SCHEMA_VERSIONS } from "@/lib/launchpad/content/schema-version";
 import {
   GROW_IDEA_IDS,
-  GROW_START_IDS,
   LEVEL_COHORTS,
   LEVEL_SECTION_IDS,
 } from "@/lib/launchpad/content/level-up/model";
@@ -297,43 +296,19 @@ function checkLevelUp(screen: Obj, where: string): void {
   if (improve.weekLabels !== undefined) {
     list(improve.weekLabels, `${where} week labels`, 1).forEach((label, i) => text(label, `${where} week label ${i + 1}`));
   }
-  for (const field of [
-    "context",
-    "guidance",
-    "question",
-    "salesLabel",
-    "serviceLabel",
-    "success",
-    "tryStarting",
-    "period",
-    "closerHeadline",
-    "closerContext",
-    "calendarNote",
-    "checkIn",
-    "copyLabel",
-    "copyHint",
-    "startFieldLabel",
-  ] as const) {
+  for (const field of ["guidance", "question", "closerHeadline", "closerContext", "calendarNote", "checkIn", "copyLabel", "copyHint"] as const) {
     text(grow[field], `${where} grow ${field}`);
   }
   if (!String(grow.checkIn).includes("{date}")) fail(`${where} grow checkIn must include {date}.`);
-  sameIds(grow.startOptions, `${where} grow starts`, GROW_START_IDS);
-  const startIds = new Set((grow.startOptions as Obj[]).map((option) => String(option.id)));
-  const groups = new Set<string>();
   const ideas = list(grow.ideas, `${where} ideas`, GROW_IDEA_IDS.length, GROW_IDEA_IDS.length);
   const ideaIds = new Set<string>();
+  const optionIds = new Set<string>();
   ideas.forEach((raw, i) => {
     const iw = `${where} idea ${i + 1}`;
     if (!isObj(raw) || typeof raw.id !== "string" || !(GROW_IDEA_IDS as readonly string[]).includes(raw.id)) fail(`${iw} has an unknown id.`);
     if (ideaIds.has(raw.id)) fail(`${iw} repeats ${raw.id}.`);
     ideaIds.add(raw.id);
-    if (raw.group !== "sales" && raw.group !== "service") fail(`${iw} group is missing.`);
-    groups.add(String(raw.group));
     text(raw.label, `${iw} label`);
-    text(raw.context, `${iw} context`);
-    text(raw.question, `${iw} question`);
-    if (typeof raw.start !== "string" || !startIds.has(raw.start)) fail(`${iw} start is missing.`);
-    const optionIds = new Set<string>();
     list(raw.options, `${iw} options`).forEach((option, oi) => {
       const ow = `${iw} option ${oi + 1}`;
       if (!isObj(option) || typeof option.id !== "string" || !NODE_ID_RE.test(option.id)) fail(`${ow} has no valid id.`);
@@ -351,9 +326,7 @@ function checkLevelUp(screen: Obj, where: string): void {
         });
       }
     });
-    options(raw.success, `${iw} success`);
   });
-  if (!groups.has("sales") || !groups.has("service")) fail(`${where} needs a sales idea and a service idea.`);
 }
 
 function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: string) => void, answers: Answers): void {

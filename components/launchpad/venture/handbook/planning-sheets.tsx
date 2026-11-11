@@ -11,7 +11,7 @@ import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpa
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_PRICE_ROW } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_PRICE_ROW, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -228,18 +228,7 @@ export function PricingSummarySheet() {
   );
 }
 
-export function PlanningWrapSheet({ sheet }: { sheet: "plan-1" | "plan-2" | "plan-3" | "plan-4" }) {
-  return (
-    <div data-planning-wrap={sheet}>
-      {sheet === "plan-1" && <PlanSelling />}
-      {sheet === "plan-2" && <PlanCosts />}
-      {sheet === "plan-3" && <PlanOthers />}
-      {sheet === "plan-4" && <PlanWeek />}
-    </div>
-  );
-}
-
-function PlanSelling() {
+export function SellingCustomersPage() {
   const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const templates = useTemplateBlanks();
@@ -320,7 +309,7 @@ function PlanCosts() {
   );
 }
 
-function PlanOthers() {
+export function PricingPlaybackPage() {
   const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const competitor = competitorOf(ctx?.answers, COMPETITOR_ANSWER_KEY);
@@ -348,19 +337,24 @@ function PlanOthers() {
       )}
       <AccentLabel>{s.price.myPrice}</AccentLabel>
       {price?.prices.map((row) => (
-        <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
-          {nameFor(row.serviceId, labels)} {s.price.iKeepLead} <ChosenValue>{formatWorkbookMoney(row.keptPerJob, currency)}</ChosenValue>
-          <span className={`block ${WORKBOOK_HINT}`}>
+        <div key={row.serviceId} className="mt-2">
+          <p className={WORKBOOK_BODY}>
+            {nameFor(row.serviceId, labels)}
+            {s.price.namePriceSep}
+            <ChosenValue>{formatWorkbookMoney(row.price, currency)}</ChosenValue>
+          </p>
+          <p className={WORKBOOK_BODY}>{s.jobs.iKeep} <ChosenValue>{formatWorkbookMoney(row.keptPerJob, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_HINT}>
             {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
-          </span>
-        </p>
+          </p>
+          {row.comparedToOthers ? <p className={WORKBOOK_BODY}>{s.price.mineIs} <ChosenValue>{row.comparedToOthers}</ChosenValue></p> : null}
+        </div>
       ))}
-      <p className={`mt-2 ${WORKBOOK_HINT}`}>{s.price.eachLine}</p>
     </div>
   );
 }
 
-function PlanWeek() {
+export function TypicalWeekPage() {
   const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
   const jobs = jobsOf(ctx?.answers, JOBS_COVER_ANSWER_KEY);
@@ -373,7 +367,7 @@ function PlanWeek() {
   return (
     <div>
       <AccentLabel>{s.jobs.coverMine}</AccentLabel>
-      <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">{s.jobs.typicalWeek}</p>
+      <h3 className={`mt-2 ${WORKBOOK_SUB}`}>{s.jobs.typicalWeek}</h3>
       <p className={`mt-1 ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       <p className={WORKBOOK_BODY}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> {s.jobs.weeksToCoverShort} <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
@@ -382,7 +376,6 @@ function PlanWeek() {
           {math} = {formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)} {s.jobs.aWeekPeriod}
         </p>
       )}
-      <p className={`mt-2 ${WORKBOOK_HINT}`}>{s.jobs.typicalReadOnly}</p>
       <div className="mt-4 flex justify-end">
         <LargeScribble name="jar" />
       </div>

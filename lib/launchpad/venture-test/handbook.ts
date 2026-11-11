@@ -10,7 +10,7 @@
 import type { LaunchpadFloor, LaunchpadSilver, LaunchpadSummarySection, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { applyFieldChange } from "@/lib/launchpad/content/fields";
 import { kebabId } from "@/lib/launchpad/venture-test/handbook-ids";
-import { costsOf, fieldsAnswer, identityAnswerOf, jobsOf, priceOf, rankingAnswer, salesChannelsOf, selectionAnswer, selectionOf, type JobsAnswer, type LaunchpadAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
+import { competitorOf, costsOf, fieldsAnswer, identityAnswerOf, jobsOf, priceOf, rankingAnswer, salesChannelsOf, selectionAnswer, selectionOf, type JobsAnswer, type LaunchpadAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
 import { keptPerJob, weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { workbookView } from "@/lib/launchpad/content/know-your-cost/logic";
 import { AGREE_JOB_KEY, DELIVER_JOB_KEY, FIND_CUSTOMERS_KEY, POLISH_SERVICE_KEY, PRACTICE_RUN_KEY, WRAP_JOB_KEY } from "@/lib/launchpad/content/getting-ready/copy";
@@ -132,17 +132,12 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       }
     }
     if (page.kind === "costs") {
-      out.push({ ...page, kind: "summary", sheet: "pricing-b" });
       out.push({ ...page, sheet: "costs-a" });
       out.push({ ...page, sheet: "costs-b" });
-      if (templates || priceOf(progress.answers, SET_PRICE_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "price" });
-      if (templates || jobsOf(progress.answers, JOBS_COVER_ANSWER_KEY)) {
-        out.push({ ...page, kind: "summary", sheet: "jobs" });
-        out.push({ ...page, kind: "summary", sheet: "plan-1" });
-        out.push({ ...page, kind: "summary", sheet: "plan-2" });
-        out.push({ ...page, kind: "summary", sheet: "plan-3" });
-        out.push({ ...page, kind: "summary", sheet: "plan-4" });
+      if (templates || priceOf(progress.answers, SET_PRICE_ANSWER_KEY) || competitorOf(progress.answers, "l2-competitors")) {
+        out.push({ ...page, kind: "summary", sheet: "pricing" });
       }
+      if (templates || jobsOf(progress.answers, JOBS_COVER_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "week" });
     } else if (page.silver.id === "l2-s3") {
       out.push({ ...page, sheet: "funding" });
     } else if (page.silver.id === "l6-s1") {
@@ -658,7 +653,8 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
     next = setProgressAnswer(next, WRAP_JOB_KEY, { kind: "wrap-job", version: 1, paymentHow: ["cash"], feedbackHow: ["in_person"] });
   }
   if (isTaskDone(next, "l3-s3-b1-t1") && !next.answers?.[PRACTICE_RUN_KEY]) {
-    next = setProgressAnswer(next, PRACTICE_RUN_KEY, { kind: "practice-run", version: 1, who: "family", service: "dog-walking", when: "weekend" });
+    const practiceServices = (selectionOf(next.answers, "l1-offer")?.selected ?? ["dog-walking"]).slice(0, 2);
+    next = setProgressAnswer(next, PRACTICE_RUN_KEY, { kind: "practice-run", version: 1, who: "family", services: practiceServices, when: "weekend" });
   }
   if (isTaskDone(next, "l3-s3-b2-t1") && !next.answers?.[POLISH_SERVICE_KEY]) {
     next = setProgressAnswer(next, POLISH_SERVICE_KEY, {

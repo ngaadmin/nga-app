@@ -217,7 +217,8 @@ export type PracticeRunAnswer = {
   kind: "practice-run";
   version: 1;
   who: string;
-  service: string;
+  /** One or more services. An old save with `service` is read as a one-item list. */
+  services: readonly string[];
   when: string;
 };
 
@@ -1010,9 +1011,10 @@ export function parsePracticeRunAnswer(value: unknown): PracticeRunAnswer | null
   if (!isRecord(value) || value.kind !== "practice-run" || value.version !== 1) return null;
   const who = knownIds([value.who], PRACTICE_WHO)[0];
   const when = knownIds([value.when], PRACTICE_WHEN)[0];
-  const service = typeof value.service === "string" && ID_RE.test(value.service) ? value.service : "";
-  if (!who || !when || !service) return null;
-  return { kind: "practice-run", version: 1, who, service, when };
+  const listed = Array.isArray(value.services) ? value.services : value.service != null ? [value.service] : [];
+  const services = listed.filter((id): id is string => typeof id === "string" && ID_RE.test(id));
+  if (!who || !when || services.length === 0) return null;
+  return { kind: "practice-run", version: 1, who, services, when };
 }
 
 export function parsePolishServiceAnswer(value: unknown): PolishServiceAnswer | null {
@@ -1048,8 +1050,7 @@ export function wrapJobOf(answers: LaunchpadAnswers | undefined, key: string): W
 }
 
 export function practiceRunOf(answers: LaunchpadAnswers | undefined, key: string): PracticeRunAnswer | undefined {
-  const a = answers?.[key];
-  return a?.kind === "practice-run" ? a : undefined;
+  return parsePracticeRunAnswer(answers?.[key]) ?? undefined;
 }
 
 export function polishServiceOf(answers: LaunchpadAnswers | undefined, key: string): PolishServiceAnswer | undefined {

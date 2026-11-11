@@ -270,11 +270,11 @@ export function Handbook({
                 </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
-            {pagingTemplates && templatePages[templateAt]?.kind !== "poster" ? (
+            {pagingTemplates ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel({ number: templateAt + 1, sheet: templatePages[templateAt]!.id, silver: { id: "templates" } })}
               </p>
-            ) : !templatesOpen && page && page.sheet !== "order-system" ? (
+            ) : !templatesOpen && page ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel(page)}
               </p>

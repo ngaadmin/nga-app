@@ -37,6 +37,7 @@ import {
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
 import { Chip, ReadTick } from "@/components/launchpad/venture/screens/lesson-controls";
+import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { LESSON_BODY, LESSON_HINT, LESSON_PICK, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
@@ -554,23 +555,39 @@ function PracticeStep({
   const s = useSurfaceCopy();
   const saved = practiceRunOf(answers, screen.answerKey);
   const [who, setWho] = useState(saved?.who);
-  const [service, setService] = useState(saved?.service);
+  const [picked, setPicked] = useState<string[]>(saved ? [...saved.services] : []);
   const [when, setWhen] = useState(saved?.when);
-  const ready = !!who && !!service && !!when;
+  const ready = !!who && picked.length > 0 && !!when;
+  const toggle = (id: string) => setPicked((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  const joined = joinPhrase(
+    picked.map((id) => services.find((row) => row.id === id)?.label ?? id).map((label) => label.charAt(0).toLowerCase() + label.slice(1)),
+    s.list.comma,
+    s.list.and,
+  );
   const stems = [
     { lead: screen.practiceWhoLead, label: s.ready.who, value: who, options: screen.practiceWho ?? [], onPick: setWho },
-    { lead: screen.practiceServiceLead, label: s.ready.whichService, value: service, options: services.map((row) => ({ id: row.id, label: row.label })), onPick: setService },
     { lead: screen.practiceWhenLead, label: s.ready.when, value: when, options: screen.practiceWhen ?? [], onPick: setWhen },
   ];
+  const [serviceBefore, serviceAfter] = screen.practiceServiceLead?.split("{pick}") ?? ["", ""];
   return (
     <LessonSurface
       title={screen.title}
       onBack={onExit}
-      footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "practice-run", version: 1, who: who!, service: service!, when: when! })} />}
+      footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "practice-run", version: 1, who: who!, services: picked, when: when! })} />}
     >
       <div data-task-screen="practice-run">
         {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
         {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        <p className={`mt-4 ${LESSON_BODY}`}>
+          {serviceBefore}
+          {joined}
+          {serviceAfter}
+        </p>
+        <div className="mt-2 flex flex-col">
+          {services.map((row) => (
+            <Chip key={row.id} variant="lined" label={row.label} selected={picked.includes(row.id)} onClick={() => toggle(row.id)} />
+          ))}
+        </div>
         {stems.map((stem) => {
           const [before, after] = stem.lead?.split("{pick}") ?? ["", ""];
           return (

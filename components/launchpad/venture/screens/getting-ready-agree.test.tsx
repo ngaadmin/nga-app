@@ -9,7 +9,7 @@ import { ScriptedSheetPage } from "@/components/launchpad/venture/handbook/scrip
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { WORKBOOK_ANSWER } from "@/components/launchpad/venture/handbook/paper-art";
 import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
-import type { AgreeJobAnswer } from "@/lib/launchpad/content/answers";
+import { parsePracticeRunAnswer, type AgreeJobAnswer } from "@/lib/launchpad/content/answers";
 
 const screenSpec: LaunchpadGettingReadyScreen = gettingReadyScreen("agree", "agree_the_job");
 
@@ -152,13 +152,13 @@ describe("Getting Ready bronze task surfaces", () => {
     expect(menu?.className).toContain("w-full");
     expect(menu?.className).not.toContain("absolute");
     fireEvent.click(screen.getByRole("button", { name: "a family member" }));
-    fireEvent.click(screen.getByRole("button", { name: "Which service" }));
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
     fireEvent.click(screen.getByRole("button", { name: "When you will practice" }));
     fireEvent.click(screen.getByRole("button", { name: "tomorrow" }));
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(onFinish.mock.calls[0]?.[0]).toMatchObject({ kind: "practice-run", who: "family", service: "dog-walking", when: "tomorrow" });
+    expect(onFinish.mock.calls[0]?.[0]).toMatchObject({ kind: "practice-run", who: "family", services: ["dog-walking"], when: "tomorrow" });
+    expect(parsePracticeRunAnswer({ kind: "practice-run", version: 1, who: "family", service: "grooming", when: "tomorrow" })?.services).toEqual(["grooming"]);
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(onExit).toHaveBeenCalledOnce();
     cleanup();

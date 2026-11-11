@@ -28,10 +28,10 @@ import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/ven
 import { costsOf, fieldsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
 import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
+import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
-import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
-import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
+import { FundingSheet, PricingPlaybackPage, SellingCustomersPage, TypicalWeekPage } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
 import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
@@ -529,18 +529,14 @@ export function HandbookPage({
       }
     >
       {page.kind !== "cover" && <MiniIdentity />}
-      {page.sheet === "price" ? (
-        <PriceSheet />
-      ) : page.sheet === "jobs" ? (
-        <JobsSheet />
-      ) : page.sheet === "pricing-b" ? (
-        <PricingSummarySheet />
-      ) : page.sheet === "plan-1" || page.sheet === "plan-2" || page.sheet === "plan-3" || page.sheet === "plan-4" ? (
-        <PlanningWrapSheet sheet={page.sheet} />
+      {page.sheet === "pricing" ? (
+        <PricingPlaybackPage />
+      ) : page.sheet === "week" ? (
+        <TypicalWeekPage />
       ) : page.sheet === "funding" ? (
         <FundingSheet />
       ) : page.silver.id === "l2-s1" ? (
-        <ProductOrSummary page={page} />
+        <SellingCustomersPage />
       ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.sheet === "order-system" ? (
@@ -555,8 +551,6 @@ export function HandbookPage({
         <LevelUpWorkbookPage silver={page.silver} sheet={page.sheet} />
       ) : page.kind === "cover" ? (
         <CoverPageBody page={page} />
-      ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (
-        <ProductOrSummary page={page} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} />
       ) : page.kind === "costs" ? (
@@ -566,13 +560,6 @@ export function HandbookPage({
       )}
     </article>
   );
-}
-
-function ProductOrSummary({ page }: { page: HandbookPageView }) {
-  const ctx = useLaunchpadAnswers();
-  if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook />;
-  if (page.kind === "summary") return <SummaryPageBody page={page} />;
-  return <PlaceholderPageBody page={page} />;
 }
 
 const ORDER_PICK = "font-semibold text-[#0CC1E0]";
@@ -618,9 +605,11 @@ function SalesWorkbookPage({ sheet }: { sheet: string }) {
 function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) {
   const ctx = useLaunchpadAnswers();
   const templates = useTemplateBlanks();
+  const copy = useSurfaceCopy();
   const practice = practiceRunOf(ctx?.answers, "practice_run");
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
-  const serviceLabel = services.find((row) => row.id === practice?.service)?.label ?? useSurfaceCopy().costs.dogWalking;
+  const picked = (practice?.services ?? []).map((id) => services.find((row) => row.id === id)?.label ?? id);
+  const serviceLabel = joinPhrase(picked.map((label) => label.charAt(0).toLowerCase() + label.slice(1)), copy.list.comma, copy.list.and);
   const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }

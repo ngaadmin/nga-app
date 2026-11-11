@@ -439,8 +439,9 @@ describe("<Handbook>", () => {
     turnTo("l2-s1");
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
-    expect(within(page).getByText("Decide what to sell")).toBeTruthy();
-    expect(within(page).getByText("Know who your customers are")).toBeTruthy();
+    expect(within(page).getByText("What I am selling")).toBeTruthy();
+    expect(within(page).getByText("When and who might want it")).toBeTruthy();
+    expect(within(page).queryByText("What I did")).toBeNull();
   });
 
   it("summary sections with no answer say so; placeholder floors list finished bronzes", () => {
@@ -449,7 +450,8 @@ describe("<Handbook>", () => {
     turnTo("l2-s1");
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
-    expect(within(page).getByText("Decide what to sell")).toBeTruthy();
+    expect(within(page).getByText("What I am selling")).toBeTruthy();
+    expect(within(page).queryByText("What I did")).toBeNull();
     cleanup();
     render(<Harness entry="building" initial={ALL} />);
     fireEvent.click(within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name: /^Level 3/ }));
@@ -657,6 +659,7 @@ describe("L7 weekly focus and the Templates tab", () => {
       fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     }
     expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
+    expect(screen.getByText(/^Page \d+$/)).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
     expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
     expect(screen.queryByRole("link")).toBeNull();
@@ -671,6 +674,15 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Url).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.letterUrl).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Download).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf");
+  });
+});
+
+describe("practice run playback", () => {
+  it("joins the chosen services with the payload word", () => {
+    const progress = withShortcutSampleAnswers(through("l3-s3"), FLOORS, "dog-walking", "Happy Paws");
+    render(<Harness entry="building" initial={progress} />);
+    turnTo("ready-c");
+    expect(screen.getByText(/dog walking and grooming/)).toBeTruthy();
   });
 });
 
@@ -708,6 +720,7 @@ describe("L4 My order system workbook page", () => {
     expect(screen.getByText(spec.order.checkPick).className).toContain("text-[#0CC1E0]");
     expect(screen.getByText(spec.order.templateStrong).className).toContain("text-[#0CC1E0]");
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
+    expect(screen.getByText(/^Page \d+$/)).toBeTruthy();
     expect(document.querySelector("[data-order-workbook]")?.textContent).not.toMatch(/best choice/);
   });
 });

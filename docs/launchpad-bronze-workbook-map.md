@@ -7,7 +7,7 @@ Two passes, same 31 pages, none of them the generic "What I did" placeholder:
 - Full sample: `withShortcutSampleAnswers` on a progress where every silver is done.
 - Shortcut: the live route `?reset=1&complete=all`, which uses that same helper, then the workbook was paged through in the browser.
 
-`l2-s1` and `l2-s3` are stored with page kind `placeholder`, but the renderer does not use the generic placeholder. `l2-s1` draws The product and its buyers. `l2-s3` draws the funding sheet. `l3-s1` has no page of its own. Its answers are played on `ready-a` and `ready-b`.
+`l2-s1` draws What I am selling and When and who might want it. It is not the generic placeholder. `l2-s3` draws the funding sheet. Level 2 order is selling, My costs a, My costs b, pricing (others charge plus my price), typical week, then funding. The old plan-1 through plan-4 sheets, the separate Pricing and My price pages, and the Jobs to cover stepper page are gone. Every field from those pages is on one of the kept pages. `l3-s1` has no page of its own. Its answers are played on `ready-a` and `ready-b`. The practice-run service pick is a list. An old single `service` value is read as a one-item list.
 
 The Level 4 sales shortcut sample fills `sales_channels`, `marketing_materials`, and `tell_people` only when those answers are empty, so `?complete=all` shows `sales-where`, `sales-market-1` through `sales-market-4`, and `sales-tell`. Cath approved that sample. A saved answer is left as the learner wrote it.
 
@@ -179,6 +179,7 @@ This run's start is `8371f0503f339c849491966d740cff930b9d7e53`. The only change 
 Approved removals already on the branch, listed as requested:
 
 - The 8 old Level 5 placeholder bronzes, the pitch door "Develop and practice your pitch" (Cath confirmed this again; Tell people about it now uses `l4-s1-b3`), and the old Level 5 "Plan the work" silver. The in-person workbook page stays.
+- Level 2 workbook sheets plan-1 through plan-4, the plan costs summary, the workbook title "The product and its buyers", the separate Pricing and My price pages, the Jobs to cover stepper page, and the single-select practice-run pick. Cath approved these. The silver door is still named The product and its buyers.
 - The one-off Jobs and Funding workbook auto-opens, replaced by the per-silver auto-open.
 - The direct Level 7 "Go to the rooftop", replaced by the workbook, then the lift, then the rooftop.
 - The Level 4 order screen `trackerExtra` field.

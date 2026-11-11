@@ -268,6 +268,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     jobCostPerJob: "Job cost per job",
     jobCostFrom: "Job cost comes from My costs.",
     iKeepLead: "· I keep",
+    namePriceSep: " · ",
     eachLine: "Each line: price minus job cost equals what I keep. Costs and prices stay read-only here.",
     whatOthersCharge: "What others charge",
     otherWalkers: "other walkers charge",

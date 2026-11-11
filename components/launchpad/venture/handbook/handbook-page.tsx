@@ -2,7 +2,6 @@
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useRef, useState, type ReactNode } from "react";
-import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
   silverHandbookSections,
@@ -17,8 +16,6 @@ import {
 } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
-import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
-import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble, SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { orderSystemOf } from "@/lib/launchpad/content/answers";
@@ -28,10 +25,7 @@ import { GrowthPlanSheet, WeeklyFocusSheet, WhatWentWellSheet } from "@/componen
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import {
-  BTN_CYAN_COMPACT,
-} from "@/components/launchpad/venture-test/venture-test-ui";
-import { costsOf, fieldsOf, practiceRunOf, selectionOf } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
 import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
@@ -92,25 +86,6 @@ export function Doodle({ ventureId }: { ventureId: string }) {
       <circle cx="60" cy="25" r="9.5" />
       <circle cx="74" cy="42" r="9" />
       <path d="M50 50C62 50 76 62 76 73C76 82 67 85 59 83C55 82 45 82 41 83C33 85 24 82 24 73C24 62 38 50 50 50Z" />
-    </svg>
-  );
-}
-
-function EditPencil() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="#374151"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
-      <path d="M13.5 6.5l4 4" />
     </svg>
   );
 }
@@ -200,20 +175,14 @@ const COVER_LOGO_PX = 48;
 
 function CoverPageBody({
   page,
-  editable,
-  iconVentureId,
 }: {
   page: HandbookPageView;
-  editable: boolean;
-  iconVentureId: string;
 }) {
   const s = useSurfaceCopy();
   const wrapUp =
     page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
   const answerKey = wrapUp?.answerKey ?? "";
-  const { answer, update } = useIdentityAnswer(answerKey);
-  const choices = identityChoices(page.silver, answerKey, iconVentureId);
-  const [editing, setEditing] = useState(false);
+  const { answer } = useIdentityAnswer(answerKey);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
 
   return (
@@ -257,42 +226,6 @@ function CoverPageBody({
         </p>
       )}
       </div>
-      {editable && (hasLogo || answer.name) && (
-        <button
-          type="button"
-          aria-expanded={editing}
-          onClick={() => setEditing((e) => !e)}
-          className="absolute -right-1 top-0 flex h-[30px] items-center gap-[5px] rounded-[10px] bg-white pl-2 pr-2.5 text-[13px] font-medium text-[#374151] shadow-[inset_0_0_0_1px_#E5E7EB] before:absolute before:-inset-x-1 before:-inset-y-[7px] before:content-['']"
-          data-edit-identity=""
-        >
-          <EditPencil />
-          {editing ? "Close" : "Edit"}
-          <span className="sr-only">{s.workbook.logoAndName}</span>
-        </button>
-      )}
-      {editable && editing && (
-        <div
-          className="w-full rounded-xl bg-white p-3"
-          data-inline-editor="identity"
-        >
-          <IdentityEditor
-            choices={choices}
-            answer={answer}
-            update={update}
-            idPrefix={`handbook-${answerKey}`}
-          />
-          <div className="mt-3 flex w-full justify-center self-stretch">
-            <button
-              type="button"
-              className={BTN_CYAN_COMPACT}
-              data-inline-editor-done=""
-              onClick={() => setEditing(false)}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
       <div className="flex w-full flex-col">
         <HandRule className="mb-3.5 mt-5" />
         {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} />}
@@ -328,26 +261,19 @@ function templateScribble(name?: string): ScribbleName | undefined {
 function TemplateWriteIn({
   field,
   value,
-  editable,
   compact,
-  onChange,
 }: {
   field: WorkbookTemplateField;
   value: string;
-  editable: boolean;
   compact?: boolean;
-  onChange: (value: string) => void;
 }) {
   return (
-    <label className={field.wide ? (compact ? "mb-1.5 block" : "mb-2.5 block") : compact ? "mb-1.5 flex items-end gap-2" : "mb-2.5 flex items-end gap-2"}>
+    <div className={field.wide ? (compact ? "mb-1.5 block" : "mb-2.5 block") : compact ? "mb-1.5 flex items-end gap-2" : "mb-2.5 flex items-end gap-2"}>
       <span className={field.wide ? `block ${WORKBOOK_SUB}` : `shrink-0 ${WORKBOOK_SUB}`}>{field.label}</span>
-      <input
-        value={value}
-        disabled={!editable}
-        onChange={(event) => onChange(event.target.value)}
-        className={field.wide ? `mt-0.5 block w-full ${TEMPLATE_LINE}` : `min-w-9 flex-1 ${TEMPLATE_LINE}`}
-      />
-    </label>
+      <span data-template-line="" className={field.wide ? `mt-0.5 block min-h-[26px] w-full ${TEMPLATE_LINE}` : `min-h-[26px] min-w-9 flex-1 ${TEMPLATE_LINE}`}>
+        {value.trim() ? <ChosenValue>{value}</ChosenValue> : "\u00a0"}
+      </span>
+    </div>
   );
 }
 
@@ -405,19 +331,13 @@ export function PosterTemplatePage({
 }
 
 /** One paperclip page. Strings, fields, and ticks come from the payload. */
-export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplatePage; editable: boolean }) {
+export function WorkbookTemplatePage({ page }: { page: WorkbookTemplatePage }) {
   const templates = useSurfaceCopy().templates;
   const ctx = useLaunchpadAnswers();
   const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
   const text = (id: string) => {
     const value = saved[id];
     return typeof value === "string" ? value : value == null ? "" : String(value);
-  };
-  const write = (id: string, value: string) => {
-    if (!editable || !ctx) return;
-    const values = { ...saved, [id]: value };
-    if (!value.trim()) delete values[id];
-    ctx.setAnswer(templates.answerKey, { kind: "fields", version: 1, values });
   };
   const scribble = templateScribble(page.scribble);
   const compact = Boolean(page.ticks?.length);
@@ -438,7 +358,7 @@ export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplat
       {page.jobTitle ? <h3 className={`${FREDOKA_HEADING_CLASS} mt-3 text-[18px] font-bold leading-6 text-[#0CC1E0]`}>{page.jobTitle}</h3> : null}
       <div className="mt-2">
         {(page.fields ?? []).map((field) => (
-          <TemplateWriteIn key={field.id} field={field} value={text(field.id)} editable={editable} compact={compact} onChange={(value) => write(field.id, value)} />
+          <TemplateWriteIn key={field.id} field={field} value={text(field.id)} compact={compact} />
         ))}
       </div>
       {page.wrapTitle && page.wrapFields ? (
@@ -446,7 +366,7 @@ export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplat
           <h3 className={`${FREDOKA_HEADING_CLASS} text-[18px] font-bold leading-6 text-[#0CC1E0]`}>{page.wrapTitle}</h3>
           <div className="mt-2">
             {page.wrapFields.map((field) => (
-              <TemplateWriteIn key={field.id} field={field} value={text(field.id)} editable={editable} compact={compact} onChange={(value) => write(field.id, value)} />
+              <TemplateWriteIn key={field.id} field={field} value={text(field.id)} compact={compact} />
             ))}
           </div>
         </div>
@@ -455,16 +375,16 @@ export function WorkbookTemplatePage({ page, editable }: { page: WorkbookTemplat
         <div className="mt-2 flex items-end justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5" data-template-ticks="">
             {page.ticks.map((tick) => (
-              <label key={tick.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={saved[tick.id] === "yes"}
-                  disabled={!editable}
-                  onChange={(event) => write(tick.id, event.target.checked ? "yes" : "")}
-                  className="size-[18px] flex-none rounded-[3px] border-[1.5px] border-[#8390AF]"
-                />
+              <div key={tick.id} className="flex items-center gap-2">
+                <span data-template-tick={saved[tick.id] === "yes" ? "yes" : "no"} aria-hidden="true" className="inline-flex size-[18px] flex-none items-center justify-center rounded-[3px] border-[1.5px] border-[#8390AF]">
+                  {saved[tick.id] === "yes" ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#19347D" strokeWidth="3">
+                      <path d="M5 12.5l5 5L19 7" />
+                    </svg>
+                  ) : null}
+                </span>
                 <span className={WORKBOOK_SUB}>{tick.label}</span>
-              </label>
+              </div>
             ))}
           </div>
           {art}
@@ -510,47 +430,15 @@ function MiniIdentity() {
  * workbook-summary wrap-up's, or the column Z sections its capture screens
  * name) read from the saved answers. Read-only.
  */
-function SummaryPageBody({
-  page,
-  editable,
-  iconVentureId,
-}: {
-  page: HandbookPageView;
-  editable: boolean;
-  iconVentureId: string;
-}) {
+function SummaryPageBody({ page }: { page: HandbookPageView }) {
   const s = useSurfaceCopy();
   const sectionList = silverHandbookSections(page.silver);
   const sections = useSectionLines(sectionList);
   const templates = useTemplateBlanks();
-  const ctx = useLaunchpadAnswers();
-  const [editing, setEditing] = useState<string | null>(null);
   if (templates) {
     return (
       <>
         <LevelTemplateSections sections={sectionList} />
-      </>
-    );
-  }
-  if (editable && ctx) {
-    const catalog = summaryCatalog(ctx.floors ?? []);
-    return (
-      <>
-        <div className="mt-3">
-          {sections.map(({ section }, index) => (
-            <div key={section.id} className="relative">
-              <BinderSection
-                section={section}
-                first={index === 0}
-                answers={ctx.answers}
-                catalog={catalog}
-                editing={editing}
-                setEditing={setEditing}
-                setAnswer={ctx.setAnswer}
-              />
-            </div>
-          ))}
-        </div>
       </>
     );
   }
@@ -612,22 +500,18 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
 
 /**
  * One handbook page (one completed silver), drawn on the r4 paper card.
- * `editable` comes from the entry point and the silver's completion (see
- * isHandbookPageEditable): from the building, completed identity pages get
- * an Edit button and summary pages get their pencils (the inline edits the
- * sheet's column AA allows); from home everything is read-only. Placeholder pages
- * have nothing to edit.
+ * Playback only. `editable` still marks a completed building page, and the
+ * cost callback stays on the props so the building can pass it, but the page
+ * does not render an editor.
  */
 export function HandbookPage({
   page,
   editable,
-  iconVentureId,
-  onEditCosts,
 }: {
   page: HandbookPageView;
   editable: boolean;
   iconVentureId: string;
-  /** Opens the cost sheet for the start-up list or one service. */
+  /** Kept on the props. The page no longer opens the cost editor. */
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   const s = useSurfaceCopy();
@@ -656,7 +540,7 @@ export function HandbookPage({
       ) : page.sheet === "funding" ? (
         <FundingSheet />
       ) : page.silver.id === "l2-s1" ? (
-        <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
+        <ProductOrSummary page={page} />
       ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.sheet === "order-system" ? (
@@ -670,13 +554,13 @@ export function HandbookPage({
       ) : page.sheet === "what-went-well" || page.sheet === "weekly-focus" || page.sheet === "growth-plan" ? (
         <LevelUpWorkbookPage silver={page.silver} sheet={page.sheet} />
       ) : page.kind === "cover" ? (
-        <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+        <CoverPageBody page={page} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (
-        <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
+        <ProductOrSummary page={page} />
       ) : page.kind === "summary" ? (
-        <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+        <SummaryPageBody page={page} />
       ) : page.kind === "costs" ? (
-        <CostsPageBody editable={editable && !!onEditCosts} onEditCosts={onEditCosts} silver={page.silver} part={page.sheet === "costs-b" ? "rest" : page.sheet === "costs-a" ? "startup" : "all"} />
+        <CostsPageBody silver={page.silver} part={page.sheet === "costs-b" ? "rest" : page.sheet === "costs-a" ? "startup" : "all"} />
       ) : (
         <PlaceholderPageBody page={page} />
       )}
@@ -684,18 +568,10 @@ export function HandbookPage({
   );
 }
 
-function ProductOrSummary({
-  page,
-  editable,
-  iconVentureId,
-}: {
-  page: HandbookPageView;
-  editable: boolean;
-  iconVentureId: string;
-}) {
+function ProductOrSummary({ page }: { page: HandbookPageView }) {
   const ctx = useLaunchpadAnswers();
-  if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook editable={editable} />;
-  if (page.kind === "summary") return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
+  if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook />;
+  if (page.kind === "summary") return <SummaryPageBody page={page} />;
   return <PlaceholderPageBody page={page} />;
 }
 
@@ -751,14 +627,10 @@ function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) 
 
 function CostsPageBody({
   silver,
-  editable,
-  onEditCosts,
   part = "all",
 }: {
   silver: HandbookPageView["silver"];
-  editable: boolean;
   part?: "all" | "startup" | "rest";
-  onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   const s = useSurfaceCopy();
   const ctx = useLaunchpadAnswers();
@@ -783,10 +655,8 @@ function CostsPageBody({
         marketingLabel={screen.copy.marketingLabel}
         starterLabel={screen.copy.starterLabel}
         hint={screen.copy.workbookHint}
-        editable={editable}
+        editable={false}
         part={part}
-        onEditStartup={onEditCosts ? () => onEditCosts({ name: "startup" }) : undefined}
-        onEditService={onEditCosts ? (serviceId) => onEditCosts({ name: "service", serviceId }) : undefined}
       />
     </>
   );

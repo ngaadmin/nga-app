@@ -261,7 +261,7 @@ export function Handbook({
                       templatePages[templateAt]?.kind === "poster" && poster ? (
                         <PosterTemplatePage poster={poster} />
                       ) : templatePages[templateAt]?.kind === "poster" ? null : (
-                        <WorkbookTemplatePage key={templatePages[templateAt]!.id} page={templatePages[templateAt]!} editable={entry === "building" && Boolean(setAnswer)} />
+                        <WorkbookTemplatePage key={templatePages[templateAt]!.id} page={templatePages[templateAt]!} />
                       )
                     ) : <TemplatesComingSoon />
                   ) : page ? (

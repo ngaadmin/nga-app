@@ -1,9 +1,8 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf, type JobsAnswer } from "@/lib/launchpad/content/answers";
+import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf } from "@/lib/launchpad/content/answers";
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
-import { weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { availabilityPhrase, chipLabel, isAvailabilitySlot, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
@@ -110,22 +109,6 @@ export function JobsSheet() {
       </div>
     );
   }
-  const changeCount = (serviceId: string, delta: number) => {
-    if (!jobs.typicalWeek || !ctx?.setAnswer) return;
-    const typicalWeek = jobs.typicalWeek.map((row) => {
-      if (row.serviceId !== serviceId) return row;
-      const jobsPerWeek = Math.min(7, Math.max(0, row.jobsPerWeek + delta));
-      return { ...row, jobsPerWeek, subtotal: Math.round(jobsPerWeek * row.keptPerJob * 100) / 100 };
-    });
-    const weekly = weeklyKeep(typicalWeek);
-    const next: JobsAnswer = {
-      ...jobs,
-      typicalWeek,
-      weeklyKeep: weekly,
-      weeksNeeded: weeksFromWeeklyKeep(jobs.startupTotal, weekly) ?? 0,
-    };
-    ctx.setAnswer(JOBS_COVER_ANSWER_KEY, next);
-  };
   return (
     <div data-jobs-sheet="">
       <AccentLabel as="h2">{s.jobs.coverMine}</AccentLabel>
@@ -133,12 +116,7 @@ export function JobsSheet() {
         <ul className="mt-3">
           {jobs.typicalWeek.map((row) => (
             <li key={row.serviceId} className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
-              <span className="flex shrink-0 items-center gap-2">
-                <button type="button" aria-label={`${s.sheets.fewerJobs} ${nameFor(row.serviceId, labels)} ${s.jobs.jobsWord}`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, -1)}>−</button>
-                <span className="w-4 text-center"><ChosenValue>{row.jobsPerWeek}</ChosenValue></span>
-                <button type="button" aria-label={`${s.sheets.moreJobs} ${nameFor(row.serviceId, labels)} ${s.jobs.jobsWord}`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, 1)}>+</button>
-                <span className="whitespace-nowrap">{nameFor(row.serviceId, labels)}</span>
-              </span>
+              <span className="whitespace-nowrap"><ChosenValue>{row.jobsPerWeek}</ChosenValue> {nameFor(row.serviceId, labels)}</span>
               <span className="shrink-0 whitespace-nowrap">{s.jobs.iKeep} <ChosenValue>{formatWorkbookMoney(row.subtotal, currency)}</ChosenValue></span>
             </li>
           ))}

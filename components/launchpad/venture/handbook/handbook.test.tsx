@@ -459,61 +459,32 @@ describe("<Handbook>", () => {
     expect(within(l3).queryByText("What I did")).toBeNull();
   });
 
-  it("AA6 to AA8: the goals page edits the skill pick inline, swapping the success line until the learner types", () => {
-    const onSave = vi.fn();
+  it("plays the saved goals back with no pencil or editor", () => {
     const goals = [
       ["l1-goal-make-money", fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 8, timeframeUnit: "weeks", savingFor: "a bike" })],
       ["l1-goal-help-others", fieldsAnswer({ customerCount: 5, benefit: GOAL_BENEFIT, timeframeNumber: 6, timeframeUnit: "months" })],
       ["l1-goal-learn-new-skills", fieldsAnswer({ skill: "talking-to-customers", achievement: SKILL_PREFILL, timeframeNumber: 6, timeframeUnit: "weeks" })],
     ] as const;
     const initial = goals.reduce<VentureTestProgress>((p, [k, a]) => setProgressAnswer(p, k, a), through("l1-s2"));
-    render(<Harness entry="building" initial={initial} onSave={onSave} />);
+    render(<Harness entry="building" initial={initial} />);
     turnTo("l1-s2");
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l1-s2");
-    const pencils = page.querySelectorAll<HTMLButtonElement>("[data-pencil]");
-    expect(pencils.length).toBe(1);
-    fireEvent.click(pencils[0]!);
-    // Only the three goals column AA marks editable offer an Edit pick.
-    const picks = Array.from(page.querySelectorAll<HTMLButtonElement>("[data-pencil]")).slice(1);
-    expect(picks.map((b) => b.closest("[data-summary-line]")!.getAttribute("data-summary-line"))).toEqual([
-      "l1-goal-make-money",
-      "l1-goal-help-others",
-      "l1-goal-learn-new-skills",
-    ]);
-    fireEvent.click(picks[2]!);
-    const editor = page.querySelector("[data-inline-editor='l1-goal-learn-new-skills']") as HTMLElement;
-    const skill = within(editor).getByRole("combobox") as HTMLSelectElement;
-    const achievement = editor.querySelector("textarea, input[type='text']") as HTMLInputElement;
-    fireEvent.change(skill, { target: { value: "managing-my-money" } });
-    expect(achievement.value).toBe("track every dollar coming in and going out of my business");
-    fireEvent.change(achievement, { target: { value: "TEST my own words" } });
-    fireEvent.change(skill, { target: { value: "solving-problems" } });
-    expect(achievement.value).toBe("TEST my own words");
-    fireEvent.click(within(editor).getByRole("button", { name: "Save" }));
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(page.textContent).toContain("TEST my own words");
-    expect(page.querySelector("[data-inline-editor]")).toBeNull();
+    expect(page.textContent).toContain("a bike");
+    expect(page.textContent).toContain(SKILL_PREFILL);
+    expect(page.querySelector("[data-pencil], [data-inline-editor], input, textarea")).toBeNull();
+    expect(within(page).queryByRole("button")).toBeNull();
   });
 
-  it("from the building: the cover has an Edit logo and name button and edits write back to the saved answer", () => {
-    const onSave = vi.fn();
-    render(<Harness entry="building" initial={WITH_IDENTITY} onSave={onSave} />);
+  it("from the building: the cover plays back the logo and name with no editor", () => {
+    render(<Harness entry="building" initial={WITH_IDENTITY} />);
     expect(shownPage()).toBe("cover");
     expect(document.querySelector("[data-handbook-page]")!.getAttribute("data-editable")).toBe("true");
     expect(screen.queryByText("Read only")).toBeNull();
-    const edit = screen.getByRole("button", { name: "Edit logo and name" });
-    fireEvent.click(edit);
-    expect(edit.getAttribute("aria-expanded")).toBe("true");
-    fireEvent.click(screen.getByRole("tab", { name: "Color" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Orange" }));
-    expect(onSave).toHaveBeenCalled();
-    expect(screen.getByRole("img", { name: "Logo: shield, paw icon" }).getAttribute("data-logo-color")).toBe("#FFA503");
-    fireEvent.click(screen.getByRole("tab", { name: "Name" }));
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Paw Pals" } });
-    expect(screen.getAllByText("Paw Pals").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    expect(screen.queryByRole("radio", { name: "Orange" })).toBeNull();
+    expect(screen.getAllByText("Happy Paws").length).toBeGreaterThan(0);
+    expect(screen.getByRole("img", { name: "Logo: shield, paw icon" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Edit/ })).toBeNull();
+    expect(document.querySelector("[data-edit-identity], [data-inline-editor], input, textarea")).toBeNull();
   });
 });
 
@@ -631,8 +602,9 @@ describe("L7 weekly focus and the Templates tab", () => {
     const sheet = document.querySelector("[data-workbook-templates]") as HTMLElement;
     expect(within(sheet).getByRole("heading", { name: "Order sheet" })).toBeTruthy();
     expect(within(sheet).queryByRole("heading", { name: "Taking a customer order" })).toBeNull();
-    fireEvent.change(within(sheet).getByRole("textbox", { name: "Owner name" }), { target: { value: "Ada" } });
-    expect((within(sheet).getByRole("textbox", { name: "Owner name" }) as HTMLInputElement).value).toBe("Ada");
+    expect(within(sheet).getByText("Owner name")).toBeTruthy();
+    expect(within(sheet).queryByRole("textbox")).toBeNull();
+    expect(sheet.querySelectorAll("[data-template-line]").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(screen.getByRole("heading", { name: "Wrap-up" })).toBeTruthy();
     expect(screen.getByText("Things to know about the dog")).toBeTruthy();
@@ -643,18 +615,21 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(screen.getByRole("heading", { name: "Job 1" })).toBeTruthy();
     const ticks = document.querySelector("[data-template-ticks]") as HTMLElement;
     expect(ticks.className).toContain("flex-col");
-    expect(within(ticks).getByRole("checkbox", { name: "Reminder set?" })).toBeTruthy();
-    fireEvent.click(within(ticks).getByRole("checkbox", { name: "Paid?" }));
+    expect(within(ticks).getByText("Reminder set?")).toBeTruthy();
+    expect(within(ticks).queryByRole("checkbox")).toBeNull();
+    expect(ticks.querySelectorAll("input")).toHaveLength(0);
     expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
-    expect((screen.getByRole("textbox", { name: "Owner name" }) as HTMLInputElement).value).toBe("Ada");
+    expect(screen.getByText("Owner name")).toBeTruthy();
+    expect(screen.queryByRole("textbox")).toBeNull();
     expect((screen.getByRole("button", { name: "Previous page" }) as HTMLButtonElement).disabled).toBe(true);
     unmount();
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     fireEvent.click(screen.getByRole("button", { name: "Templates" }));
     expect(screen.getByRole("heading", { name: "Taking a customer order" })).toBeTruthy();
-    expect((screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByText("Name")).toBeTruthy();
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 
   it("shows a payload edit of the draft poster and takes the blank PDF links from the payload", () => {
@@ -776,6 +751,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
         version: 1 as const,
         offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], packagesExtra: "Puppy visits", addons: ["photo-updates"], addonsExtra: "Rain coat" }],
         availability: ["weekday_morning"],
+        availabilityExtra: "Saturday mornings",
       },
       "l2-customers": { kind: "customer" as const, version: 1 as const, numberAsked: 3, yesNo: "yes" as const, interests: ["30-minute-walk"], timesExtra: "After dinner" },
       "l2-competitors": {
@@ -799,7 +775,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
     render(
       <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
         <LaunchpadAnswersProvider value={{ iconVentureId: "dog-walking", answers, setAnswer: () => {}, floors: FLOORS }}>
-          <ProductHandbook editable={false} />
+          <ProductHandbook />
           <PricingSummarySheet />
         </LaunchpadAnswersProvider>
       </SurfaceCopyProvider>,
@@ -815,6 +791,17 @@ describe("L2 playback extras and L7 workbook pages", () => {
     const compared = document.querySelector("[data-job-compared]");
     expect(compared?.textContent).toContain("Dog walking");
     expect(compared?.querySelector("[data-chosen-value]")?.textContent).toBe("Park walks");
+    const product = document.querySelector("[data-module2-handbook]")!;
+    const times = product.querySelector("[data-times-extra]")!;
+    const ownTime = product.querySelector("[data-availability-extra]")!;
+    expect(times.textContent).toContain(LAUNCHPAD_SURFACE_COPY.offer.timesExtraLine);
+    expect(times.textContent).toContain("After dinner");
+    expect(ownTime.textContent).toContain(LAUNCHPAD_SURFACE_COPY.sheets.ownTime);
+    expect(ownTime.textContent).toContain("Saturday mornings");
+    const when = within(product).getByRole("heading", { name: "When" });
+    expect(when.compareDocumentPosition(times) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(product.querySelector("input, textarea, button")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
   });
 
   it("plays Reflect before the weekly focus and Grow after it, and a payload title edit shows", () => {
@@ -851,6 +838,56 @@ describe("L2 playback extras and L7 workbook pages", () => {
     expect(screen.getByText("Start a referral program")).toBeTruthy();
     expect(screen.getByText("2").className).toContain("font-semibold");
     expect(screen.getByText("this week")).toBeTruthy();
+  });
+});
+
+describe("workbook playback only", () => {
+  function paperOffenders(label: string) {
+    const paper = document.querySelector("[data-paper-scroll]");
+    expect(paper, label).toBeTruthy();
+    const inputs = paper!.querySelectorAll("input, textarea, [contenteditable='true']");
+    const buttons = [...paper!.querySelectorAll("button")].filter(
+      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]"),
+    );
+    expect(inputs, label).toHaveLength(0);
+    expect(buttons.map((btn) => (btn.getAttribute("aria-label") || btn.textContent || "").replace(/\s+/g, " ").trim()), label).toEqual([]);
+  }
+
+  it("renders no input, textarea, or editor button on any page, including Templates", () => {
+    const progress = withShortcutSampleAnswers(ALL, FLOORS, "dog-walking", "Happy Paws");
+    render(<Harness entry="building" initial={progress} />);
+    const seen = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      const id = document.querySelector("[data-handbook-page]")?.getAttribute("data-handbook-page") ?? "missing";
+      seen.add(id);
+      paperOffenders(id);
+      const next = screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement;
+      if (next.disabled) break;
+      fireEvent.click(next);
+    }
+    expect(seen.has("cover")).toBe(true);
+    expect(seen.has("what-went-well")).toBe(true);
+    expect(seen.has("growth-plan")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    let openedPoster = false;
+    for (let i = 0; i < 8; i++) {
+      const id = document.querySelector("[data-template-page]")?.getAttribute("data-template-page") ?? "templates";
+      paperOffenders(id);
+      const poster = document.querySelector("[data-poster-open]");
+      if (poster && !openedPoster) {
+        fireEvent.click(poster);
+        expect(document.querySelector("[data-poster-viewer]")).toBeTruthy();
+        paperOffenders("poster-viewer");
+        expect(screen.getByRole("button", { name: LAUNCHPAD_SURFACE_COPY.templates.poster.viewerPrint })).toBeTruthy();
+        expect(screen.getByRole("button", { name: LAUNCHPAD_SURFACE_COPY.templates.poster.viewerClose })).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: LAUNCHPAD_SURFACE_COPY.templates.poster.viewerClose }));
+        openedPoster = true;
+      }
+      const next = screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement;
+      if (next.disabled) break;
+      fireEvent.click(next);
+    }
+    expect(openedPoster).toBe(true);
   });
 });
 

@@ -339,7 +339,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "Lift with the workbook button after Set your goals", cue);
 
   const hb1 = page.getByRole("dialog");
-  await step(t, "Open your workbook opens on page 1; Next page to the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
+  await step(t, "Open your workbook opens on page 1; Next page to the Set your goals page, goals play back with no editor", async () => {
     await cue.click();
     await turnTo(hb1, "l1-s2");
     const gp = hb1.locator('[data-handbook-page="l1-s2"]');
@@ -347,14 +347,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(gp).toContainText("TEST a new bike");
     await expect(gp).toContainText("TEST run my own books");
     await expect(hb1.locator("[data-back-to-lift]")).toBeVisible();
+    await expect(gp.locator("input, textarea, [data-pencil], [data-inline-editor]")).toHaveCount(0);
     await shot(t, "Workbook from the lift, Set your goals page", null);
-    await gp.locator("[data-pencil]").first().click();
-    await gp.locator("[data-summary-line='l1-goal-make-money'] [data-pencil]").click();
-    const ed = gp.locator("[data-inline-editor='l1-goal-make-money']");
-    await ed.getByLabel("Saving for").fill("TEST a used bike");
-    await shot(t, "Handbook goals page, saving for editor open", null);
-    await ed.getByRole("button", { name: "Save" }).click();
-    await expect(gp).toContainText("TEST a used bike");
   });
   await step(t, "Handbook Back to the lift lands on the Level 1 corridor", async () => {
     await hb1.locator("[data-back-to-lift]").click();
@@ -616,21 +610,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
       return sc.scrollHeight - sc.clientHeight;
     });
     expect(overflow, "cover fits the page card with no scrolling").toBeLessThanOrEqual(1);
-    await cover.getByRole("button", { name: /^Edit/ }).click();
-    const done = cover.locator("[data-inline-editor-done]");
-    await expect(done).toBeVisible();
-    expect((await done.boundingBox())!.width).toBeLessThan(140);
-    const fit = await cover.getByRole("radiogroup", { name: "Logo shape" }).evaluate((g) => {
-      const c = g.closest(".bg-white")!.getBoundingClientRect();
-      return [...g.querySelectorAll("button")].every((b) => {
-        const r = b.getBoundingClientRect();
-        return r.left >= c.left - 0.5 && r.right <= c.right + 0.5;
-      });
-    });
-    expect(fit).toBe(true);
-    await shot(t, "Workbook cover, logo and name editor open", null);
-    await done.click();
-    await expect(done).toHaveCount(0);
+    await expect(cover.locator("input, textarea, [data-pencil], [data-edit-identity]")).toHaveCount(0);
+    await shot(t, "Workbook cover, logo and name", null);
   });
   await shot(t, "Handbook, Level 2 pages", null);
 
@@ -658,7 +639,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(home.getByRole("button", { name: /Level 1/ })).toHaveCount(0);
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
-    expect(saved).toContain("TEST a used bike");
+    expect(saved).toContain("TEST a new bike");
     // Level 1's cover is outside this level's pages. Open the full workbook from the building to check it.
     await page.getByRole("button", { name: "Close workbook" }).click();
     await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();

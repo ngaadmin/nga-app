@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { levelUpOf, offerOf, selectionOf, type GrowPlan, type LevelUpAnswer } from "@/lib/launchpad/content/answers";
 import type { LaunchpadLevelUpScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
@@ -88,6 +88,38 @@ function offerWords(option: LevelUpOption): string {
   return option.sentence?.trim() ? option.sentence : option.label;
 }
 
+/** Clipboard first. A missing API or a rejection falls back to a hidden textarea. */
+async function copyPlainText(text: string): Promise<boolean> {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Permission or a missing secure context. The textarea path is next.
+  }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.setAttribute("aria-hidden", "true");
+  area.tabIndex = -1;
+  area.style.position = "fixed";
+  area.style.top = "0";
+  area.style.left = "0";
+  area.style.opacity = "0";
+  document.body.appendChild(area);
+  area.focus();
+  area.select();
+  let ok = false;
+  try {
+    ok = typeof document.execCommand === "function" && document.execCommand("copy");
+  } catch {
+    ok = false;
+  }
+  area.remove();
+  return ok;
+}
+
 function visibleOptions(idea: LevelUpIdea, cohort: LevelCohort): LevelUpOption[] {
   if (idea.id !== "expand") return [...idea.options];
   const allowed = new Set(expandJobsFor(idea.options, cohort).map((row) => row.id));
@@ -129,7 +161,16 @@ export function LevelUpFlow({
     ...(offerOf(answers, "l2-offer")?.offerings.map((row) => row.serviceId) ?? []),
   ]);
   const [page, setPage] = useState(0);
+  const [copyNote, setCopyNote] = useState<{ kind: "idle" | "copied" | "failed"; at: number }>({ kind: "idle", at: 0 });
   const [openSlot, setOpenSlot] = useState<"offer" | "start" | "checkIn" | null>(null);
+  useEffect(() => {
+    if (copyNote.kind !== "copied") return;
+    const at = copyNote.at;
+    const timer = window.setTimeout(() => {
+      setCopyNote((current) => (current.at === at ? { kind: "idle", at } : current));
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [copyNote]);
   const [slotPage, setSlotPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
   if (slotPage !== page) {
@@ -474,16 +515,26 @@ export function LevelUpFlow({
       <>
         <ScreenPrompt tone="question" flush className="!mt-3">{content.grow.closerHeadline}</ScreenPrompt>
         <p className={`mt-[21px] ${LESSON_BODY}`}>{content.grow.closerContext}</p>
-        <p className={`mt-4 ${LESSON_BODY}`} data-check-in-date="">{checkInLine}</p>
-        <p className={`mt-4 ${LESSON_BODY}`}>{content.grow.calendarNote}</p>
+        <p className={`mt-4 select-text ${LESSON_BODY}`} data-check-in-date="">{checkInLine}</p>
+        <p className={`mt-4 select-text ${LESSON_BODY}`}>{content.grow.calendarNote}</p>
         <button
           type="button"
           className="mt-4 h-11 rounded-xl border border-[#D5DAE3] bg-white px-4 font-sans text-[16px] font-semibold leading-[23px] text-[#19347D]"
-          onClick={() => void navigator.clipboard?.writeText(checkInClipboard(content.grow.calendarNote, checkInLine))}
+          onClick={() => {
+            const text = checkInClipboard(content.grow.calendarNote, checkInLine);
+            void copyPlainText(text).then((ok) => setCopyNote({ kind: ok ? "copied" : "failed", at: Date.now() }));
+          }}
         >
-          {content.grow.copyLabel}
+          {copyNote.kind === "copied" && content.grow.copiedLabel ? content.grow.copiedLabel : content.grow.copyLabel}
         </button>
-        <p className={`mt-3 ${LESSON_HINT}`}>{content.grow.copyHint}</p>
+        <p className="sr-only" role="status" aria-live="polite">
+          {copyNote.kind === "copied" ? content.grow.copiedLabel : copyNote.kind === "failed" ? content.grow.copyFailedHint : ""}
+        </p>
+        {copyNote.kind === "failed" && content.grow.copyFailedHint ? (
+          <p className={`mt-3 ${LESSON_HINT}`} data-copy-failed="">{content.grow.copyFailedHint}</p>
+        ) : (
+          <p className={`mt-3 ${LESSON_HINT}`}>{content.grow.copyHint}</p>
+        )}
       </>
     );
   }

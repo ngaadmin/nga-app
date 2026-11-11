@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { levelUpOf, parseLevelUpAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { checkLaunchpadVenturePayload } from "@/lib/launchpad/content/check-payload";
@@ -281,12 +281,53 @@ describe("Level Up screens", () => {
     expect(screen.getByText("See you in three months.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe("Copied");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     const saved = levelUpOf({ "l7-grow": onFinish.mock.calls[0]?.[0] }, "l7-grow");
     expect(saved?.ideas).toEqual(["referral"]);
     expect(saved?.growPlans).toEqual([
       { idea: "referral", options: ["free-walk"], when: "this-week", successCount: 4, checkIn: "one-month", checkInDate: "December 10, 2026" },
     ]);
+  });
+
+  function reachCloser(target = grow) {
+    render(<LevelUpFlow screen={target} today={new Date(2026, 10, 10)} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fillIdea();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  }
+
+  it("shows a payload edit of the copied label", async () => {
+    const edited = structuredClone(grow);
+    edited.content.grow.copiedLabel = "Saved for the calendar";
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(() => Promise.resolve()) } });
+    reachCloser(edited);
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    expect(await screen.findByRole("button", { name: "Saved for the calendar" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Copied" })).toBeNull();
+  });
+
+  it("copies with the textarea fallback when the clipboard rejects", async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(() => Promise.reject(new Error("denied"))) } });
+    const exec = vi.fn(() => true);
+    document.execCommand = exec;
+    reachCloser();
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
+    expect(exec).toHaveBeenCalledWith("copy");
+  });
+
+  it("shows the failure hint and leaves the check-in selectable when copy fails", async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(() => Promise.reject(new Error("denied"))) } });
+    document.execCommand = vi.fn(() => false);
+    reachCloser();
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Select the check-in text and copy it by hand."));
+    expect(document.querySelector("[data-copy-failed]")?.textContent).toBe("Select the check-in text and copy it by hand.");
+    expect(document.querySelector("[data-check-in-date]")?.className).toContain("select-text");
+    expect(screen.queryByRole("button", { name: "Copied" })).toBeNull();
   });
 
   it("caps the menu at three ideas and repeats screen 2 in menu order", () => {

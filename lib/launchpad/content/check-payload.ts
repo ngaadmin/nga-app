@@ -337,6 +337,8 @@ function checkLevelUp(screen: Obj, where: string): void {
   text(grow.startLabel, `${where} grow start label`, true);
   text(grow.checkInLabel, `${where} grow check-in label`, true);
   text(grow.successFieldLabel, `${where} grow success field`, true);
+  text(grow.copiedLabel, `${where} grow copied label`, true);
+  text(grow.copyFailedHint, `${where} grow copy failed hint`, true);
   text(grow.joinWord, `${where} grow join word`, true);
   text(grow.dateLine, `${where} grow date line`, true);
   if (typeof grow.dateLine === "string" && !grow.dateLine.includes("{date}")) fail(`${where} grow date line must include {date}.`);

@@ -70,6 +70,8 @@ export function levelUpContent(): LaunchpadLevelUpContent {
       checkIn: "Your next check-in: {date}",
       copyLabel: "Copy",
       copyHint: "Add this to your calendar.",
+      copiedLabel: "Copied",
+      copyFailedHint: "Select the check-in text and copy it by hand.",
       ideas: [
         {
           id: "referral",

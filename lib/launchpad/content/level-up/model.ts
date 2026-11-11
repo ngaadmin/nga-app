@@ -93,6 +93,10 @@ export type LaunchpadLevelUpContent = {
     checkIn: string;
     copyLabel: string;
     copyHint: string;
+    /** Button label after a successful copy. Absent on a payload published before this feedback. */
+    copiedLabel?: string;
+    /** Shown when the copy fails, so the learner can copy the check-in by hand. */
+    copyFailedHint?: string;
     ideas: readonly LevelUpIdea[];
   };
   /**

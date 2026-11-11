@@ -153,9 +153,13 @@ export function levelUpContent(): LaunchpadLevelUpContent {
           context: "A new service means new income from the same dogs and the same route.",
           statement: "I'll start offering {offer} {start}. My experiment works if {count} customers book my new service, and I'll check in on how it's going in {checkIn}.",
           successLine: "{count} customers book my new service",
-          optionsFrom: "l1-offer",
-          alwaysOffered: ["dog-walking"],
-          options: [],
+          options: [
+            { id: "dog-sitting", label: "Dog sitting", sentence: "dog sitting" },
+            { id: "grooming", label: "Grooming", sentence: "grooming" },
+            { id: "dog-training", label: "Dog training", sentence: "dog training" },
+            { id: "holiday-care", label: "Holiday care", sentence: "holiday care" },
+            { id: "manage-bookings-for-others", label: "Manage bookings for others", sentence: "manage bookings for others" },
+          ],
         },
         {
           id: "expand",

@@ -402,15 +402,7 @@ function checkLevelUp(screen: Obj, where: string): void {
         text(raw.stacked.startNote, `${iw} stacked start note`, true);
       }
     }
-    const sourced = typeof raw.optionsFrom === "string";
-    if (raw.optionsFrom !== undefined && !sourced) fail(`${iw} optionsFrom is missing.`);
-    if (sourced && !ANSWER_KEY_RE.test(String(raw.optionsFrom))) fail(`${iw} optionsFrom is not a valid answer key.`);
-    if (raw.alwaysOffered !== undefined) {
-      list(raw.alwaysOffered, `${iw} always offered`).forEach((id, n) => {
-        if (typeof id !== "string" || !NODE_ID_RE.test(id)) fail(`${iw} always offered ${n + 1} has no valid id.`);
-      });
-    }
-    list(raw.options, `${iw} options`, sourced ? 0 : 1).forEach((option, oi) => {
+    list(raw.options, `${iw} options`).forEach((option, oi) => {
       const ow = `${iw} option ${oi + 1}`;
       if (!isObj(option) || typeof option.id !== "string" || !NODE_ID_RE.test(option.id)) fail(`${ow} has no valid id.`);
       if (optionIds.has(option.id)) fail(`${ow} repeats ${option.id}.`);

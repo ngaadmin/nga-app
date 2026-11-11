@@ -53,7 +53,7 @@ const IMPROVE_PICK_PAGES = SECTION_PAGES.length;
 const IMPROVE_TOTAL = IMPROVE_PICK_PAGES + 1;
 
 function blankAnswer(): LevelUpAnswer {
-  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, starts: {}, idea: "", option: "", success: "", start: "" };
+  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, starts: {}, ideas: [], idea: "", option: "", success: "", start: "" };
 }
 
 function pickedStatements(picks: LevelUpAnswer["picks"]) {
@@ -85,6 +85,10 @@ function StartPick({ value, options, onChange }: { value: string; options: reado
 
 function Lined({ item, selected, muted, tag, onClick }: { item: { id: string; label: string }; selected: boolean; muted?: boolean; tag?: string; onClick: () => void }) {
   return <Chip variant="lined" label={item.label} selected={selected} muted={muted} tag={tag} onClick={onClick} />;
+}
+
+function orderedIdeas(ids: readonly string[]): string[] {
+  return GROW_IDEAS.map((idea) => idea.id).filter((id) => ids.includes(id));
 }
 
 function SectionBlock({ id, children }: { id: LevelSectionId; children: ReactNode }) {
@@ -140,7 +144,7 @@ export function LevelUpFlow({
 
   let ready = true;
   if (screen.step === "improve" && page < IMPROVE_PICK_PAGES) ready = improvePicksReady([SECTION_PAGES[page]!]);
-  if (screen.step === "grow" && page === 0) ready = Boolean(draft.idea);
+  if (screen.step === "grow" && page === 0) ready = orderedIdeas(draft.ideas).length > 0;
   if (screen.step === "grow" && page === 1) ready = growReady;
 
   const go = () => {
@@ -155,7 +159,15 @@ export function LevelUpFlow({
       }
       next.starts = Object.fromEntries(rows.map((item) => [item.id, mapImproveStart(next.starts[item.id])]));
     }
-    if (screen.step === "grow" && page === 0 && idea) next.start = next.start || idea.start;
+    if (screen.step === "grow" && page === 0) {
+      const ideas = orderedIdeas(next.ideas);
+      const first = growIdea(ideas[0] ?? "");
+      next.ideas = ideas;
+      next.idea = ideas[0] ?? "";
+      next.option = "";
+      next.success = "";
+      next.start = first?.start ?? "";
+    }
     save(next, page >= total - 1);
   };
 
@@ -250,15 +262,19 @@ export function LevelUpFlow({
         <ScreenPrompt tone="question" flush>{GROW_QUESTION}</ScreenPrompt>
         <div className="mt-[21px]">
           <ScreenPrompt tone="section" flush className="!mt-0">{GROW_SALES_LABEL}</ScreenPrompt>
-          {GROW_IDEAS.filter((row) => row.group === "sales").map((row) => (
-            <Lined key={row.id} item={row} selected={draft.idea === row.id} onClick={() => setDraft({ ...draft, idea: row.id, option: "", success: "", start: row.start })} />
-          ))}
+          {GROW_IDEAS.filter((row) => row.group === "sales").map((row) => {
+            const on = draft.ideas.includes(row.id);
+            const full = !on && orderedIdeas(draft.ideas).length >= 3;
+            return <Lined key={row.id} item={row} selected={on} muted={full} onClick={() => setDraft({ ...draft, ideas: on ? draft.ideas.filter((id) => id !== row.id) : [...draft.ideas, row.id] })} />;
+          })}
         </div>
         <div className="mt-[21px]">
           <ScreenPrompt tone="section" flush className="!mt-0">{GROW_SERVICE_LABEL}</ScreenPrompt>
-          {GROW_IDEAS.filter((row) => row.group === "service").map((row) => (
-            <Lined key={row.id} item={row} selected={draft.idea === row.id} onClick={() => setDraft({ ...draft, idea: row.id, option: "", success: "", start: row.start })} />
-          ))}
+          {GROW_IDEAS.filter((row) => row.group === "service").map((row) => {
+            const on = draft.ideas.includes(row.id);
+            const full = !on && orderedIdeas(draft.ideas).length >= 3;
+            return <Lined key={row.id} item={row} selected={on} muted={full} onClick={() => setDraft({ ...draft, ideas: on ? draft.ideas.filter((id) => id !== row.id) : [...draft.ideas, row.id] })} />;
+          })}
         </div>
       </>
     );

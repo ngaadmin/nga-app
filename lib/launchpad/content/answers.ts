@@ -265,6 +265,8 @@ export type LevelUpAnswer = {
   /** Silent quick / longer mark for each picked statement. Never shown. */
   pace: Readonly<Record<string, "quick" | "longer">>;
   starts: Readonly<Record<string, string>>;
+  /** Grow ideas in the order shown on screen 1. `idea` is the first of these. */
+  ideas: readonly string[];
   idea: string;
   option: string;
   success: string;
@@ -566,6 +568,7 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     picks: stringIdMap(value.picks),
     pace: paceMap(value.pace),
     starts: stringIdMap(value.starts),
+    ideas: idList(value.ideas).length ? idList(value.ideas) : text(value.idea) ? [text(value.idea)] : [],
     idea: text(value.idea),
     option: text(value.option),
     success: text(value.success),

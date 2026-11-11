@@ -45,6 +45,7 @@ describe("Level Up screens", () => {
         picks: {},
         pace: {},
         starts: {},
+        ideas: [],
         idea: "",
         option: "",
         success: "",
@@ -99,6 +100,7 @@ describe("Level Up screens", () => {
         picks: {},
         pace: {},
         starts: {},
+        ideas: [],
         idea: "",
         option: "",
         success: "",
@@ -111,6 +113,7 @@ describe("Level Up screens", () => {
         picks: { customers: "followed-up" },
         pace: {},
         starts: { "followed-up": "in-a-month" },
+        ideas: [],
         idea: "",
         option: "",
         success: "",
@@ -141,6 +144,7 @@ describe("Level Up screens", () => {
             picks: {},
             pace: {},
             starts: {},
+            ideas: [],
             idea: "",
             option: "",
             success: "",
@@ -173,7 +177,28 @@ describe("Level Up screens", () => {
     expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish).toHaveBeenCalled();
-    expect(levelUpOf({ "l7-grow": onFinish.mock.calls[0]?.[0] }, "l7-grow")?.idea).toBe("referral");
+    const saved = levelUpOf({ "l7-grow": onFinish.mock.calls[0]?.[0] }, "l7-grow");
+    expect(saved?.ideas).toEqual(["referral"]);
+    expect(saved?.idea).toBe("referral");
+  });
+
+  it("ticks one to three Grow ideas and opens the first one shown", () => {
+    render(<LevelUpFlow screen={grow} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    const cont = () => screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
+    expect(cont().disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: /Expand your services/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start a referral program/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Offer a prepaid pack/ }));
+    expect((screen.getByRole("button", { name: /Build a bundle/ }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: /Offer a prepaid pack/ }));
+    expect((screen.getByRole("button", { name: /Build a bundle/ }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: /Expand your services/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start a referral program/ }));
+    expect(cont().disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: /Expand your services/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start a referral program/ }));
+    fireEvent.click(cont());
+    expect(screen.getByText("What will owners get for sending a friend?")).toBeTruthy();
   });
 
   it("grays services the learner already offers", () => {

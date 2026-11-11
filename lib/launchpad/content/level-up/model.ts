@@ -57,7 +57,7 @@ export const IMPROVE_PLAN_CONTEXT = "A plan with dates is a plan you'll actually
 export const IMPROVE_PLAN_GUIDANCE = "Check your plan. Tap a start date if you want to change it.";
 
 export const GROW_CONTEXT = "Every business can grow a little. Trying one new idea is a simple way to bring in more work.";
-export const GROW_GUIDANCE = "Pick one idea to try. Next, you'll plan how and when to start.";
+export const GROW_GUIDANCE = "Pick one to three ideas to try. Next, you'll plan how and when to start.";
 export const GROW_QUESTION = "What will you try?";
 export const GROW_SALES_LABEL = "Grow your sales";
 export const GROW_SERVICE_LABEL = "Grow your service";

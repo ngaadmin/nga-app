@@ -1,7 +1,8 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
@@ -345,6 +346,58 @@ function TemplateWriteIn({
         className={field.wide ? `mt-0.5 block w-full ${TEMPLATE_LINE}` : `min-w-9 flex-1 ${TEMPLATE_LINE}`}
       />
     </label>
+  );
+}
+
+/** Draft poster on the Templates tab. Copy and file URLs come from the payload. */
+export function PosterTemplatePage({ poster }: { poster: { heading: string; blankLink: string; close: string; print: string; draftSrc: string; letterSrc: string; a4Src: string; blankPreviewSrc: string } }) {
+  const [open, setOpen] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const blank = poster.letterSrc;
+  const viewer = (
+    <div className="fixed inset-0 z-modal flex flex-col bg-[#2A2A2A]" data-poster-viewer="">
+      <div className="flex h-14 flex-none items-center justify-between bg-white px-2">
+        <button type="button" onClick={() => setOpen(false)} className="flex h-11 items-center gap-1.5 px-2.5 font-sans text-[16px] font-semibold text-[#19347D]">
+          <span aria-hidden="true">×</span>
+          {poster.close}
+        </button>
+        <button
+          type="button"
+          aria-label={poster.print}
+          onClick={() => frame.current?.contentWindow?.print()}
+          className="flex size-11 items-center justify-center text-[#19347D]"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M6 9V3h12v6" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <path d="M6 14h12v7H6z" />
+          </svg>
+        </button>
+      </div>
+      <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+        <img src={poster.blankPreviewSrc} alt="" className="max-h-full max-w-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.45)]" />
+      </div>
+      <iframe ref={frame} title={poster.blankLink} src={blank} data-poster-frame="" data-poster-src={blank} className="sr-only" />
+    </div>
+  );
+  return (
+    <article data-handbook-page="templates" data-workbook-templates="" data-template-page="poster" aria-label={poster.heading}>
+      <MiniIdentity />
+      <AccentLabel as="h2">{poster.heading}</AccentLabel>
+      <img src={poster.draftSrc} alt="" width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 flex items-start gap-2 text-left font-sans text-[16px] font-normal leading-6 text-[#0CC1E0] underline decoration-[#0CC1E0] underline-offset-[3px]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" className="mt-0.5 shrink-0">
+          <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+          <path d="M14 3v6h6" />
+        </svg>
+        {poster.blankLink}
+      </button>
+      {open && typeof document !== "undefined" ? createPortal(viewer, document.body) : null}
+    </article>
   );
 }
 

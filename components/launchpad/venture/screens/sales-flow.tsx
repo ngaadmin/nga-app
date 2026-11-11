@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/content/types";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
-import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
+import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type OrderSystemAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
+import { OrderSystemFlow } from "@/components/launchpad/venture/screens/order-system-flow";
 import { OWN_LABEL, SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
 import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
@@ -13,7 +14,7 @@ import { FieldControl } from "@/components/launchpad/venture/screens/field-contr
 import { LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 import { LESSON_BODY, LESSON_HINT } from "@/components/launchpad/venture/screens/screen-ui";
 
-type ReadyAnswer = SalesChannelsAnswer | MarketingMaterialsAnswer | TellPeopleAnswer;
+type ReadyAnswer = SalesChannelsAnswer | MarketingMaterialsAnswer | TellPeopleAnswer | OrderSystemAnswer;
 
 function toggle(list: readonly string[], id: string): string[] {
   return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
@@ -33,6 +34,7 @@ export function SalesFlow({
   onSave?: (answer: ReadyAnswer) => void;
   onFinish: (answer: ReadyAnswer) => void;
 }) {
+  if (screen.step === "order") return <OrderSystemFlow screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "materials") return <MaterialsStep screen={screen} answers={answers} floors={floors} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "targets") return <TargetsStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
   return <ChannelsStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;

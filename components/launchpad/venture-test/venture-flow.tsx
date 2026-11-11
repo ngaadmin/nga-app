@@ -191,6 +191,7 @@ export function VentureFlow({
   shortcut = null,
   iconSetOverride = null,
   cohort = null,
+  openTemplates = false,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -202,6 +203,8 @@ export function VentureFlow({
   iconSetOverride?: string | null;
   /** Test route only. Which Grow expand list to show. */
   cohort?: LevelCohort | null;
+  /** TEST-ONLY `?templates=1`: open the workbook on the Templates tab. */
+  openTemplates?: boolean;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -217,6 +220,7 @@ export function VentureFlow({
     openLevel?: number;
     /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
     level?: number;
+    openTemplates?: boolean;
   } | null>(null);
   const closeHandbook = useCallback(() => setHandbook(null), []);
   const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
@@ -284,6 +288,7 @@ export function VentureFlow({
       setVentureId(initialVentureId);
       setProgress(shortcutProgress);
       go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
+      if (openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
       return;
     }
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
@@ -884,6 +889,7 @@ export function VentureFlow({
             onClose={closeHandbook}
             initialSheet={handbook.openSheet}
             initialLevel={handbook.openLevel}
+            initialTemplates={handbook.openTemplates}
             onEditCosts={(step) => {
               const found = findKnowYourCost(floors);
               if (!found) return;

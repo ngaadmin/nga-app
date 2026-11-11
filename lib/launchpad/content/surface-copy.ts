@@ -364,6 +364,17 @@ export const LAUNCHPAD_SURFACE_COPY = {
     comingSoon: "Templates coming soon.",
     answerKey: "workbook-templates",
     pages: WORKBOOK_TEMPLATE_PAGES,
+    /** Storybird placeholder. The level for this page is still open. Letter is the test default. */
+    poster: {
+      heading: "Here's your draft poster",
+      blankLink: "Here's a blank one you can print, fill in, photocopy and hang up.",
+      close: "Close",
+      print: "Print",
+      draftSrc: "/launchpad/posters/draft-poster.png",
+      letterSrc: "/launchpad/posters/blank-poster-Letter.pdf",
+      a4Src: "/launchpad/posters/blank-poster-A4.pdf",
+      blankPreviewSrc: "/launchpad/posters/blank-poster-preview.png",
+    },
   },
   buildComplete: {
     greeting: "Congratulations!",

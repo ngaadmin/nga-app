@@ -19,6 +19,8 @@ import {
   TELL_QUESTION,
   WHERE_GROUPS,
   WHERE_PAGES,
+  ORDER_SYSTEM,
+  ORDER_SYSTEM_KEY,
 } from "@/lib/launchpad/content/sales/copy";
 
 function screen(step: LaunchpadSalesScreen["step"], answerKey: string, id: string): LaunchpadSalesScreen {
@@ -74,6 +76,50 @@ export function salesDoors(): LaunchpadBronze[] {
     door("l4-s1-b2", "Develop your marketing materials", "materials", MARKETING_MATERIALS_KEY),
     door("l4-s1-b4", "Tell people about it", "targets", TELL_PEOPLE_KEY),
   ];
+}
+
+/** Level 4 silver 2. One bronze, two screens inside the task. */
+export function orderSystemSilver(): LaunchpadSilver {
+  const id = "l4-s2-b1";
+  const screen: LaunchpadSalesScreen = {
+    id: `${id}-t1-s1`,
+    type: "sales",
+    step: "order",
+    answerKey: ORDER_SYSTEM_KEY,
+    title: ORDER_SYSTEM.title,
+    order: {
+      question: ORDER_SYSTEM.question,
+      context: ORDER_SYSTEM.context,
+      guidance: ORDER_SYSTEM.guidance,
+      trackerLead: ORDER_SYSTEM.trackerLead,
+      emptyLabel: ORDER_SYSTEM.emptyLabel,
+      extraLabel: ORDER_SYSTEM.extraLabel,
+      extraMax: ORDER_SYSTEM.extraMax,
+      trackerOptions: ORDER_SYSTEM.trackerOptions.map((row) => ({ ...row })),
+      playbackTitle: ORDER_SYSTEM.playbackTitle,
+      templateBefore: ORDER_SYSTEM.templateBefore,
+      templateStrong: ORDER_SYSTEM.templateStrong,
+      templateAfter: ORDER_SYSTEM.templateAfter,
+      repeatLine: ORDER_SYSTEM.repeatLine,
+      reminderLead: ORDER_SYSTEM.reminderLead,
+      reminderDefault: ORDER_SYSTEM.reminderDefault,
+      reminderOptions: ORDER_SYSTEM.reminderOptions.map((row) => ({ ...row })),
+      checkLine: ORDER_SYSTEM.checkLine,
+    },
+  };
+  return {
+    id: "l4-s2",
+    title: ORDER_SYSTEM.silverTitle,
+    placeholder: false,
+    bronzes: [
+      {
+        id,
+        title: ORDER_SYSTEM.title,
+        placeholder: false,
+        tasks: [{ id: `${id}-t1`, title: ORDER_SYSTEM.title, placeholder: false, screens: [screen] }],
+      },
+    ],
+  };
 }
 
 export function applySalesDoors(silver: LaunchpadSilver): LaunchpadSilver {

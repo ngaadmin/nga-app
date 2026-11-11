@@ -247,6 +247,7 @@ type AnswerKind =
   | "sales-channels"
   | "marketing-materials"
   | "tell-people"
+  | "order-system"
   | "level-up";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
@@ -722,7 +723,7 @@ function checkReadyOptions(value: unknown, where: string): void {
 
 function checkSales(screen: Obj, where: string, answers: Answers): void {
   const step = screen.step;
-  const kind = step === "channels" ? "sales-channels" : step === "materials" ? "marketing-materials" : step === "targets" ? "tell-people" : "";
+  const kind = step === "channels" ? "sales-channels" : step === "materials" ? "marketing-materials" : step === "targets" ? "tell-people" : step === "order" ? "order-system" : "";
   if (!kind) fail(`${where} has an unknown sales step.`);
   saves(answers, screen, kind, where);
   text(screen.title, `${where} title`);
@@ -738,6 +739,32 @@ function checkSales(screen: Obj, where: string, answers: Answers): void {
     checkReadyOptions(screen.proofs, `${where} proofs`);
   }
   if (step === "targets") text(screen.hint, `${where} hint`);
+  if (step === "order") checkOrderSystem(screen.order, `${where} order`);
+}
+
+function checkOrderOptions(value: unknown, where: string): void {
+  const seen = new Set<string>();
+  list(value, where, 1).forEach((raw, i) => {
+    if (!isObj(raw)) fail(`${where} option ${i + 1} is malformed.`);
+    text(raw.id, `${where} option ${i + 1} id`);
+    if (typeof raw.id !== "string" || seen.has(raw.id)) fail(`${where} option ${i + 1} id is repeated.`);
+    seen.add(String(raw.id));
+    text(raw.label, `${where} option ${i + 1} label`);
+  });
+}
+
+function checkOrderSystem(value: unknown, where: string): void {
+  if (!isObj(value)) fail(`${where} is missing.`);
+  for (const field of ["question", "context", "guidance", "trackerLead", "emptyLabel", "extraLabel", "playbackTitle", "templateBefore", "templateStrong", "templateAfter", "repeatLine", "reminderLead", "checkLine"] as const) {
+    text(value[field], `${where} ${field}`);
+  }
+  if (typeof value.extraMax !== "number" || !Number.isInteger(value.extraMax) || value.extraMax < 1 || value.extraMax > 80) {
+    fail(`${where} extraMax must be a whole number from 1 to 80.`);
+  }
+  checkOrderOptions(value.trackerOptions, `${where} trackerOptions`);
+  checkOrderOptions(value.reminderOptions, `${where} reminderOptions`);
+  const reminderIds = new Set((Array.isArray(value.reminderOptions) ? value.reminderOptions : []).flatMap((row) => (isObj(row) && typeof row.id === "string" ? [row.id] : [])));
+  if (typeof value.reminderDefault !== "string" || !reminderIds.has(value.reminderDefault)) fail(`${where} reminderDefault is not an option.`);
 }
 
 function checkGettingReady(screen: Obj, where: string, answers: Answers): void {

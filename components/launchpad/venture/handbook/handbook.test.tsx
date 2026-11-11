@@ -609,6 +609,7 @@ describe("L7 weekly focus and the Templates tab", () => {
       ...LAUNCHPAD_SURFACE_COPY,
       templates: {
         ...LAUNCHPAD_SURFACE_COPY.templates,
+        poster: undefined,
         pages: LAUNCHPAD_SURFACE_COPY.templates.pages.map((page, index) =>
           index === 0
             ? { ...page, title: "Order sheet", fields: page.fields.map((field) => (field.id === "name" ? { ...field, label: "Owner name" } : field)) }
@@ -617,7 +618,7 @@ describe("L7 weekly focus and the Templates tab", () => {
       },
     };
     const { unmount } = render(
-      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+      <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
         <Harness entry="building" initial={WITH_IDENTITY} />
       </SurfaceCopyProvider>,
     );
@@ -647,7 +648,34 @@ describe("L7 weekly focus and the Templates tab", () => {
     unmount();
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    expect(screen.getByRole("heading", { name: "Here's your draft poster" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect((screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement).disabled).toBe(true);
+  });
+
+  it("shows a payload edit of the draft poster and opens the Letter PDF", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      templates: {
+        ...LAUNCHPAD_SURFACE_COPY.templates,
+        poster: { ...LAUNCHPAD_SURFACE_COPY.templates.poster, heading: "Your poster draft", letterSrc: "/launchpad/posters/blank-poster-Letter.pdf" },
+      },
+    };
+    render(
+      <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
+        <Harness entry="building" initial={WITH_IDENTITY} />
+      </SurfaceCopyProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Templates" }));
+    expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
+    expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
+    fireEvent.click(screen.getByRole("button", { name: copy.templates.poster.blankLink }));
+    const frame = document.querySelector("[data-poster-frame]") as HTMLIFrameElement;
+    expect(frame.getAttribute("data-poster-src")).toBe("/launchpad/posters/blank-poster-Letter.pdf");
+    fireEvent.click(screen.getByRole("button", { name: copy.templates.poster.close }));
+    expect(document.querySelector("[data-poster-viewer]")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
   });
 });
 

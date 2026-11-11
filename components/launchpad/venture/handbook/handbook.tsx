@@ -17,7 +17,7 @@ import {
 } from "@/lib/launchpad/venture-test/handbook";
 import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
-import { HandbookPage, TemplatesComingSoon, WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
+import { HandbookPage, PosterTemplatePage, TemplatesComingSoon, WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
@@ -81,6 +81,7 @@ export function Handbook({
   onEditCosts,
   initialSheet,
   initialLevel,
+  initialTemplates = false,
   scopeLevel,
   backLabel = "‹ Back to the lift",
 }: {
@@ -100,6 +101,8 @@ export function Handbook({
   initialSheet?: string;
   /** Open on this floor's workbook section, including a read-only preview when it is still empty. */
   initialLevel?: number;
+  /** Open the Templates tab. Used by the test route `?templates=1`. */
+  initialTemplates?: boolean;
   /** Home card: only this level's template pages. Floor shortcuts leave this unset. */
   scopeLevel?: number;
   /** Label for the back control. The floor shortcut keeps "Back to the lift". */
@@ -116,9 +119,11 @@ export function Handbook({
     .filter((tab) => scopeLevel == null || tab.level === scopeLevel)
     .map((tab) => (scopeLevel == null ? tab : { ...tab, tappable: true }));
   // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
-  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(initialTemplates);
   const [templatePage, setTemplatePage] = useState(0);
-  const templatePages = s.templates.pages ?? [];
+  const poster = s.templates.poster;
+  const formPages = s.templates.pages ?? [];
+  const templatePages = poster ? [{ id: "poster" }, ...formPages] : formPages;
   const templateAt = Math.min(templatePage, Math.max(0, templatePages.length - 1));
   const pagingTemplates = templatesOpen && templatePages.length > 0;
   const [index, setIndex] = useState(() => {
@@ -244,14 +249,20 @@ export function Handbook({
               >
                 <TemplateBlanks on={scopeLevel != null}>
                   {templatesOpen ? (
-                    pagingTemplates ? <WorkbookTemplatePage key={templatePages[templateAt]!.id} page={templatePages[templateAt]!} editable={entry === "building" && Boolean(setAnswer)} /> : <TemplatesComingSoon />
+                    pagingTemplates ? (
+                      poster && templateAt === 0 ? (
+                        <PosterTemplatePage poster={poster} />
+                      ) : (
+                        <WorkbookTemplatePage key={formPages[poster ? templateAt - 1 : templateAt]!.id} page={formPages[poster ? templateAt - 1 : templateAt]!} editable={entry === "building" && Boolean(setAnswer)} />
+                      )
+                    ) : <TemplatesComingSoon />
                   ) : page ? (
                     <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
                   ) : null}
                 </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
-            {pagingTemplates ? (
+            {pagingTemplates && !(poster && templateAt === 0) ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel({ number: templateAt + 1, sheet: templatePages[templateAt]!.id, silver: { id: "templates" } })}
               </p>

@@ -158,3 +158,36 @@ export const PIECE_FIELDS = [
 ] as const;
 
 export const OWN_LABEL = "Add your own";
+
+/** Row 36. Set up your order system. Placeholder empty label is the Grow slot word. */
+export const ORDER_SYSTEM_KEY = "order_system";
+
+export const ORDER_SYSTEM = {
+  title: "Set up your order system",
+  silverTitle: "Take the order",
+  question: "How will you keep track of your orders?",
+  context: "Once people know about your business, they will start getting in touch. A simple system means no job or customer gets missed.",
+  guidance: "Pick where you will keep your orders. A calendar is the best choice because it can repeat regular jobs and remind you before each one.",
+  trackerLead: "I will keep my orders in",
+  emptyLabel: "choose",
+  extraLabel: "Add your own (optional)",
+  extraMax: 40,
+  trackerOptions: [
+    { id: "calendar", label: "My calendar (best choice)" },
+    { id: "notebook", label: "A paper notebook" },
+    { id: "phone", label: "A notes page on my phone" },
+  ],
+  playbackTitle: "My order system",
+  templateBefore: "When someone books, I will write down the details using the ",
+  templateStrong: "Taking a customer order",
+  templateAfter: " template.",
+  repeatLine: "For a regular job, I will add it as a repeat so it never slips.",
+  reminderLead: "I will set a reminder",
+  reminderDefault: "night-before",
+  reminderOptions: [
+    { id: "night-before", label: "the night before" },
+    { id: "morning-of", label: "the morning of" },
+    { id: "hour-before", label: "an hour before" },
+  ],
+  checkLine: "I will check my orders every morning.",
+} as const;

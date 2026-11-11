@@ -492,7 +492,27 @@ export type LaunchpadGettingReadyScreen = TaskScreenBase & {
   eyebrow?: string;
 };
 
-export type SalesStep = "channels" | "materials" | "targets";
+export type SalesStep = "channels" | "materials" | "targets" | "order";
+
+export type OrderSystemCopy = {
+  question: string;
+  context: string;
+  guidance: string;
+  trackerLead: string;
+  emptyLabel: string;
+  extraLabel: string;
+  extraMax: number;
+  trackerOptions: readonly { id: string; label: string }[];
+  playbackTitle: string;
+  templateBefore: string;
+  templateStrong: string;
+  templateAfter: string;
+  repeatLine: string;
+  reminderLead: string;
+  reminderDefault: string;
+  reminderOptions: readonly { id: string; label: string }[];
+  checkLine: string;
+};
 
 export type SalesOption = { id: string; label: string; sentence?: string };
 
@@ -565,6 +585,8 @@ export type LaunchpadSalesScreen = TaskScreenBase & {
   hooks?: readonly SalesOption[];
   proofs?: readonly SalesOption[];
   pieceFields?: readonly SalesPieceField[];
+  /** Set up your order system. Present when step is "order". */
+  order?: OrderSystemCopy;
 };
 
 /** Row 26. Own cash confirms. Borrow sets a payback plan. No lender. */

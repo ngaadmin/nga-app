@@ -256,6 +256,15 @@ export type TellPeopleAnswer = {
   counts: Readonly<Record<string, number>>;
 };
 
+/** Level 4 order system. The tracker pick, an optional extra, and the reminder. */
+export type OrderSystemAnswer = {
+  kind: "order-system";
+  version: 1;
+  tracker: string;
+  trackerExtra?: string;
+  reminder: string;
+};
+
 /** One Grow idea the learner planned. `checkInDate` is written once, when that idea's screen is completed. */
 export type GrowPlan = {
   idea: string;
@@ -304,6 +313,7 @@ export type LaunchpadAnswer =
   | SalesChannelsAnswer
   | MarketingMaterialsAnswer
   | TellPeopleAnswer
+  | OrderSystemAnswer
   | LevelUpAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
@@ -545,6 +555,24 @@ export function marketingOf(answers: LaunchpadAnswers | undefined, key: string):
   return value?.kind === "marketing-materials" ? value : undefined;
 }
 
+export function parseOrderSystemAnswer(value: unknown): OrderSystemAnswer | null {
+  if (!isRecord(value) || value.kind !== "order-system" || value.version !== 1) return null;
+  if (typeof value.tracker !== "string" || !ID_RE.test(value.tracker)) return null;
+  if (typeof value.reminder !== "string" || !ID_RE.test(value.reminder)) return null;
+  const extra = typeof value.trackerExtra === "string" ? value.trackerExtra.trim().slice(0, 40) : "";
+  return {
+    kind: "order-system",
+    version: 1,
+    tracker: value.tracker,
+    reminder: value.reminder,
+    ...(extra ? { trackerExtra: extra } : {}),
+  };
+}
+
+export function orderSystemOf(answers: LaunchpadAnswers | undefined, key: string): OrderSystemAnswer | undefined {
+  return parseOrderSystemAnswer(answers?.[key]) ?? undefined;
+}
+
 export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string): TellPeopleAnswer | undefined {
   const value = answers?.[key];
   return value?.kind === "tell-people" ? value : undefined;
@@ -665,6 +693,8 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseMarketingMaterialsAnswer(value);
     case "tell-people":
       return parseTellPeopleAnswer(value);
+    case "order-system":
+      return parseOrderSystemAnswer(value);
     case "level-up":
       return parseLevelUpAnswer(value);
     default:

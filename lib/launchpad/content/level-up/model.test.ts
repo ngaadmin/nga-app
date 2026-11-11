@@ -41,7 +41,7 @@ describe("Level Up check-in date", () => {
 
   it("keeps the Grow menu to the locked question and the five idea names", () => {
     const grow = levelUpContent().grow;
-    expect(grow.question).toBe("What will you try to grow your business?");
+    expect(grow.question).toBe("What will you try, to grow your business?");
     expect(grow.context).toBe("A growth experiment isn't about polishing what you have, it's one new thing you try to see if it pays off.");
     expect(grow.guidance).toBe("Try at least one growth experiment.");
     expect(grow.optionPrompt).toBe("Select at least one.");

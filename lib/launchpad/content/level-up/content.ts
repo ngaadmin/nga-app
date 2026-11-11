@@ -45,7 +45,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
       weekLabels: ["Week 1", "Week 2", "Week 3", "Week 4"],
     },
     grow: {
-      question: "What will you try to grow your business?",
+      question: "What will you try, to grow your business?",
       context: "A growth experiment isn't about polishing what you have, it's one new thing you try to see if it pays off.",
       guidance: "Try at least one growth experiment.",
       optionPrompt: "Select at least one.",

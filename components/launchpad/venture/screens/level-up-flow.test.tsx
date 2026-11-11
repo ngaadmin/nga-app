@@ -219,7 +219,7 @@ describe("Level Up screens", () => {
     edited.content.grow.question = "Which experiment will you run?";
     render(<LevelUpFlow screen={edited} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     expect(screen.getByText("Which experiment will you run?")).toBeTruthy();
-    expect(screen.queryByText("What will you try to grow your business?")).toBeNull();
+    expect(screen.queryByText("What will you try, to grow your business?")).toBeNull();
   });
 
   it("keeps the closer date and writes each idea check-in once", async () => {

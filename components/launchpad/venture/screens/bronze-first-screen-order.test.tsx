@@ -41,6 +41,22 @@ function follows(earlier: Node, later: Node) {
   return (earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 }
 
+function assertContextFirst(context: string, guidance: string, question: string, interaction: Element) {
+  const c = screen.getByText(context);
+  const g = screen.getByText(guidance);
+  const q = screen.getByText(question);
+  expect(follows(c, g)).toBe(true);
+  expect(follows(g, q)).toBe(true);
+  expect(q.nextElementSibling).toBe(interaction);
+  expect(c.className).toContain("mt-3");
+  expect(c.className).toContain("text-[18px]");
+  expect(c.className).toContain("text-[#19347D]");
+  expect(g.className).toContain("mt-1.5");
+  expect(g.className).toContain("text-[#4A5568]");
+  expect(q.className).toContain("mt-1");
+  expect(q.className).toContain("text-[#0CC1E0]");
+}
+
 function assertLead(question: string, context?: string, guidance?: string) {
   const q = screen.getByText(question);
   expect(q.className).toContain("mt-1");
@@ -69,16 +85,16 @@ describe("bronze first screens: question, then context, then guidance", () => {
     assertLead(spec.prompt, spec.context, spec.guidance);
   });
 
-  it("Find the why", () => {
+  it("Find the why leads with context, then guidance, then the question", () => {
     const spec = firstScreen("Find the why") as LaunchpadRankOrderScreen;
     render(<RankOrderScreen screen={spec} />);
-    assertLead(spec.prompt, spec.context, RANK_GUIDANCE);
+    assertContextFirst(spec.context!, RANK_GUIDANCE, spec.prompt, document.querySelector("ol[aria-label='Your ranking']")!);
   });
 
-  it("Know your impact", () => {
+  it("Know your impact leads with context, then guidance, then the question", () => {
     const spec = firstScreen("Know your impact") as LaunchpadChoiceCaptureScreen;
     render(<ChoiceCaptureScreen screen={spec} />);
-    assertLead(spec.prompt, spec.context, spec.guidance);
+    assertContextFirst(spec.context!, spec.guidance!, spec.prompt, screen.getByRole("group"));
   });
 
   it("Get the money you need to start", () => {

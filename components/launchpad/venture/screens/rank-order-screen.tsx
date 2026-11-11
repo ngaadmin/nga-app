@@ -236,7 +236,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const ghostRanked = ghostId ? splitOf(drag!.seq).above.indexOf(ghostId) : -1;
   return (
     <div className="flex flex-col" data-screen-type="rank-order" data-dragging={ghostId ? "" : undefined}>
-      <BronzeFirstLead question={screen.prompt} context={screen.context} guidance={RANK_GUIDANCE} />
+      <BronzeFirstLead order="context-first" question={screen.prompt} context={screen.context} guidance={RANK_GUIDANCE} />
       <ol className="mx-5 mt-3 flex flex-col gap-1.5 short:mt-2" aria-label={s.rank.yourRanking}>
         {above.map((id, i) => tile(id, i + 1))}
       </ol>

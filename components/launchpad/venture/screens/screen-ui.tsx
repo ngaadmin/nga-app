@@ -105,9 +105,12 @@ export function ScreenGuidance({ children, flush = false }: { children: ReactNod
 }
 
 /**
- * Opening of a bronze's first screen: aqua question, navy context, gray
- * guidance. 4px above the question, 12px above the context, 6px above the
- * guidance. `flush` drops the side margin inside an already padded lesson.
+ * Opening of a bronze's first screen. The usual order is aqua question, navy
+ * context, gray guidance. Find the why and Know your impact use
+ * `context-first`: navy context, gray guidance, aqua question, with the
+ * interaction directly under the question. Spacing stays 4px above the
+ * question, 12px above the context, and 6px above the guidance. `flush`
+ * drops the side margin inside an already padded lesson.
  */
 export function BronzeFirstLead({
   question,
@@ -116,6 +119,7 @@ export function BronzeFirstLead({
   questionId,
   flush = false,
   questionClassName = "",
+  order = "question-first",
 }: {
   question?: string;
   context?: string;
@@ -123,16 +127,29 @@ export function BronzeFirstLead({
   questionId?: string;
   flush?: boolean;
   questionClassName?: string;
+  order?: "question-first" | "context-first";
 }) {
+  const questionNode = question ? (
+    <ScreenPrompt id={questionId} tone="question" flush={flush} className={questionClassName}>
+      {question}
+    </ScreenPrompt>
+  ) : null;
+  const contextNode = context ? <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_BODY}`}>{context}</p> : null;
+  const guidanceNode = guidance ? <ScreenGuidance flush={flush}>{guidance}</ScreenGuidance> : null;
+  if (order === "context-first") {
+    return (
+      <>
+        {contextNode}
+        {guidanceNode}
+        {questionNode}
+      </>
+    );
+  }
   return (
     <>
-      {question ? (
-        <ScreenPrompt id={questionId} tone="question" flush={flush} className={questionClassName}>
-          {question}
-        </ScreenPrompt>
-      ) : null}
-      {context ? <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_BODY}`}>{context}</p> : null}
-      {guidance ? <ScreenGuidance flush={flush}>{guidance}</ScreenGuidance> : null}
+      {questionNode}
+      {contextNode}
+      {guidanceNode}
     </>
   );
 }

@@ -298,19 +298,20 @@ describe("Level Up screens", () => {
     expect(screen.queryByText("I'll start offering")).toBeNull();
   });
 
-  it("puts the gray guidance before the aqua question", () => {
+  it("puts the aqua question before the context and the gray guidance", () => {
     render(<LevelUpFlow screen={grow} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    const question = document.getElementById("grow-question");
     const context = screen.getByText(grow.content.grow.context!);
     const guidance = screen.getByText(grow.content.grow.guidance);
-    const question = document.getElementById("grow-question");
     expect(question).toBeTruthy();
     const follows = (earlier: Node, later: Node) => (earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(question!, context)).toBe(true);
     expect(follows(context, guidance)).toBe(true);
-    expect(follows(guidance, question!)).toBe(true);
+    expect(question!.className).toContain("mt-1");
+    expect(question!.className).toContain("text-[#0CC1E0]");
+    expect(context.className).toContain("mt-3");
     expect(guidance.className).toContain("mt-1.5");
     expect(guidance.className).toContain("text-[#4A5568]");
-    expect(question!.className).toContain("mt-1");
-    expect(question!.className).not.toContain("mt-[21px]");
   });
 
   it("keeps Holiday care on Grow and off the Level 1 offer list", () => {

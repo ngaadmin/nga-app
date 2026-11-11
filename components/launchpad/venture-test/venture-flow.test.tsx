@@ -48,7 +48,7 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     expect(screen.getByText("Design your logo")).toBeTruthy();
   });
 
-  it("an L1 door opens one screen: context, guidance, then the question and options; Finish waits for a pick", async () => {
+  it("an L1 door opens one screen: the question, then context, then guidance, then the options; Finish waits for a pick", async () => {
     renderFlow({ kind: "level", level: 1 });
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
     const bronze = silver.bronzes[0]!;
@@ -60,14 +60,15 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     expect(document.querySelector("[data-screen-type='context']")).toBeNull();
     const page = document.querySelector("[data-screen-type='choice-capture'][data-mode='multi']") as HTMLElement;
     expect(page).toBeTruthy();
-    // Context at the top, guidance under it, then the question, then the options.
-    const intro = page.querySelector("[data-screen-intro]") as HTMLElement;
-    expect(intro.textContent).toContain(capture.context!);
-    expect(intro.querySelector("[data-guidance]")?.textContent).toBe(capture.guidance);
     const prompt = screen.getByText(capture.prompt);
+    const context = screen.getByText(capture.context!);
+    const guidance = screen.getByText(capture.guidance!);
     const options = screen.getByRole("group");
-    expect(intro.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(prompt.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const follows = (earlier: Node, later: Node) => (earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(prompt, context)).toBe(true);
+    expect(follows(context, guidance)).toBe(true);
+    expect(follows(guidance, options)).toBe(true);
+    expect(page.querySelector("[data-screen-intro]")).toBeNull();
     expect(screen.queryByText(/tasks done/)).toBeNull();
     const finish = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
     expect(finish.disabled).toBe(true);

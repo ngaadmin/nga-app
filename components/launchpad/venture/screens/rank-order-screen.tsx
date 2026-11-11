@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as R
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { rankingAnswer, rankingOf } from "@/lib/launchpad/content/answers";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
-import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { BronzeFirstLead } from "@/components/launchpad/venture/screens/screen-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 
 /** Moves `id` one place up (-1) or down (+1). */
@@ -236,9 +236,7 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const ghostRanked = ghostId ? splitOf(drag!.seq).above.indexOf(ghostId) : -1;
   return (
     <div className="flex flex-col" data-screen-type="rank-order" data-dragging={ghostId ? "" : undefined}>
-      {screen.context && <ScreenIntro context={screen.context} guidance={RANK_GUIDANCE} />}
-      <ScreenPrompt>{screen.prompt}</ScreenPrompt>
-      {!screen.context && <ScreenGuidance>{RANK_GUIDANCE}</ScreenGuidance>}
+      <BronzeFirstLead question={screen.prompt} context={screen.context} guidance={RANK_GUIDANCE} />
       <ol className="mx-5 mt-3 flex flex-col gap-1.5 short:mt-2" aria-label={s.rank.yourRanking}>
         {above.map((id, i) => tile(id, i + 1))}
       </ol>

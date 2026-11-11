@@ -11,7 +11,7 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
+import { BronzeFirstLead, LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
 import { TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function unitWord(unit: FundingRepayUnit, count: number): string {
@@ -105,7 +105,13 @@ export function FundingFlow({
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
         {step === "choose" && (
           <>
-            <p className="font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.context}</p>
+            <BronzeFirstLead
+              flush
+              question={screen.copy.prompt}
+              context={screen.copy.context}
+              guidance={screen.copy.guidance}
+              questionClassName={known ? "" : "!text-[#C5CDD8]"}
+            />
             {known ? (
               <div className="mt-4 rounded-2xl bg-[#F4FBFE] px-4 py-5 text-center" data-startup-total="">
                 <p className="text-[16px] text-[#6B7280]">{s.funding.startupIs}</p>
@@ -123,7 +129,6 @@ export function FundingFlow({
                 )}
               </div>
             )}
-            <h2 className={`mb-2 mt-5 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] ${known ? "text-[#0CC1E0]" : "text-[#C5CDD8]"}`}>{screen.copy.prompt}</h2>
             {([
               ["own_cash", screen.copy.ownCash],
               ["borrow", screen.copy.borrow],

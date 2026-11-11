@@ -104,6 +104,39 @@ export function ScreenGuidance({ children, flush = false }: { children: ReactNod
   return <p className={`${flush ? "" : "mx-5"} mt-1.5 ${LESSON_HINT}`}>{children}</p>;
 }
 
+/**
+ * Opening of a bronze's first screen: aqua question, navy context, gray
+ * guidance. 4px above the question, 12px above the context, 6px above the
+ * guidance. `flush` drops the side margin inside an already padded lesson.
+ */
+export function BronzeFirstLead({
+  question,
+  context,
+  guidance,
+  questionId,
+  flush = false,
+  questionClassName = "",
+}: {
+  question?: string;
+  context?: string;
+  guidance?: string;
+  questionId?: string;
+  flush?: boolean;
+  questionClassName?: string;
+}) {
+  return (
+    <>
+      {question ? (
+        <ScreenPrompt id={questionId} tone="question" flush={flush} className={questionClassName}>
+          {question}
+        </ScreenPrompt>
+      ) : null}
+      {context ? <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_BODY}`}>{context}</p> : null}
+      {guidance ? <ScreenGuidance flush={flush}>{guidance}</ScreenGuidance> : null}
+    </>
+  );
+}
+
 /** Progress text such as "Goal 2 of 5". Same color and size as a hint. */
 export function ScreenEyebrow({ children }: { children: ReactNode }) {
   return (

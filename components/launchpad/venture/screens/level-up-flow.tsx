@@ -25,7 +25,7 @@ import { LargeScribble, SCRIBBLE_SRC } from "@/components/launchpad/venture/hand
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { OrderedSlots } from "@/components/launchpad/venture/screens/rank-order-screen";
-import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { BronzeFirstLead, LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 function blankAnswer(): LevelUpAnswer {
   return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan: [], ideas: [], growPlans: [] };
@@ -305,13 +305,12 @@ export function LevelUpFlow({
   if (screen.step === "reflect") {
     body = (
       <>
-        {page === 0 ? (
-          <>
-            <p className={`mt-3 ${LESSON_BODY}`}>{content.reflect.context}</p>
-            <ScreenGuidance flush>{content.reflect.guidance}</ScreenGuidance>
-          </>
-        ) : null}
-        <ScreenPrompt tone="question" flush>{content.reflect.question}</ScreenPrompt>
+        <BronzeFirstLead
+          flush
+          question={content.reflect.question}
+          context={page === 0 ? content.reflect.context : undefined}
+          guidance={page === 0 ? content.reflect.guidance : undefined}
+        />
         {sections[page] ? reflectSection(sections[page].id) : null}
       </>
     );
@@ -320,9 +319,7 @@ export function LevelUpFlow({
       <>
         {page === 0 ? (
           <>
-            <p className={`mt-3 ${LESSON_BODY}`}>{content.improve.context}</p>
-            <ScreenGuidance flush>{content.improve.guidance}</ScreenGuidance>
-            <ScreenPrompt tone="question" flush>{content.improve.question}</ScreenPrompt>
+            <BronzeFirstLead flush question={content.improve.question} context={content.improve.context} guidance={content.improve.guidance} />
           </>
         ) : null}
         {sections[page] ? improveSection(sections[page].id) : null}
@@ -346,9 +343,7 @@ export function LevelUpFlow({
     const full = growIdeas.length >= 3;
     body = (
       <>
-        {content.grow.context ? <p className={`mt-3 ${LESSON_BODY}`}>{content.grow.context}</p> : null}
-        <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
-        <ScreenPrompt id="grow-question" tone="question" flush>{content.grow.question}</ScreenPrompt>
+        <BronzeFirstLead flush questionId="grow-question" question={content.grow.question} context={content.grow.context} guidance={content.grow.guidance} />
         <div className="mt-[21px]">
           {(content.grow.ideas ?? []).map((idea) => {
             const on = growIdeas.some((row) => row.id === idea.id);

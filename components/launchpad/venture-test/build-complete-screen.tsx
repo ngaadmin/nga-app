@@ -18,9 +18,9 @@ function Sparkle() {
 }
 
 /**
- * Standalone business-build celebration (Option B). Not placed in the learner
- * flow. Callers pass the payload copy and the floor count. One call site can
- * show it after the rooftop finish, or instead of it, later.
+ * Rooftop finish (Option B). Shown when the building is complete, including
+ * "Go to the rooftop" and ?rooftop=1. Callers pass the payload copy and the
+ * floor count.
  */
 export function BuildCompleteScreen({
   copy,
@@ -41,7 +41,7 @@ export function BuildCompleteScreen({
   }, []);
   const dots = Math.max(0, Math.floor(levelCount));
   return (
-    <section className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white" data-build-complete="" aria-labelledby="lp-build-complete-title">
+    <section className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white" data-build-complete="" data-placeholder="rooftop-finish" aria-labelledby="lp-build-complete-title">
       {confetti ? <LessonCompletionConfetti /> : null}
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pb-4 pt-6 text-center">
         <div className="mb-3.5 flex items-center justify-center gap-1.5">

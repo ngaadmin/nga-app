@@ -19,7 +19,7 @@ function renderScreen(levelCount: number) {
   render(
     <BuildCompleteScreen
       copy={copy}
-      terraceLabel={LAUNCHPAD_SURFACE_COPY.rooftop.terrace}
+      terraceLabel={copy.terrace}
       levelCount={levelCount}
       onWorkbook={onWorkbook}
       onLaunchpad={onLaunchpad}
@@ -56,14 +56,11 @@ describe("business build complete", () => {
 
   it("keeps an older published payload valid and fills the new sections from the bundle", () => {
     const payload = structuredClone(launchpadTestVentureSeed());
-    const surface = payload.surface as { buildComplete?: unknown; rooftop?: unknown };
+    const surface = payload.surface as { buildComplete?: unknown };
     delete surface.buildComplete;
-    delete surface.rooftop;
     expect(checkLaunchpadVenturePayload(payload, "dog-walking").ok).toBe(true);
     const merged = surfaceCopyFrom(payload.surface);
     expect(merged.buildComplete).toEqual(copy);
-    expect(merged.rooftop.tryAnother).toBe("Try another one");
-    expect(merged.rooftop.line).toBe("You've built your business. You're on your way!");
     expect(merged.chrome.back).toBe(payload.surface?.chrome.back);
   });
 });

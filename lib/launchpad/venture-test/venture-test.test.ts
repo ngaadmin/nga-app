@@ -305,7 +305,7 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
 
   it("parses the params: rooftop, then complete, then level; anything else is no shortcut", () => {
     expect(ventureTestShortcut({ rooftop: "1" })).toEqual({ kind: "all", land: "rooftop" });
-    expect(ventureTestShortcut({ buildComplete: "1" })).toEqual({ kind: "all", land: "build-complete" });
+    expect(ventureTestShortcut({ buildComplete: "1" })).toEqual({ kind: "all", land: "rooftop" });
     expect(ventureTestShortcut({ rooftop: "1", buildComplete: "1" })).toEqual({ kind: "all", land: "rooftop" });
     expect(ventureTestShortcut({ complete: "all" })).toEqual({ kind: "all", land: "building" });
     expect(ventureTestShortcut({ rooftop: "1", complete: "all" })).toEqual({ kind: "all", land: "rooftop" });

@@ -44,7 +44,6 @@ import { BronzeDoors } from "@/components/launchpad/venture/bronze-doors";
 import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
 import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
-import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { BuildCompleteScreen } from "@/components/launchpad/venture-test/build-complete-screen";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
@@ -115,10 +114,8 @@ type View =
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number; costStep?: CostEditorStep }
   | { screen: "lift"; from: number }
-  /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
-  | { screen: "rooftop" }
-  /** TEST-ONLY celebration. Not part of the learner flow. */
-  | { screen: "build-complete" };
+  /** Business-build celebration, once every floor is done. */
+  | { screen: "rooftop" };
 
 /** Doors close, the indicator moves, then the next corridor opens. */
 const LIFT_MS = 2400;
@@ -432,13 +429,10 @@ export function VentureFlow({
       break;
     }
     case "rooftop":
-      body = <VentureRooftopFinish onLaunchpadHome={toHome} />;
-      break;
-    case "build-complete":
       body = (
         <BuildCompleteScreen
           copy={surface.buildComplete}
-          terraceLabel={surface.rooftop.terrace}
+          terraceLabel={surface.buildComplete.terrace}
           levelCount={floors.length}
           onWorkbook={() => setHandbook({ ventureId, entry: "building" })}
           onLaunchpad={toHome}
@@ -871,7 +865,7 @@ export function VentureFlow({
 
   return (
     <SurfaceCopyProvider value={surface}>
-    <VentureTestShell focus={view.screen === "workbook" || view.screen === "build-complete"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
+    <VentureTestShell focus={view.screen === "workbook" || view.screen === "rooftop"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
       <div className="flex min-h-0 flex-1 flex-col bg-white" data-content-source={content.source === "seed" ? "seed" : "db"} data-content-hash={content.contentHash}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
         {handbook?.entry === "building" && handbook.ventureId === ventureId && (

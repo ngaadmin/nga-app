@@ -427,7 +427,7 @@ export function allTasksCompleteProgress(floors: readonly VentureTestFloor[]): V
 /** A TEST-ONLY URL shortcut (see ventureTestShortcut). */
 export type VentureTestShortcut =
   /** Every task complete; land on the rooftop finish or the building. */
-  | { kind: "all"; land: "rooftop" | "building" | "build-complete" }
+  | { kind: "all"; land: "rooftop" | "building" }
   /** Every floor below `level` complete; land in that floor's corridor. */
   | { kind: "level"; level: number }
   /** Every silver up to and including `silverId` complete; land in the corridor of the next open silver. */
@@ -441,14 +441,13 @@ const LEVEL_PARAM_RE = /^[1-9]\d?$/;
 
 /**
  * TEST-ONLY URL shortcuts:
- * - `?rooftop=1`: everything complete, open the rooftop finish screen.
- * - `?buildComplete=1`: everything complete, open the business-build celebration.
- *   It does not replace the rooftop finish. `?rooftop=1` still wins when both are set.
+ * - `?rooftop=1`: everything complete, open the business-build celebration.
+ * - `?buildComplete=1`: alias of `?rooftop=1`.
  * - `?complete=all`: everything complete, land on the building.
  * - `?complete=<silver id>` (e.g. `l2-s1`): every silver up to and including
  *   that one complete, land in the corridor of the next open silver.
  * - `?level=<n>`: every floor below n complete, land in Level n's corridor.
- * Precedence: rooftop, then buildComplete, then complete, then level.
+ * Precedence: rooftop (including the buildComplete alias), then complete, then level.
  */
 export function ventureTestShortcut(params: {
   rooftop?: string;
@@ -456,8 +455,7 @@ export function ventureTestShortcut(params: {
   complete?: string;
   level?: string;
 }): VentureTestShortcut | null {
-  if (params.rooftop === "1") return { kind: "all", land: "rooftop" };
-  if (params.buildComplete === "1") return { kind: "all", land: "build-complete" };
+  if (params.rooftop === "1" || params.buildComplete === "1") return { kind: "all", land: "rooftop" };
   if (params.complete === "all") return { kind: "all", land: "building" };
   if (params.complete && SILVER_ID_PARAM_RE.test(params.complete)) return { kind: "through-silver", silverId: params.complete };
   if (params.level && LEVEL_PARAM_RE.test(params.level)) return { kind: "level", level: Number(params.level) };
@@ -466,7 +464,6 @@ export function ventureTestShortcut(params: {
 
 export type VentureTestShortcutLanding =
   | { screen: "rooftop" }
-  | { screen: "build-complete" }
   | { screen: "building" }
   | { screen: "corridor"; level: number };
 

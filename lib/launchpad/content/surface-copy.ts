@@ -277,17 +277,9 @@ export const LAUNCHPAD_SURFACE_COPY = {
     dayStreak: "day streak",
     mainNavigation: "Main navigation",
   },
-  /** Current rooftop finish. Words stay as they are until Storybird replaces them. */
-  rooftop: {
-    heading: "Congratulations!",
-    line: "You've built your business. You're on your way!",
-    tryAnother: "Try another one",
-    backHome: "Back to home",
-    terrace: "Rooftop terrace",
-  },
   /**
-   * Business-build celebration. Every line is a Storybird placeholder.
-   * The screen is not in the learner flow yet.
+   * Rooftop finish. Every line is a Storybird placeholder.
+   * This screen replaces the earlier rooftop finish.
    */
   buildComplete: {
     greeting: "Congratulations!",
@@ -296,6 +288,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     summary: "All 7 levels complete.",
     workbook: "See my workbook",
     back: "Back to Launchpad",
+    terrace: "Rooftop terrace",
   },
 } as const;
 

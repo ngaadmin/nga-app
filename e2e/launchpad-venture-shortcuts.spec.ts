@@ -16,7 +16,7 @@ test("rooftop shortcuts", async ({ page }, info) => {
     await page.goto(url("reset=1&rooftop=1"));
     await expect(page.locator('[data-placeholder="rooftop-finish"]')).toBeVisible({ timeout: 60_000 });
   });
-  const back = page.locator('[data-placeholder="rooftop-finish"] button').last();
+  const back = page.getByRole("button", { name: "Back to Launchpad" });
   await shot(t, "Rooftop from ?rooftop=1", back);
   await step(t, "Rooftop button goes back to Launchpad home", async () => {
     await back.click();

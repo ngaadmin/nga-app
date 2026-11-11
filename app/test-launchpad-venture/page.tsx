@@ -33,11 +33,9 @@ export const metadata: Metadata = {
  *
  * Test shortcuts (this browser's localStorage only, never the database):
  * - `?rooftop=1` marks every task in the venture complete and opens the
- *   rooftop finish screen directly.
- * - `?buildComplete=1` marks every task complete and opens the business-build
- *   celebration. It is not part of the learner flow and does not change the
- *   rooftop finish. `?rooftop=1` still wins when both are set. "See my workbook"
- *   opens the handbook; "Back to Launchpad" returns to the business ideas home.
+ *   business-build celebration (the rooftop finish). "See my workbook" opens
+ *   the handbook. "Back to Launchpad" returns to the business ideas home.
+ * - `?buildComplete=1` is an alias of `?rooftop=1`.
  * - `?complete=all` marks every task complete and lands on the building, so
  *   the "Go to the rooftop" button shows.
  * - `?complete=<silver id>` (e.g. `?complete=l2-s1`) marks every silver up to
@@ -48,7 +46,7 @@ export const metadata: Metadata = {
  * - `?iconSet=<venture id>` (e.g. `friendship-bracelets`) shows that
  *   business's icon set in the logo picker, for ventures not yet in the app.
  * The shortcuts use `?venture=<id>` when given, otherwise the dog-walking
- * venture, and skip the building intro. Precedence: rooftop, buildComplete, complete, level.
+ * venture, and skip the building intro. Precedence: rooftop (buildComplete is the same), complete, level.
  * They replace completed tasks but keep saved answers; `?reset=1` runs first,
  * so `?reset=1&complete=all` still ends fully complete (with no answers).
  */

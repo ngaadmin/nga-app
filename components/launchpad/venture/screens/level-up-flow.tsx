@@ -32,6 +32,8 @@ import {
   REFLECT_CONTEXT,
   REFLECT_GUIDANCE,
   REFLECT_QUESTION,
+  SECTION_PAGES,
+  SHOW_IMPROVE_TIMING,
   START_OPTIONS,
   THREE_MONTHS_LABEL,
   addMonths,
@@ -52,8 +54,8 @@ import { FieldControl } from "@/components/launchpad/venture/screens/field-contr
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
-const REFLECT_PAGES: readonly LevelSectionId[][] = [["customers"], ["ready", "job"], ["happy"]];
-const IMPROVE_PAGES: readonly LevelSectionId[][] = [["customers"], ["ready", "job"], ["happy"]];
+const IMPROVE_PICK_PAGES = SECTION_PAGES.length;
+const IMPROVE_TOTAL = IMPROVE_PICK_PAGES + (SHOW_IMPROVE_TIMING ? 2 : 1);
 
 function blankAnswer(): LevelUpAnswer {
   return { kind: "level-up", version: 1, selected: [], picks: {}, starts: {}, idea: "", option: "", success: "", start: "" };
@@ -109,7 +111,9 @@ export function LevelUpFlow({
   const offered = new Set(selectionOf(answers, "l1-offer")?.selected ?? []);
   const [page, setPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
-  const total = screen.step === "improve" ? 5 : 3;
+  const total = screen.step === "improve" ? IMPROVE_TOTAL : screen.step === "reflect" ? SECTION_PAGES.length : 3;
+  const whenPage = SHOW_IMPROVE_TIMING ? IMPROVE_PICK_PAGES : -1;
+  const planPage = IMPROVE_TOTAL - 1;
   const checkIn = addMonths(today, 3);
   const checkInLabel = formatCheckInDate(checkIn);
 
@@ -130,28 +134,33 @@ export function LevelUpFlow({
   const nowItems = chosenItems.filter((item) => item.tag === "do-now");
   const laterItems = chosenItems.filter((item) => item.tag === "three-months");
   const whenMode = nowItems.length && laterItems.length ? "mixed" : laterItems.length ? "later" : "now";
-  const planItems = whenMode === "mixed"
-    ? chosenItems.filter((item) => item.id === draft.picks.now || item.id === draft.picks.later)
-    : whenMode === "later"
-      ? chosenItems.filter((item) => item.id === draft.picks.later)
-      : nowItems;
+  const planItems = !SHOW_IMPROVE_TIMING
+    ? chosenItems
+    : whenMode === "mixed"
+      ? chosenItems.filter((item) => item.id === draft.picks.now || item.id === draft.picks.later)
+      : whenMode === "later"
+        ? chosenItems.filter((item) => item.id === draft.picks.later)
+        : nowItems;
   const whenReady = whenMode === "now" ? true : whenMode === "later" ? Boolean(draft.picks.later) : Boolean(draft.picks.now && draft.picks.later);
   const idea = growIdea(draft.idea);
   const growReady = Boolean(draft.option && draft.success);
 
   let ready = true;
-  if (screen.step === "improve" && page < 3) ready = improvePicksReady(IMPROVE_PAGES[page] ?? []);
-  if (screen.step === "improve" && page === 3) ready = whenReady;
+  if (screen.step === "improve" && page < IMPROVE_PICK_PAGES) ready = improvePicksReady([SECTION_PAGES[page]!]);
+  if (screen.step === "improve" && page === whenPage) ready = whenReady;
   if (screen.step === "grow" && page === 0) ready = Boolean(draft.idea);
   if (screen.step === "grow" && page === 1) ready = growReady;
 
   const go = () => {
     if (!ready) return;
     const next = { ...draft };
-    if (screen.step === "improve" && page === 3 && whenMode === "now") {
+    if (screen.step === "improve" && page === IMPROVE_PICK_PAGES - 1 && !SHOW_IMPROVE_TIMING) {
+      next.starts = Object.fromEntries(chosenItems.map((item) => [item.id, next.starts[item.id] ?? "this-week"]));
+    }
+    if (screen.step === "improve" && page === whenPage && whenMode === "now") {
       next.starts = Object.fromEntries(nowItems.map((item) => [item.id, next.starts[item.id] ?? "this-week"]));
     }
-    if (screen.step === "improve" && page === 3 && whenMode !== "now") {
+    if (screen.step === "improve" && page === whenPage && whenMode !== "now") {
       const rows = whenMode === "later" ? laterItems.filter((item) => item.id === next.picks.later) : chosenItems.filter((item) => item.id === next.picks.now || item.id === next.picks.later);
       next.starts = Object.fromEntries(rows.map((item) => [item.id, next.starts[item.id] ?? (item.tag === "do-now" ? "this-week" : "in-three-months")]));
     }
@@ -162,7 +171,7 @@ export function LevelUpFlow({
   const reflectSection = (section: LevelSectionId) => (
     <SectionBlock key={section} id={section}>
       {statementsIn(section).map((item) => (
-        <Lined key={item.id} item={{ id: item.id, label: item.reflectLabel }} selected={draft.selected.includes(item.id)} onClick={() => setDraft({ ...draft, selected: toggle(draft.selected, item.id) })} />
+        <Lined key={item.id} item={{ id: item.id, label: item.label }} selected={draft.selected.includes(item.id)} onClick={() => setDraft({ ...draft, selected: toggle(draft.selected, item.id) })} />
       ))}
     </SectionBlock>
   );
@@ -178,12 +187,11 @@ export function LevelUpFlow({
             <p className={LESSON_BODY}>{nailedLine(section)}</p>
           </div>
         ) : (
-          rows.map((item) => (
+          live.map((item) => (
             <Lined
               key={item.id}
-              item={{ id: item.id, label: item.improveLabel }}
-              muted={wins.has(item.id)}
-              tag={wins.has(item.id) ? undefined : item.tag === "do-now" ? DO_NOW_LABEL : THREE_MONTHS_LABEL}
+              item={{ id: item.id, label: item.label }}
+              tag={SHOW_IMPROVE_TIMING ? (item.tag === "do-now" ? DO_NOW_LABEL : THREE_MONTHS_LABEL) : undefined}
               selected={draft.picks[section] === item.id}
               onClick={() => setDraft({ ...draft, picks: { ...draft.picks, [section]: item.id } })}
             />
@@ -197,7 +205,7 @@ export function LevelUpFlow({
     <div className="mt-[21px]">
       <ScreenPrompt tone="section" flush className="!mt-0">{label}</ScreenPrompt>
       {items.map((item) => (
-        <Lined key={item.id} item={{ id: item.id, label: item.improveLabel }} selected={lock || picked === item.id} onClick={() => { if (!lock) onPick(item.id); }} />
+        <Lined key={item.id} item={{ id: item.id, label: item.label }} selected={lock || picked === item.id} onClick={() => { if (!lock) onPick(item.id); }} />
       ))}
     </div>
   );
@@ -213,10 +221,10 @@ export function LevelUpFlow({
             <ScreenPrompt tone="question" flush>{REFLECT_QUESTION}</ScreenPrompt>
           </>
         ) : null}
-        {(REFLECT_PAGES[page] ?? []).map(reflectSection)}
+        {SECTION_PAGES[page] ? reflectSection(SECTION_PAGES[page]) : null}
       </>
     );
-  } else if (screen.step === "improve" && page < 3) {
+  } else if (screen.step === "improve" && page < IMPROVE_PICK_PAGES) {
     body = (
       <>
         {page === 0 ? (
@@ -226,10 +234,10 @@ export function LevelUpFlow({
             <ScreenPrompt tone="question" flush>{IMPROVE_QUESTION}</ScreenPrompt>
           </>
         ) : null}
-        {(IMPROVE_PAGES[page] ?? []).map(improveSection)}
+        {SECTION_PAGES[page] ? improveSection(SECTION_PAGES[page]) : null}
       </>
     );
-  } else if (screen.step === "improve" && page === 3) {
+  } else if (screen.step === "improve" && page === whenPage) {
     body = whenMode === "now" ? (
       <>
         <ScreenPrompt tone="question" flush className="!mt-3">{IMPROVE_ALL_NOW_QUESTION}</ScreenPrompt>
@@ -255,9 +263,9 @@ export function LevelUpFlow({
         <ScreenGuidance flush>{IMPROVE_PLAN_GUIDANCE}</ScreenGuidance>
         {planItems.map((item) => (
           <p key={item.id} className={`mt-4 ${LESSON_BODY}`}>
-            {commitLine(item.improveLabel)}, starting{" "}
+            {SHOW_IMPROVE_TIMING ? `${commitLine(item.label)}, starting` : `${item.label}, starting`}{" "}
             <StartPick
-              value={draft.starts[item.id] ?? (item.tag === "do-now" ? "this-week" : "in-three-months")}
+              value={draft.starts[item.id] ?? (SHOW_IMPROVE_TIMING && item.tag === "three-months" ? "in-three-months" : "this-week")}
               options={START_OPTIONS}
               onChange={(id) => setDraft({ ...draft, starts: { ...draft.starts, [item.id]: id as StartId } })}
             />

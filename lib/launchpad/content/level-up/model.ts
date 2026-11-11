@@ -9,10 +9,18 @@ export type LevelTag = "do-now" | "three-months";
 export type GrowIdeaId = "referral" | "prepaid" | "bundle" | "new-service" | "expand";
 export type LevelCohort = "explorer" | "pathfinder" | "maverick";
 
+/**
+ * Cath asked to hold the Do now / Three months tags. The timing screen and
+ * its all-now / all-later alternates stay in the flow, but they are skipped
+ * while this is false.
+ */
+export const SHOW_IMPROVE_TIMING = false;
+
 export type LevelStatement = {
   id: string;
-  reflectLabel: string;
-  improveLabel: string;
+  /** Same words on Reflect and Improve. */
+  label: string;
+  /** Used only while SHOW_IMPROVE_TIMING is on. */
   tag: LevelTag;
   section: LevelSectionId;
 };
@@ -25,23 +33,24 @@ export const LEVEL_SECTIONS: readonly { id: LevelSectionId; label: string }[] = 
 ];
 
 export const LEVEL_STATEMENTS: readonly LevelStatement[] = [
-  { id: "neighbors", section: "customers", tag: "do-now", reflectLabel: "Told my neighbors about my business", improveLabel: "Tell my neighbors about my business" },
-  { id: "texted", section: "customers", tag: "do-now", reflectLabel: "Texted my regular customers", improveLabel: "Text my regular customers" },
-  { id: "flyers", section: "customers", tag: "do-now", reflectLabel: "Put up flyers nearby", improveLabel: "Put up flyers nearby" },
-  { id: "mailboxes", section: "customers", tag: "three-months", reflectLabel: "Dropped flyers in mailboxes", improveLabel: "Drop flyers in mailboxes" },
-  { id: "new-place", section: "customers", tag: "three-months", reflectLabel: "Found customers in a new place", improveLabel: "Find customers in a new place" },
-  { id: "gear", section: "ready", tag: "do-now", reflectLabel: "Had my gear ready for every job", improveLabel: "Get any gear I'm missing" },
-  { id: "packed", section: "ready", tag: "do-now", reflectLabel: "Packed my bag the night before", improveLabel: "Pack my bag the night before" },
-  { id: "confirmed", section: "ready", tag: "do-now", reflectLabel: "Confirmed each job the day before", improveLabel: "Confirm each job the day before" },
-  { id: "between", section: "ready", tag: "three-months", reflectLabel: "Left enough time between jobs", improveLabel: "Leave enough time between jobs" },
-  { id: "notes", section: "job", tag: "do-now", reflectLabel: "Checked each dog's notes first", improveLabel: "Check each dog's notes first" },
-  { id: "home", section: "job", tag: "do-now", reflectLabel: "Got every dog home on time", improveLabel: "Get every dog home on time" },
-  { id: "playtime", section: "job", tag: "three-months", reflectLabel: "Gave dogs extra playtime", improveLabel: "Give dogs extra playtime" },
-  { id: "skill", section: "job", tag: "three-months", reflectLabel: "Learned a new dog-care skill", improveLabel: "Learn a new dog-care skill" },
-  { id: "feedback", section: "happy", tag: "do-now", reflectLabel: "Asked owners for feedback", improveLabel: "Ask owners for feedback" },
-  { id: "thanks", section: "happy", tag: "do-now", reflectLabel: "Sent owners a thank-you", improveLabel: "Send owners a thank-you" },
-  { id: "rebook", section: "happy", tag: "three-months", reflectLabel: "Got a repeat booking", improveLabel: "Ask owners to book again" },
+  { id: "more-than-one-way", section: "customers", tag: "do-now", label: "I used more than one way to get my name out" },
+  { id: "followed-up", section: "customers", tag: "do-now", label: "I followed up with everyone who showed interest" },
+  { id: "knew-someone", section: "customers", tag: "three-months", label: "I asked every customer if they knew someone" },
+  { id: "book-again", section: "customers", tag: "three-months", label: "I asked every customer if they'd like to book me again" },
+  { id: "kept-track", section: "ready", tag: "do-now", label: "I kept track of every job that came in" },
+  { id: "confirmed", section: "ready", tag: "do-now", label: "I confirmed each job with the customer beforehand" },
+  { id: "slipped", section: "ready", tag: "three-months", label: "Nobody's appointment slipped my mind" },
+  { id: "on-time", section: "job", tag: "do-now", label: "I always showed up on time at each job" },
+  { id: "brought-everything", section: "job", tag: "do-now", label: "I always brought everything I needed" },
+  { id: "enough-time", section: "job", tag: "three-months", label: "I had enough time to deliver a good service" },
+  { id: "names", section: "happy", tag: "do-now", label: "I remembered all my customer names and their pets' names" },
+  { id: "feedback", section: "happy", tag: "do-now", label: "I asked every customer for feedback" },
+  { id: "photo", section: "happy", tag: "three-months", label: "I always sent the owner a photo of their pet when I was with them" },
+  { id: "expect", section: "happy", tag: "three-months", label: "The customer always knew what to expect from me" },
 ];
+
+/** One Reflect or Improve step per section, so the counter is Section N of 4. */
+export const SECTION_PAGES: readonly LevelSectionId[] = ["customers", "ready", "job", "happy"];
 
 export const REFLECT_CONTEXT = "Looking back at what went well shows you what to keep doing, and it's a great reason to feel proud.";
 export const REFLECT_GUIDANCE = "Pick every statement that's true for you in each section. There are no wrong answers.";

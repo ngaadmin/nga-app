@@ -12,30 +12,62 @@ const improve: LaunchpadLevelUpScreen = { id: "improve", type: "level-up", step:
 const grow: LaunchpadLevelUpScreen = { id: "grow", type: "level-up", step: "grow", title: "Grow", answerKey: "l7-grow" };
 
 describe("Level Up screens", () => {
-  it("walks Reflect and keeps the opening copy", () => {
+  it("walks four Reflect sections and keeps a ticked outcome", () => {
     const onFinish = vi.fn();
     render(<LevelUpFlow screen={reflect} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
-    expect(screen.getByText("What went well in your business?")).toBeTruthy();
-    expect(screen.getByText("1 of 3", { exact: false }) || document.body.textContent).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Told my neighbors about my business/ }));
+    expect(screen.getByText("Section 1 of 4")).toBeTruthy();
+    expect(screen.getByText("I used more than one way to get my name out")).toBeTruthy();
+    expect(screen.getByText("I asked every customer if they'd like to book me again")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "I used more than one way to get my name out" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Getting ready")).toBeTruthy();
+    expect(screen.getByText("Section 2 of 4")).toBeTruthy();
+    expect(screen.getByText("Nobody's appointment slipped my mind")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Section 3 of 4")).toBeTruthy();
+    expect(screen.getByText("I always showed up on time at each job")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Section 4 of 4")).toBeTruthy();
+    expect(screen.getByText("I remembered all my customer names and their pets' names")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish).toHaveBeenCalled();
-    expect(onFinish.mock.calls[0]?.[0].selected).toEqual(["neighbors"]);
+    expect(onFinish.mock.calls[0]?.[0].selected).toEqual(["more-than-one-way"]);
   });
 
-  it("shows a nailed section when every Reflect win covers it", () => {
+  it("offers only unticked statements, nails a finished section, and skips the timing screens", () => {
     const answers: LaunchpadAnswers = {
-      "l7-reflect": { kind: "level-up", version: 1, selected: ["gear", "packed", "confirmed", "between"], picks: {}, starts: {}, idea: "", option: "", success: "", start: "" },
+      "l7-reflect": {
+        kind: "level-up",
+        version: 1,
+        selected: ["kept-track", "confirmed", "slipped", "more-than-one-way"],
+        picks: {},
+        starts: {},
+        idea: "",
+        option: "",
+        success: "",
+        start: "",
+      },
     };
     render(<LevelUpFlow screen={improve} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: /Put up flyers nearby/ }));
+    expect(screen.getByText("Section 1 of 5")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "I used more than one way to get my name out" })).toBeNull();
+    expect(screen.getByRole("button", { name: "I followed up with everyone who showed interest" })).toBeTruthy();
+    expect(screen.queryByText("Do now")).toBeNull();
+    expect(screen.queryByText("Three months")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "I followed up with everyone who showed interest" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("You nailed this one!")).toBeTruthy();
     expect(screen.getByText("Everything in Getting ready is already a win. Keep it up.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Get any gear I'm missing/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "I always showed up on time at each job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "I asked every customer for feedback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByText("Pick one to start now and one to start in three months.")).toBeNull();
+    expect(screen.queryByText("Your picks are all quick fixes, so you can start them all now.")).toBeNull();
+    expect(screen.queryByText("These all take a bit longer. Pick one to start in three months.")).toBeNull();
+    expect(screen.getByText("Section 5 of 5")).toBeTruthy();
+    expect(screen.getByText(/I followed up with everyone who showed interest, starting/)).toBeTruthy();
+    expect(screen.getByText(/I always showed up on time at each job, starting/)).toBeTruthy();
   });
 
   it("sets the Grow check-in to today plus three months and copies that date", async () => {

@@ -266,7 +266,7 @@ export function Handbook({
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel({ number: templateAt + 1, sheet: templatePages[templateAt]!.id, silver: { id: "templates" } })}
               </p>
-            ) : !templatesOpen && page ? (
+            ) : !templatesOpen && page && page.sheet !== "order-system" ? (
               <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
                 {paperLabel(page)}
               </p>

@@ -20,7 +20,9 @@ import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
-import { SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { LargeScribble, SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { orderSystemOf } from "@/lib/launchpad/content/answers";
+import type { OrderSystemCopy } from "@/lib/launchpad/content/types";
 import { WeeklyFocusSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
@@ -635,6 +637,8 @@ export function HandbookPage({
         <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
         <ReadyWrapPage sheet={page.sheet} />
+      ) : page.sheet === "order-system" ? (
+        <OrderSystemWorkbook silver={page.silver} />
       ) : page.sheet?.startsWith("sales-") ? (
         <SalesWorkbookPage sheet={page.sheet} />
       ) : page.sheet === "budget-split" ? (
@@ -669,6 +673,39 @@ function ProductOrSummary({
   if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook editable={editable} />;
   if (page.kind === "summary") return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
   return <PlaceholderPageBody page={page} />;
+}
+
+const ORDER_PICK = "font-semibold text-[#0CC1E0]";
+
+function OrderLine({ before, pick, after }: { before: string; pick?: string | null; after?: string }) {
+  return (
+    <p className={`mb-3 ${WORKBOOK_BODY}`}>
+      {before}
+      {pick ? <span className={ORDER_PICK}>{pick}</span> : null}
+      {after}
+    </p>
+  );
+}
+
+function OrderSystemWorkbook({ silver }: { silver: HandbookPageView["silver"] }) {
+  const ctx = useLaunchpadAnswers();
+  const screen = silver.bronzes.flatMap((bronze) => bronze.tasks.flatMap((task) => task.screens)).find((item) => item.type === "sales" && item.step === "order");
+  const copy: OrderSystemCopy | undefined = screen && screen.type === "sales" ? screen.order : undefined;
+  if (!copy) return null;
+  const saved = orderSystemOf(ctx?.answers, screen && screen.type === "sales" ? screen.answerKey : "");
+  const tracker = copy.trackerOptions.find((option) => option.id === saved?.tracker)?.workbook ?? null;
+  const reminder = copy.reminderOptions.find((option) => option.id === saved?.reminder)?.label ?? null;
+  return (
+    <div data-order-workbook="">
+      <AccentLabel as="h2">{copy.workbookTitle}</AccentLabel>
+      <OrderLine before={copy.trackerBefore} pick={tracker} after={copy.trackerAfter} />
+      <OrderLine before={copy.templateBefore} pick={copy.templateStrong} after={copy.templateAfter} />
+      <OrderLine before={copy.repeatLine} />
+      <OrderLine before={copy.reminderBefore} pick={reminder} after={copy.reminderAfter} />
+      <OrderLine before={copy.checkBefore} pick={copy.checkPick} after={copy.checkAfter} />
+      <LargeScribble name="calendar" />
+    </div>
+  );
 }
 
 function SalesWorkbookPage({ sheet }: { sheet: string }) {

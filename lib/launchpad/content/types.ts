@@ -502,7 +502,7 @@ export type OrderSystemCopy = {
   emptyLabel: string;
   extraLabel: string;
   extraMax: number;
-  trackerOptions: readonly { id: string; label: string }[];
+  trackerOptions: readonly { id: string; label: string; workbook: string }[];
   playbackTitle: string;
   templateBefore: string;
   templateStrong: string;
@@ -512,6 +512,14 @@ export type OrderSystemCopy = {
   reminderDefault: string;
   reminderOptions: readonly { id: string; label: string }[];
   checkLine: string;
+  workbookTitle: string;
+  trackerBefore: string;
+  trackerAfter: string;
+  reminderBefore: string;
+  reminderAfter: string;
+  checkBefore: string;
+  checkPick: string;
+  checkAfter: string;
 };
 
 export type SalesOption = { id: string; label: string; sentence?: string };

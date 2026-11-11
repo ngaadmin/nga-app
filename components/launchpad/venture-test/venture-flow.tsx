@@ -192,6 +192,7 @@ export function VentureFlow({
   iconSetOverride = null,
   cohort = null,
   openTemplates = false,
+  openSheet = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -205,6 +206,8 @@ export function VentureFlow({
   cohort?: LevelCohort | null;
   /** TEST-ONLY `?templates=1`: open the workbook on the Templates tab. */
   openTemplates?: boolean;
+  /** TEST-ONLY `?sheet=<id>`: open the workbook on that page. */
+  openSheet?: string | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -288,7 +291,8 @@ export function VentureFlow({
       setVentureId(initialVentureId);
       setProgress(shortcutProgress);
       go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
-      if (openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
+      if (openSheet) setHandbook({ ventureId: initialVentureId, entry: "building", openSheet });
+      else if (openTemplates) setHandbook({ ventureId: initialVentureId, entry: "building", openTemplates: true });
       return;
     }
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));

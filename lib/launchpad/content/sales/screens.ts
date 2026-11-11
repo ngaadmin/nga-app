@@ -105,6 +105,14 @@ export function orderSystemSilver(): LaunchpadSilver {
       reminderDefault: ORDER_SYSTEM.reminderDefault,
       reminderOptions: ORDER_SYSTEM.reminderOptions.map((row) => ({ ...row })),
       checkLine: ORDER_SYSTEM.checkLine,
+      workbookTitle: ORDER_SYSTEM.workbookTitle,
+      trackerBefore: ORDER_SYSTEM.trackerBefore,
+      trackerAfter: ORDER_SYSTEM.trackerAfter,
+      reminderBefore: ORDER_SYSTEM.reminderBefore,
+      reminderAfter: ORDER_SYSTEM.reminderAfter,
+      checkBefore: ORDER_SYSTEM.checkBefore,
+      checkPick: ORDER_SYSTEM.checkPick,
+      checkAfter: ORDER_SYSTEM.checkAfter,
     },
   };
   return {

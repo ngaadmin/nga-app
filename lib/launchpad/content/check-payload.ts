@@ -750,12 +750,13 @@ function checkOrderOptions(value: unknown, where: string): void {
     if (typeof raw.id !== "string" || seen.has(raw.id)) fail(`${where} option ${i + 1} id is repeated.`);
     seen.add(String(raw.id));
     text(raw.label, `${where} option ${i + 1} label`);
+    if (where.endsWith("trackerOptions")) text(raw.workbook, `${where} option ${i + 1} workbook`);
   });
 }
 
 function checkOrderSystem(value: unknown, where: string): void {
   if (!isObj(value)) fail(`${where} is missing.`);
-  for (const field of ["question", "context", "guidance", "trackerLead", "emptyLabel", "extraLabel", "playbackTitle", "templateBefore", "templateStrong", "templateAfter", "repeatLine", "reminderLead", "checkLine"] as const) {
+  for (const field of ["question", "context", "guidance", "trackerLead", "emptyLabel", "extraLabel", "playbackTitle", "templateBefore", "templateStrong", "templateAfter", "repeatLine", "reminderLead", "checkLine", "workbookTitle", "trackerBefore", "trackerAfter", "reminderBefore", "reminderAfter", "checkBefore", "checkPick", "checkAfter"] as const) {
     text(value[field], `${where} ${field}`);
   }
   if (typeof value.extraMax !== "number" || !Number.isInteger(value.extraMax) || value.extraMax < 1 || value.extraMax > 80) {

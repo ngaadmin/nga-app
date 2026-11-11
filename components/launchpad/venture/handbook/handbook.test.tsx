@@ -690,6 +690,44 @@ describe("L7 weekly focus and the Templates tab", () => {
   });
 });
 
+describe("L4 My order system workbook page", () => {
+  it("plays the saved picks back and a payload edit changes one line", () => {
+    const floors = structuredClone(FLOORS);
+    const order = floors.find((floor) => floor.level === 4)!.silvers.find((silver) => silver.id === "l4-s2")!;
+    const spec = order.bronzes[0]!.tasks[0]!.screens[0]!;
+    if (spec.type !== "sales" || !spec.order) throw new Error("order screen missing");
+    const original = spec.order.repeatLine;
+    spec.order.repeatLine = "A regular job stays on the list.";
+    const progress = setProgressAnswer(through("l4-s2"), "order_system", {
+      kind: "order-system",
+      version: 1,
+      tracker: "calendar",
+      reminder: "night-before",
+    });
+    render(
+      <Handbook
+        entry="building"
+        businessName="Happy Paws"
+        floors={floors}
+        progress={progress}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+        initialSheet="order-system"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: spec.order.workbookTitle })).toBeTruthy();
+    expect(screen.getByText("A regular job stays on the list.")).toBeTruthy();
+    expect(screen.queryByText(original)).toBeNull();
+    expect(screen.getByText("My calendar").className).toContain("text-[#0CC1E0]");
+    expect(screen.getByText("the night before").className).toContain("text-[#0CC1E0]");
+    expect(screen.getByText(spec.order.checkPick).className).toContain("text-[#0CC1E0]");
+    expect(screen.getByText(spec.order.templateStrong).className).toContain("text-[#0CC1E0]");
+    expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
+    expect(document.querySelector("[data-order-workbook]")?.textContent).not.toMatch(/best choice/);
+  });
+});
+
 describe("<LaunchpadHome> book button", () => {
   const card = (hasHandbook: boolean): InProgressVenture => ({
     ventureId: "dog-walking",

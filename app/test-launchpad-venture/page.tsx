@@ -64,6 +64,7 @@ export default async function TestLaunchpadVenturePage({
     iconSet?: string;
     cohort?: string;
     templates?: string;
+    sheet?: string;
   }>;
 }) {
   if (!isVentureTestEnabled()) notFound();
@@ -93,6 +94,7 @@ export default async function TestLaunchpadVenturePage({
       iconSetOverride={params.iconSet && LAUNCHPAD_VENTURE_ID_RE.test(params.iconSet) ? params.iconSet : null}
       cohort={params.cohort === "explorer" || params.cohort === "pathfinder" || params.cohort === "maverick" ? params.cohort : null}
       openTemplates={params.templates === "1"}
+      openSheet={params.sheet && /^[a-z0-9-]+$/.test(params.sheet) ? params.sheet : null}
     />
   );
 }

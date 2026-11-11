@@ -145,6 +145,8 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       out.push({ ...page, sheet: "funding" });
     } else if (page.silver.id === "l6-s1") {
       out.push({ ...page, kind: "summary", sheet: "budget-split" });
+    } else if (page.silver.id === "l4-s2") {
+      out.push({ ...page, kind: "summary", sheet: "order-system" });
     } else if (page.silver.id === "l4-s1") {
       const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
       const sheets = salesWorkbookSheets(progress.answers, name);
@@ -418,6 +420,13 @@ export function withShortcutSampleAnswers(
       for (const b of silver.bronzes)
         for (const t of b.tasks)
           for (const screen of t.screens) {
+            if (screen.type === "sales" && screen.step === "order" && screen.order && !next.answers?.[screen.answerKey]) {
+              const tracker = screen.order.trackerOptions[0]?.id;
+              const reminder = screen.order.reminderDefault;
+              if (tracker && reminder) {
+                next = setProgressAnswer(next, screen.answerKey, { kind: "order-system", version: 1, tracker, reminder });
+              }
+            }
             if (screen.type !== "know-your-cost" || next.answers?.[screen.answerKey]) continue;
             next = setProgressAnswer(next, screen.answerKey, sampleCostsAnswer(screen, floors, next.answers));
           }

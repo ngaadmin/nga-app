@@ -7,6 +7,15 @@ import { salesDoors } from "@/lib/launchpad/content/sales/screens";
 afterEach(cleanup);
 
 describe("Level 4 sales bronzes", () => {
+  it("keeps the three marketing doors and not the pitch door", () => {
+    expect(salesDoors().map((door) => door.title)).toEqual([
+      "Pick the sales channel(s)",
+      "Develop your marketing materials",
+      "Tell people about it",
+    ]);
+    expect(salesDoors().some((door) => /pitch/i.test(door.title))).toBe(false);
+  });
+
   it("captures channels on a white lesson and does not play the workbook sentence back", () => {
     const screenSpec = salesDoors()[0]!.tasks[0]!.screens[0]!;
     if (screenSpec.type !== "sales") throw new Error("expected sales screen");

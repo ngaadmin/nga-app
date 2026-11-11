@@ -178,7 +178,7 @@ This run's start is `8371f0503f339c849491966d740cff930b9d7e53`. The only change 
 
 Approved removals already on the branch, listed as requested:
 
-- The 8 old Level 5 placeholder bronzes, `l4-s1-b3` (the pitch), and the old Level 5 "Plan the work" silver.
+- The 8 old Level 5 placeholder bronzes, the pitch door "Develop and practice your pitch" (Cath confirmed this again; Tell people about it now uses `l4-s1-b3`), and the old Level 5 "Plan the work" silver. The in-person workbook page stays.
 - The one-off Jobs and Funding workbook auto-opens, replaced by the per-silver auto-open.
 - The direct Level 7 "Go to the rooftop", replaced by the workbook, then the lift, then the rooftop.
 - The Level 4 order screen `trackerExtra` field.

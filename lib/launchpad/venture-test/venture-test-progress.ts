@@ -284,7 +284,7 @@ export function pricingBronzeStates(progress: VentureTestProgress, silver: Ventu
 
 export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true, independent = false): NodeState[] {
   // A door left open ("Come back") stays current and does not block the next door.
-  // A placeholder beside real doors (the Level 4 pitch) stays locked and does not gate the next door.
+  // A placeholder beside real doors stays locked and does not gate the next door.
   // `independent` opens every built door at once. The test route uses it for Sales and Delivery.
   let blocked = false;
   return silver.bronzes.map((b) => {

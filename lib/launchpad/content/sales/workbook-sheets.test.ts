@@ -61,6 +61,8 @@ describe("Level 4 workbook playback", () => {
     expect(where?.blocks.some((block) => block.kind === "sub" && block.underline)).toBeFalsy();
     const flyer = sheets.find((sheet) => sheet.blocks.some((block) => block.kind === "sub" && block.underline === "flyer"));
     expect(flyer?.blocks.some((block) => block.kind === "sub" && block.text === "What my flyer will say" && block.underline === "flyer")).toBe(true);
+    const verbal = sheets.find((sheet) => sheet.blocks.some((block) => block.kind === "sub" && block.text === "What I will say in person"));
+    expect(verbal?.blocks.some((block) => block.kind === "sub" && block.underline === "in person")).toBe(true);
     const tell = sheets.find((sheet) => sheet.id === "sales-tell");
     expect(JSON.stringify(tell)).toContain("20");
     expect(tell?.blocks.some((block) => block.kind === "sub" && block.underline)).toBeFalsy();

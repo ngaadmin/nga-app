@@ -39,21 +39,26 @@ describe("Level Up check-in date", () => {
     expect("startOptions" in improve).toBe(false);
   });
 
-  it("keeps the Grow picker to one question and the five idea headings", () => {
+  it("keeps the Grow menu to the locked question and the five idea names", () => {
     const grow = levelUpContent().grow;
-    expect(grow.question).toBe("What will you try?");
-    expect(grow.guidance).toBe("Pick up to three ideas to try.");
-    expect("context" in grow).toBe(false);
-    expect("salesLabel" in grow).toBe(false);
-    expect("startOptions" in grow).toBe(false);
+    expect(grow.question).toBe("What will you try to grow your business?");
+    expect(grow.context).toBe("A growth experiment isn't about polishing what you have, it's one new thing you try to see if it pays off.");
+    expect(grow.guidance).toBe("Try at least one growth experiment.");
+    expect(grow.optionPrompt).toBe("Select at least one.");
     expect(grow.ideas.map((idea) => idea.label)).toEqual([
       "Start a referral program",
-      "Offer a prepaid pack",
-      "Build a bundle",
+      "Offer subscriptions and prepays",
+      "Build service bundles",
       "Add a new dog service",
-      "Expand your services",
+      "Expand beyond dog walking",
     ]);
-    expect(grow.ideas.every((idea) => !("context" in idea) && !("success" in idea) && !("start" in idea))).toBe(true);
+    expect(grow.ideas.map((idea) => idea.successLine)).toEqual([
+      "{count} new customers book through a referral",
+      "{count} customers sign up and pay upfront",
+      "{count} customers book a bundle",
+      "{count} customers book my new service",
+      "{count} customers give me more to do",
+    ]);
   });
 
   it("gates expand jobs by cohort", () => {

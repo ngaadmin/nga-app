@@ -73,6 +73,7 @@ describe("Level Up screens", () => {
         pace: {},
         improvePlan: [],
         ideas: [],
+        growPlans: [],
       },
     };
     render(<LevelUpFlow screen={improve} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
@@ -123,6 +124,7 @@ describe("Level Up screens", () => {
         pace: {},
         improvePlan: [],
         ideas: [],
+        growPlans: [],
       },
       "l7-improve": {
         kind: "level-up",
@@ -132,6 +134,7 @@ describe("Level Up screens", () => {
         pace: {},
         improvePlan: [],
         ideas: [],
+        growPlans: [],
       },
     };
     const { unmount } = render(<LevelUpFlow screen={improve} answers={mapped} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
@@ -160,6 +163,7 @@ describe("Level Up screens", () => {
             pace: {},
             improvePlan: [],
             ideas: [],
+        growPlans: [],
           },
         }}
         onExit={() => {}}
@@ -203,141 +207,112 @@ describe("Level Up screens", () => {
     expect(kept && "starts" in kept).toBe(false);
   });
 
-  function openGrowMenu() {
-    fireEvent.click(screen.getByRole("button", { name: /What will you try/ }));
+  function fillIdea() {
+    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
+    fireEvent.click(screen.getByRole("button", { name: "This week" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "How many customers" }), { target: { value: "4" } });
+    fireEvent.click(screen.getByRole("button", { name: "one month" }));
   }
 
-  it("sets the Grow check-in to today plus three months and copies that date", async () => {
+  it("shows a payload edit to the Grow question", () => {
+    const edited = structuredClone(grow);
+    edited.content.grow.question = "Which experiment will you run?";
+    render(<LevelUpFlow screen={edited} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    expect(screen.getByText("Which experiment will you run?")).toBeTruthy();
+    expect(screen.queryByText("What will you try to grow your business?")).toBeNull();
+  });
+
+  it("keeps the closer date and writes each idea check-in once", async () => {
     const write = vi.fn(() => Promise.resolve());
     Object.assign(navigator, { clipboard: { writeText: write } });
     const onFinish = vi.fn();
     render(<LevelUpFlow screen={grow} today={new Date(2026, 10, 10)} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
     expect(screen.getByText("Section 1 of 2")).toBeTruthy();
-    expect(screen.queryByText(/Section \d+ of 3/)).toBeNull();
-    openGrowMenu();
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    expect(screen.getByText("Section 1 of 3")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Section 2 of 2")).toBeTruthy();
+    expect(screen.getByText("Section 2 of 3")).toBeTruthy();
+    expect(screen.getByText("Select at least one.")).toBeTruthy();
+    fillIdea();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Section 3 of 3")).toBeTruthy();
     expect(screen.getByText("Your next check-in: February 10, 2027")).toBeTruthy();
     expect(screen.getByText("See you in three months.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(onFinish).toHaveBeenCalled();
     const saved = levelUpOf({ "l7-grow": onFinish.mock.calls[0]?.[0] }, "l7-grow");
-    expect(saved?.ideas).toEqual(["free-walk"]);
-    expect(saved && "idea" in saved).toBe(false);
-    expect(saved && "option" in saved).toBe(false);
-    expect(saved && "success" in saved).toBe(false);
-    expect(saved && "start" in saved).toBe(false);
+    expect(saved?.ideas).toEqual(["referral"]);
+    expect(saved?.growPlans).toEqual([
+      { idea: "referral", options: ["free-walk"], when: "this-week", successCount: 4, checkIn: "one-month", checkInDate: "December 10, 2026" },
+    ]);
   });
 
-  it("ticks one to three Grow options under the idea headings and stops at three", () => {
+  it("caps the menu at three ideas and repeats screen 2 in menu order", () => {
     render(<LevelUpFlow screen={grow} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     const cont = () => screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
     expect(cont().disabled).toBe(true);
-    const guidance = screen.getByText("Pick up to three ideas to try.");
-    const question = screen.getByText("What will you try?");
-    const menu = document.querySelector("[data-grow-menu]");
-    expect(question.compareDocumentPosition(guidance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(guidance.nextElementSibling).toBe(menu);
-    expect(screen.queryByText("Grow your sales")).toBeNull();
-    expect(screen.queryByText("Grow your service")).toBeNull();
-    openGrowMenu();
-    expect(screen.getByText("Start a referral program")).toBeTruthy();
-    expect(screen.getByText("Expand your services")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
-    fireEvent.click(screen.getByRole("button", { name: "A monthly pack" }));
-    fireEvent.click(screen.getByRole("button", { name: "Walk and wash" }));
-    expect((screen.getByRole("button", { name: "A ten-walk pack" }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "A monthly pack" }));
-    expect((screen.getByRole("button", { name: "A ten-walk pack" }) as HTMLButtonElement).disabled).toBe(false);
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
-    fireEvent.click(screen.getByRole("button", { name: "Walk and wash" }));
-    expect(cont().disabled).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand beyond dog walking" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    fireEvent.click(screen.getByRole("button", { name: "Build service bundles" }));
+    expect((screen.getByRole("button", { name: "Add a new dog service" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Build service bundles" }));
+    expect((screen.getByRole("button", { name: "Add a new dog service" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(cont());
-    expect(screen.getByText("See you in three months.")).toBeTruthy();
-    expect(screen.queryByText("What will owners get for sending a friend?")).toBeNull();
-    expect(screen.queryByText("What will success look like?")).toBeNull();
-  });
-
-  it("grays services the learner already offers and hides expand jobs outside the cohort", () => {
-    const answers: LaunchpadAnswers = { "l1-offer": selectionAnswer(["dog-walking", "dog-training"]) };
-    const { unmount } = render(<LevelUpFlow screen={grow} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
-    openGrowMenu();
-    expect((screen.getByRole("button", { name: "Dog walking" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Dog Training" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Grooming" }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByText("Section 2 of 4")).toBeTruthy();
+    expect(screen.getByText("Start a referral program")).toBeTruthy();
+    fillIdea();
+    fireEvent.click(cont());
+    expect(screen.getByText("Expand beyond dog walking")).toBeTruthy();
     expect(screen.queryByText("Grocery delivery")).toBeNull();
     expect(screen.getByText("Lawn mowing")).toBeTruthy();
+  });
+
+  it("grays services already chosen and hides expand jobs outside the cohort", () => {
+    const answers: LaunchpadAnswers = { "l1-offer": selectionAnswer(["dog-sitting", "grooming"]) };
+    const { unmount } = render(<LevelUpFlow screen={grow} answers={answers} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add a new dog service" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect((screen.getByRole("button", { name: "Dog sitting" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Grooming" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Dog training" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Holiday care" }) as HTMLButtonElement).disabled).toBe(false);
     unmount();
     render(<LevelUpFlow screen={grow} cohort="explorer" onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
-    openGrowMenu();
+    fireEvent.click(screen.getByRole("button", { name: "Expand beyond dog walking" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByText("Lawn mowing")).toBeNull();
     expect(screen.getByText("Curb painting")).toBeTruthy();
   });
 
-  it("keeps an older Grow payload valid and ignores a saved per-idea plan", () => {
+  it("keeps an older Grow payload valid and ignores an old option id save", () => {
     const payload = structuredClone(launchpadTestVentureSeed());
     const growScreen = payload.floors.find((floor) => floor.level === 7)!.silvers[0]!.bronzes[2]!.tasks[0]!.screens[0]!;
     if (growScreen.type !== "level-up") throw new Error("missing");
-    const copy = growScreen.content.grow as unknown as {
-      context?: string;
-      salesLabel?: string;
-      serviceLabel?: string;
-      guidance: string;
-      ideas: { group?: string; context?: string; question?: string; success?: { id: string; label: string }[]; start?: string }[];
-    };
-    copy.context = "Every business can grow a little. Trying one new idea is a simple way to bring in more work.";
-    copy.salesLabel = "Grow your sales";
-    copy.serviceLabel = "Grow your service";
-    copy.guidance = "Pick up to three ideas to try. Keeping it to three helps you focus on the ones you really want to do. Next, you'll plan how and when to start.";
-    for (const idea of copy.ideas) {
-      idea.group = "sales";
-      idea.context = "A small thank-you makes owners happy to tell their friends about you.";
-      idea.question = "What will owners get for sending a friend?";
-      idea.success = [{ id: "new-owner", label: "A new owner books" }];
-      idea.start = "this-week";
-    }
+    const copy = growScreen.content.grow as unknown as { startOptions?: unknown; checkInOptions?: unknown; ideas: { successLine?: string }[] };
+    delete copy.startOptions;
+    delete copy.checkInOptions;
+    for (const idea of copy.ideas) delete idea.successLine;
     expect(checkLaunchpadVenturePayload(payload, "dog-walking").ok).toBe(true);
     const kept = parseLevelUpAnswer({
       kind: "level-up",
       version: 1,
-      ideas: ["referral"],
+      ideas: ["free-walk"],
       idea: "referral",
       option: "free-walk",
       success: "new-owner",
       start: "this-week",
     });
-    expect(kept?.ideas).toEqual(["referral"]);
-    expect(kept && "idea" in kept).toBe(false);
-    expect(kept && "option" in kept).toBe(false);
-    expect(kept && "success" in kept).toBe(false);
-    expect(kept && "start" in kept).toBe(false);
+    expect(kept?.ideas).toEqual(["free-walk"]);
+    expect(kept?.growPlans).toEqual([]);
     const onFinish = vi.fn();
-    render(
-      <LevelUpFlow
-        screen={growScreen}
-        answers={kept ? { "l7-grow": kept } : undefined}
-        onExit={() => {}}
-        onSave={() => {}}
-        onFinish={onFinish}
-      />,
-    );
+    render(<LevelUpFlow screen={growScreen} answers={kept ? { "l7-grow": kept } : undefined} onExit={() => {}} onSave={() => {}} onFinish={onFinish} />);
     expect(screen.getByText("Section 1 of 2")).toBeTruthy();
-    expect(screen.queryByText(copy.context)).toBeNull();
-    expect(screen.queryByText("Grow your sales")).toBeNull();
-    expect(screen.getByText(copy.guidance)).toBeTruthy();
-    const cont = () => screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
-    expect(cont().disabled).toBe(true);
-    openGrowMenu();
-    fireEvent.click(screen.getByRole("button", { name: "A free walk" }));
-    expect(cont().disabled).toBe(false);
-    fireEvent.click(cont());
-    expect(screen.queryByText("What will owners get for sending a friend?")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("See you in three months.")).toBeTruthy();
-    fireEvent.click(cont());
-    expect(onFinish.mock.calls[0]?.[0].ideas).toEqual(["free-walk"]);
+    expect(screen.queryByText("Select at least one.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onFinish.mock.calls[0]?.[0].ideas).toEqual(["referral"]);
   });
 });

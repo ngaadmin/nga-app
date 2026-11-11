@@ -300,6 +300,26 @@ function checkLevelUp(screen: Obj, where: string): void {
     text(grow[field], `${where} grow ${field}`);
   }
   if (!String(grow.checkIn).includes("{date}")) fail(`${where} grow checkIn must include {date}.`);
+  text(grow.context, `${where} grow context`, true);
+  text(grow.optionPrompt, `${where} grow option prompt`, true);
+  text(grow.startLabel, `${where} grow start label`, true);
+  text(grow.checkInLabel, `${where} grow check-in label`, true);
+  text(grow.successFieldLabel, `${where} grow success field`, true);
+  const choiceIds = (raw: unknown, label: string, withMonths: boolean) => {
+    if (raw === undefined) return;
+    const seen = new Set<string>();
+    list(raw, label).forEach((item, i) => {
+      const cw = `${label} ${i + 1}`;
+      if (!isObj(item) || typeof item.id !== "string" || !NODE_ID_RE.test(item.id) || seen.has(item.id)) fail(`${cw} has no valid id.`);
+      seen.add(item.id);
+      text(item.label, `${cw} label`);
+      if (withMonths && (typeof item.months !== "number" || !Number.isInteger(item.months) || item.months < 1 || item.months > 36)) {
+        fail(`${cw} months are missing.`);
+      }
+    });
+  };
+  choiceIds(grow.startOptions, `${where} grow starts`, false);
+  choiceIds(grow.checkInOptions, `${where} grow check-ins`, true);
   if (content.workbookPages !== undefined) {
     const seen = new Set<string>();
     list(content.workbookPages, `${where} workbook pages`).forEach((page, i) => {
@@ -318,6 +338,8 @@ function checkLevelUp(screen: Obj, where: string): void {
     if (ideaIds.has(raw.id)) fail(`${iw} repeats ${raw.id}.`);
     ideaIds.add(raw.id);
     text(raw.label, `${iw} label`);
+    text(raw.successLine, `${iw} success line`, true);
+    if (typeof raw.successLine === "string" && !raw.successLine.includes("{count}")) fail(`${iw} success line must include {count}.`);
     list(raw.options, `${iw} options`).forEach((option, oi) => {
       const ow = `${iw} option ${oi + 1}`;
       if (!isObj(option) || typeof option.id !== "string" || !NODE_ID_RE.test(option.id)) fail(`${ow} has no valid id.`);

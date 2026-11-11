@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
-import { levelUpOf, selectionOf, type LevelUpAnswer } from "@/lib/launchpad/content/answers";
-import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
+import { levelUpOf, offerOf, selectionOf, type GrowPlan, type LevelUpAnswer } from "@/lib/launchpad/content/answers";
+import type { LaunchpadLevelUpScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import {
   addMonths,
   checkInClipboard,
@@ -18,12 +18,13 @@ import {
   type LevelSectionId,
   type LevelUpIdea,
 } from "@/lib/launchpad/content/level-up/model";
+import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { OrderedSlots } from "@/components/launchpad/venture/screens/rank-order-screen";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 function blankAnswer(): LevelUpAnswer {
-  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan: [], ideas: [] };
+  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan: [], ideas: [], growPlans: [] };
 }
 
 function planFor(ids: readonly string[]): { statementId: string; week: number }[] {
@@ -34,94 +35,22 @@ function toggle(list: readonly string[], id: string): string[] {
   return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
 }
 
-type GrowRow = { id: string; label: string; offered: boolean };
-
-/** Options the learner can tick: cohort-gated expand jobs, with services they already offer marked. */
-function growGroups(ideas: readonly LevelUpIdea[], cohort: LevelCohort, offered: ReadonlySet<string>): { id: string; label: string; options: GrowRow[] }[] {
-  return ideas
-    .map((idea) => {
-      const rows = idea.id === "expand" ? expandJobsFor(idea.options ?? [], cohort) : (idea.options ?? []);
-      return {
-        id: idea.id,
-        label: idea.label,
-        options: rows.map((option) => ({ id: option.id, label: option.label, offered: idea.id === "new-service" && offered.has(option.id) })),
-      };
-    })
-    .filter((group) => group.options.length > 0);
+function orderedIdeas(ideas: readonly LevelUpIdea[], ids: readonly string[]): LevelUpIdea[] {
+  const chosen = new Set(ids);
+  return ideas.filter((idea) => chosen.has(idea.id)).slice(0, 3);
 }
 
-/** Known option ids only, skipping services already offered. At most three, in tick order. */
-function keptGrowPicks(groups: readonly { options: readonly GrowRow[] }[], selected: readonly string[]): string[] {
-  const allowed = new Set(groups.flatMap((group) => group.options.filter((option) => !option.offered).map((option) => option.id)));
-  const out: string[] = [];
-  for (const id of selected) {
-    if (!allowed.has(id) || out.includes(id)) continue;
-    out.push(id);
-    if (out.length === 3) break;
-  }
-  return out;
+function blankPlan(idea: string): GrowPlan {
+  return { idea, options: [], when: "", successCount: 0, checkIn: "", checkInDate: "" };
 }
 
-/**
- * One dropdown of every Grow option, grouped under the idea headings.
- * A native select cannot tick several rows or gray the rest at three,
- * so this uses the box styling from FieldControl and the lined Chip checkbox.
- */
-function GroupedTickMenu({
-  groups,
-  selected,
-  onToggle,
-}: {
-  groups: readonly { id: string; label: string; options: readonly GrowRow[] }[];
-  selected: readonly string[];
-  onToggle: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const summary = groups
-    .flatMap((group) => group.options)
-    .filter((option) => selected.includes(option.id))
-    .map((option) => option.label)
-    .join(", ");
-  const full = selected.length >= 3;
-  return (
-    <div className="mt-2" data-grow-menu="" data-open={open ? "true" : "false"}>
-      <button
-        type="button"
-        aria-labelledby={summary ? "grow-question grow-picks" : "grow-question"}
-        aria-expanded={open}
-        aria-controls="grow-options"
-        onClick={() => setOpen((value) => !value)}
-        className="flex min-h-[42px] w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left font-sans text-[18px] font-medium leading-[26px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#C5D4EA] outline-none focus-visible:shadow-[inset_0_0_0_2px_#3FB7DA]"
-      >
-        <span id={summary ? "grow-picks" : undefined} className="min-w-0 flex-1 font-normal">{summary}</span>
-        <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" className="shrink-0">
-          <path d="M1 1l4 4 4-4" fill="none" stroke="#19347D" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      {open ? (
-        <div id="grow-options" className="mt-2 rounded-xl bg-white px-3 py-1 shadow-[inset_0_0_0_1.5px_#C5D4EA]">
-          {groups.map((group) => (
-            <div key={group.id}>
-              <ScreenPrompt tone="section" flush className="!mt-3">{group.label}</ScreenPrompt>
-              {group.options.map((option) => {
-                const on = selected.includes(option.id);
-                return (
-                  <Chip
-                    key={option.id}
-                    variant="lined"
-                    label={option.label}
-                    selected={on}
-                    muted={option.offered || (!on && full)}
-                    onClick={() => onToggle(option.id)}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+function planForIdea(plans: readonly GrowPlan[], idea: string): GrowPlan {
+  return plans.find((row) => row.idea === idea) ?? blankPlan(idea);
+}
+
+function writePlan(plans: readonly GrowPlan[], next: GrowPlan): GrowPlan[] {
+  const rest = plans.filter((row) => row.idea !== next.idea);
+  return [...rest, next];
 }
 
 function Lined({ item, selected, muted, onClick }: { item: { id: string; label: string }; selected: boolean; muted?: boolean; onClick: () => void }) {
@@ -158,13 +87,20 @@ export function LevelUpFlow({
   const sections = content.sections;
   const saved = levelUpOf(answers, screen.answerKey) ?? blankAnswer();
   const wins = new Set(levelUpOf(answers, "l7-reflect")?.selected ?? []);
-  const offered = new Set(selectionOf(answers, "l1-offer")?.selected ?? []);
+  const offered = new Set([
+    ...(selectionOf(answers, "l1-offer")?.selected ?? []),
+    ...(offerOf(answers, "l2-offer")?.offerings.map((row) => row.serviceId) ?? []),
+  ]);
   const [page, setPage] = useState(0);
   const [draft, setDraft] = useState<LevelUpAnswer>(saved);
+  const writtenDates = useRef(new Map(saved.growPlans.filter((row) => row.checkIn && row.checkInDate).map((row) => [row.idea, { checkIn: row.checkIn, checkInDate: row.checkInDate }])));
   const pickPages = sections.length;
   const weekLabels = content.improve.weekLabels ?? [];
   const planAvailable = Boolean(content.improve.planHeader && weekLabels.length > 0);
-  const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : 2;
+  const growIdeas = orderedIdeas(content.grow.ideas ?? [], draft.ideas);
+  const growDetail = Boolean(content.grow.startOptions?.length && content.grow.checkInOptions?.length && growIdeas.every((idea) => idea.successLine));
+  const growTotal = 1 + (growDetail ? growIdeas.length : 0) + 1;
+  const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : growTotal;
   const checkIn = addMonths(today, 3);
   const checkInLabel = formatCheckInDate(checkIn);
   const checkInLine = fillToken(content.grow.checkIn, "date", checkInLabel);
@@ -181,13 +117,21 @@ export function LevelUpFlow({
   const improvePicksReady = (ids: readonly LevelSectionId[]) =>
     ids.every((section) => statementsIn(content.statements, section).every((item) => wins.has(item.id)) || Boolean(draft.picks[section]));
   const chosenItems = pickedStatements(content, draft.picks);
-  const groups = growGroups(content.grow.ideas ?? [], cohort, offered);
-  const kept = keptGrowPicks(groups, draft.ideas);
+  const currentIdea = growDetail && page > 0 && page <= growIdeas.length ? growIdeas[page - 1] : undefined;
+  const currentPlan = currentIdea ? planForIdea(draft.growPlans, currentIdea.id) : undefined;
 
   let ready = true;
   if (screen.step === "improve" && page < pickPages) ready = improvePicksReady([sections[page]!.id]);
   if (screen.step === "improve" && page === pickPages) ready = chosenItems.length > 0 && chosenItems.every((item) => draft.improvePlan.some((row) => row.statementId === item.id)) && draft.improvePlan.length === chosenItems.length;
-  if (screen.step === "grow" && page === 0) ready = kept.length > 0;
+  if (screen.step === "grow" && page === 0) ready = growIdeas.length > 0;
+  if (currentIdea && currentPlan) {
+    const visible = new Set((currentIdea.id === "expand" ? expandJobsFor(currentIdea.options, cohort) : currentIdea.options).map((option) => option.id));
+    const blocked = currentIdea.id === "new-service" ? offered : new Set<string>();
+    const picked = currentPlan.options.filter((id) => visible.has(id) && !blocked.has(id));
+    const starts = new Set((content.grow.startOptions ?? []).map((option) => option.id));
+    const periods = new Set((content.grow.checkInOptions ?? []).map((option) => option.id));
+    ready = picked.length > 0 && starts.has(currentPlan.when) && currentPlan.successCount >= 1 && periods.has(currentPlan.checkIn);
+  }
 
   const go = () => {
     if (!ready) return;
@@ -202,7 +146,21 @@ export function LevelUpFlow({
       }
       if (!covered) next.improvePlan = planFor(rows.map((item) => item.id));
     }
-    if (screen.step === "grow") next.ideas = kept;
+    if (screen.step === "grow" && page === 0) {
+      next.ideas = growIdeas.map((idea) => idea.id);
+      next.growPlans = next.growPlans.filter((row) => next.ideas.includes(row.idea));
+    }
+    if (currentIdea && currentPlan) {
+      const committed = writtenDates.current.get(currentIdea.id);
+      const period = (content.grow.checkInOptions ?? []).find((option) => option.id === currentPlan.checkIn);
+      const checkInDate = committed && committed.checkIn === currentPlan.checkIn
+        ? committed.checkInDate
+        : period?.months
+          ? formatCheckInDate(addMonths(today, period.months))
+          : "";
+      if (checkInDate) writtenDates.current.set(currentIdea.id, { checkIn: currentPlan.checkIn, checkInDate });
+      next.growPlans = writePlan(next.growPlans, { ...currentPlan, checkInDate });
+    }
     save(next, page >= total - 1);
   };
 
@@ -286,20 +244,77 @@ export function LevelUpFlow({
       </>
     );
   } else if (page === 0) {
+    const full = growIdeas.length >= 3;
     body = (
       <>
         <ScreenPrompt id="grow-question" tone="question" flush className="!mt-3">{content.grow.question}</ScreenPrompt>
+        {content.grow.context ? <p className={`mt-[21px] ${LESSON_BODY}`}>{content.grow.context}</p> : null}
+        <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
         <div className="mt-[21px]">
-          <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
-          <GroupedTickMenu
-            groups={groups}
-            selected={kept}
-            onToggle={(id) => {
-              if (kept.includes(id)) setDraft({ ...draft, ideas: kept.filter((item) => item !== id) });
-              else if (kept.length < 3) setDraft({ ...draft, ideas: [...kept, id] });
-            }}
-          />
+          {(content.grow.ideas ?? []).map((idea) => {
+            const on = growIdeas.some((row) => row.id === idea.id);
+            return (
+              <Lined
+                key={idea.id}
+                item={idea}
+                selected={on}
+                muted={!on && full}
+                onClick={() => {
+                  if (on) setDraft({ ...draft, ideas: draft.ideas.filter((id) => id !== idea.id) });
+                  else if (!full) setDraft({ ...draft, ideas: [...draft.ideas, idea.id] });
+                }}
+              />
+            );
+          })}
         </div>
+      </>
+    );
+  } else if (currentIdea && currentPlan) {
+    const visible = currentIdea.id === "expand" ? expandJobsFor(currentIdea.options, cohort) : currentIdea.options;
+    const [before, after] = (currentIdea.successLine ?? "").split("{count}");
+    const field: LaunchpadTextField = { name: "success", input: "integer", label: content.grow.successFieldLabel ?? "", min: 1, max: 999 };
+    const patch = (plan: GrowPlan) => setDraft({ ...draft, growPlans: writePlan(draft.growPlans, plan) });
+    body = (
+      <>
+        <ScreenPrompt tone="section" flush className="!mt-3">{currentIdea.label}</ScreenPrompt>
+        {content.grow.optionPrompt ? <ScreenGuidance flush>{content.grow.optionPrompt}</ScreenGuidance> : null}
+        {visible.map((option) => {
+          const blocked = currentIdea.id === "new-service" && offered.has(option.id);
+          const on = !blocked && currentPlan.options.includes(option.id);
+          return (
+            <Lined
+              key={option.id}
+              item={option}
+              selected={on}
+              muted={blocked}
+              onClick={() => {
+                if (blocked) return;
+                patch({ ...currentPlan, options: on ? currentPlan.options.filter((id) => id !== option.id) : [...currentPlan.options, option.id] });
+              }}
+            />
+          );
+        })}
+        {content.grow.startLabel ? <ScreenPrompt tone="section" flush className="!mt-[21px]">{content.grow.startLabel}</ScreenPrompt> : null}
+        {(content.grow.startOptions ?? []).map((option) => (
+          <Lined key={option.id} item={option} selected={currentPlan.when === option.id} onClick={() => patch({ ...currentPlan, when: option.id })} />
+        ))}
+        {currentIdea.successLine ? (
+          <p className={`mt-4 ${LESSON_BODY}`}>
+            {before}
+            <FieldControl
+              field={field}
+              value={currentPlan.successCount || ""}
+              onChange={(value) => patch({ ...currentPlan, successCount: typeof value === "number" ? value : 0 })}
+              appearance="inline"
+              idPrefix="grow"
+            />
+            {after}
+          </p>
+        ) : null}
+        {content.grow.checkInLabel ? <ScreenPrompt tone="section" flush className="!mt-[21px]">{content.grow.checkInLabel}</ScreenPrompt> : null}
+        {(content.grow.checkInOptions ?? []).map((option) => (
+          <Lined key={option.id} item={option} selected={currentPlan.checkIn === option.id} onClick={() => patch({ ...currentPlan, checkIn: option.id })} />
+        ))}
       </>
     );
   } else {

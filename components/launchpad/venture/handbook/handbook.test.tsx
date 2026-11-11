@@ -552,6 +552,7 @@ describe("L7 weekly focus and the Templates tab", () => {
         { statementId: "confirmed", week: 1 },
       ],
       ideas: [],
+      growPlans: [],
     });
     render(
       <Handbook

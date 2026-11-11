@@ -256,6 +256,17 @@ export type TellPeopleAnswer = {
   counts: Readonly<Record<string, number>>;
 };
 
+/** One Grow idea the learner planned. `checkInDate` is written once, when that idea's screen is completed. */
+export type GrowPlan = {
+  idea: string;
+  options: readonly string[];
+  when: string;
+  successCount: number;
+  /** Period id. Kept so a later view can show the pick without recomputing the date. */
+  checkIn: string;
+  checkInDate: string;
+};
+
 /** Level 7 Reflect, Improve, or Grow. Lists and short ids only. */
 export type LevelUpAnswer = {
   kind: "level-up";
@@ -266,11 +277,10 @@ export type LevelUpAnswer = {
   pace: Readonly<Record<string, "quick" | "longer">>;
   /** Improve week order. Old saves used `starts` instead; that field is ignored. */
   improvePlan: readonly { statementId: string; week: number }[];
-  /**
-   * Grow option ids the learner ticked, in tick order (one to three).
-   * Old per-idea fields (`idea`, `option`, `success`, `start`) are ignored.
-   */
+  /** Grow idea ids, in the order shown on the menu. At most three. */
   ideas: readonly string[];
+  /** One plan per chosen idea. Old saves omit this. */
+  growPlans: readonly GrowPlan[];
 };
 
 export type LaunchpadAnswer =
@@ -570,6 +580,28 @@ function stringIdMap(value: unknown): Record<string, string> {
   return out;
 }
 
+function growPlansOf(value: unknown): GrowPlan[] {
+  if (!Array.isArray(value)) return [];
+  const out: GrowPlan[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.idea !== "string" || !ID_RE.test(item.idea)) continue;
+    if (out.some((row) => row.idea === item.idea)) continue;
+    const count = item.successCount;
+    const when = typeof item.when === "string" && (item.when === "" || ID_RE.test(item.when)) ? item.when : "";
+    const checkIn = typeof item.checkIn === "string" && (item.checkIn === "" || ID_RE.test(item.checkIn)) ? item.checkIn : "";
+    const date = typeof item.checkInDate === "string" && item.checkInDate.trim() && item.checkInDate.length <= 80 ? item.checkInDate.trim() : "";
+    out.push({
+      idea: item.idea,
+      options: idList(item.options),
+      when,
+      successCount: typeof count === "number" && Number.isInteger(count) && count >= 1 && count <= 999 ? count : 0,
+      checkIn,
+      checkInDate: date,
+    });
+  }
+  return out;
+}
+
 export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
   if (!isRecord(value) || value.kind !== "level-up" || value.version !== 1) return null;
   return {
@@ -580,6 +612,7 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     pace: paceMap(value.pace),
     improvePlan: improvePlanOf(value.improvePlan),
     ideas: idList(value.ideas),
+    growPlans: growPlansOf(value.growPlans),
   };
 }
 

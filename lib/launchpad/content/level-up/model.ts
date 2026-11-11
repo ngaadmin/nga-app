@@ -30,12 +30,16 @@ export type LevelUpOption = {
   cohorts?: readonly LevelCohort[];
 };
 
-/** One Grow heading and the options listed under it. */
+/** One Grow idea and the options the learner can tick on its own screen. */
 export type LevelUpIdea = {
   id: GrowIdeaId;
   label: string;
   options: readonly LevelUpOption[];
+  /** `{count}` is the whole-number blank. Absent on a payload published before this screen. */
+  successLine?: string;
 };
+
+export type GrowChoice = { id: string; label: string; months?: number };
 
 /** Shared by the Reflect, Improve, and Grow screens of one Level Up silver. */
 export type LaunchpadLevelUpContent = {
@@ -58,10 +62,21 @@ export type LaunchpadLevelUpContent = {
   grow: {
     guidance: string;
     question: string;
+    /** Shown under the question. Absent on a payload published before this screen. */
+    context?: string;
+    /** Shown above the option list on each idea screen. */
+    optionPrompt?: string;
+    startLabel?: string;
+    checkInLabel?: string;
+    /** Accessible name of the success number blank. */
+    successFieldLabel?: string;
+    startOptions?: readonly GrowChoice[];
+    /** `months` is how far ahead the check-in date is written. */
+    checkInOptions?: readonly GrowChoice[];
     closerHeadline: string;
     closerContext: string;
     calendarNote: string;
-    /** `{date}` is the calculated check-in date. */
+    /** `{date}` is the closer's own check-in date. */
     checkIn: string;
     copyLabel: string;
     copyHint: string;

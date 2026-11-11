@@ -93,8 +93,6 @@ export function orderSystemSilver(): LaunchpadSilver {
       guidance: ORDER_SYSTEM.guidance,
       trackerLead: ORDER_SYSTEM.trackerLead,
       emptyLabel: ORDER_SYSTEM.emptyLabel,
-      extraLabel: ORDER_SYSTEM.extraLabel,
-      extraMax: ORDER_SYSTEM.extraMax,
       trackerOptions: ORDER_SYSTEM.trackerOptions.map((row) => ({ ...row })),
       playbackTitle: ORDER_SYSTEM.playbackTitle,
       templateBefore: ORDER_SYSTEM.templateBefore,

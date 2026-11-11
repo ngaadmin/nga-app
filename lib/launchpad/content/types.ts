@@ -500,8 +500,6 @@ export type OrderSystemCopy = {
   guidance: string;
   trackerLead: string;
   emptyLabel: string;
-  extraLabel: string;
-  extraMax: number;
   trackerOptions: readonly { id: string; label: string; workbook: string }[];
   playbackTitle: string;
   templateBefore: string;

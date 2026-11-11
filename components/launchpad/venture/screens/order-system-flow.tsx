@@ -88,7 +88,6 @@ function OrderSystemScreens({
   const saved = orderSystemOf(answers, screen.answerKey);
   const [page, setPage] = useState(0);
   const [tracker, setTracker] = useState(saved?.tracker ?? "");
-  const [extra, setExtra] = useState(saved?.trackerExtra ?? "");
   const [reminder, setReminder] = useState(saved?.reminder ?? copy.reminderDefault);
   const trackerOk = copy.trackerOptions.some((option) => option.id === tracker);
   const reminderOk = copy.reminderOptions.some((option) => option.id === reminder);
@@ -99,14 +98,7 @@ function OrderSystemScreens({
       setPage(1);
       return;
     }
-    const typed = extra.trim().slice(0, copy.extraMax);
-    onFinish({
-      kind: "order-system",
-      version: 1,
-      tracker,
-      reminder,
-      ...(typed ? { trackerExtra: typed } : {}),
-    });
+    onFinish({ kind: "order-system", version: 1, tracker, reminder });
   };
   return (
     <LessonSurface
@@ -131,16 +123,6 @@ function OrderSystemScreens({
           <>
             <BronzeFirstLead flush question={copy.question} context={copy.context} guidance={copy.guidance} />
             <StackedSelect lead={copy.trackerLead} value={tracker} emptyLabel={copy.emptyLabel} options={copy.trackerOptions} onChange={setTracker} />
-            <label className={`mt-4 block ${LESSON_BODY}`}>
-              {copy.extraLabel}
-              <input
-                aria-label={copy.extraLabel}
-                maxLength={copy.extraMax}
-                value={extra}
-                onChange={(event) => setExtra(event.target.value.slice(0, copy.extraMax))}
-                className="mt-1 w-full border-b border-dashed border-[#F4D5A7] bg-transparent py-1 font-sans text-[18px] leading-[26px] text-[#19347D] outline-none"
-              />
-            </label>
           </>
         ) : (
           <>

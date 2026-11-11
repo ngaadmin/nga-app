@@ -256,12 +256,11 @@ export type TellPeopleAnswer = {
   counts: Readonly<Record<string, number>>;
 };
 
-/** Level 4 order system. The tracker pick, an optional extra, and the reminder. */
+/** Level 4 order system. The tracker pick and the reminder. */
 export type OrderSystemAnswer = {
   kind: "order-system";
   version: 1;
   tracker: string;
-  trackerExtra?: string;
   reminder: string;
 };
 
@@ -559,14 +558,7 @@ export function parseOrderSystemAnswer(value: unknown): OrderSystemAnswer | null
   if (!isRecord(value) || value.kind !== "order-system" || value.version !== 1) return null;
   if (typeof value.tracker !== "string" || !ID_RE.test(value.tracker)) return null;
   if (typeof value.reminder !== "string" || !ID_RE.test(value.reminder)) return null;
-  const extra = typeof value.trackerExtra === "string" ? value.trackerExtra.trim().slice(0, 40) : "";
-  return {
-    kind: "order-system",
-    version: 1,
-    tracker: value.tracker,
-    reminder: value.reminder,
-    ...(extra ? { trackerExtra: extra } : {}),
-  };
+  return { kind: "order-system", version: 1, tracker: value.tracker, reminder: value.reminder };
 }
 
 export function orderSystemOf(answers: LaunchpadAnswers | undefined, key: string): OrderSystemAnswer | undefined {

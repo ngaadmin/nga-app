@@ -170,8 +170,6 @@ export const ORDER_SYSTEM = {
   guidance: "Pick where you will keep your orders. A calendar is the best choice because it can repeat regular jobs and remind you before each one.",
   trackerLead: "I will keep my orders in",
   emptyLabel: "choose",
-  extraLabel: "Add your own (optional)",
-  extraMax: 40,
   trackerOptions: [
     { id: "calendar", label: "My calendar (best choice)", workbook: "My calendar" },
     { id: "notebook", label: "A paper notebook", workbook: "A paper notebook" },

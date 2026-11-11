@@ -84,7 +84,7 @@ function GroupedTickMenu({
     .join(", ");
   const full = selected.length >= 3;
   return (
-    <div className="mt-[21px]" data-grow-menu="" data-open={open ? "true" : "false"}>
+    <div className="mt-2" data-grow-menu="" data-open={open ? "true" : "false"}>
       <button
         type="button"
         aria-labelledby={summary ? "grow-question grow-picks" : "grow-question"}
@@ -288,16 +288,18 @@ export function LevelUpFlow({
   } else if (page === 0) {
     body = (
       <>
-        <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
-        <ScreenPrompt id="grow-question" tone="question" flush>{content.grow.question}</ScreenPrompt>
-        <GroupedTickMenu
-          groups={groups}
-          selected={kept}
-          onToggle={(id) => {
-            if (kept.includes(id)) setDraft({ ...draft, ideas: kept.filter((item) => item !== id) });
-            else if (kept.length < 3) setDraft({ ...draft, ideas: [...kept, id] });
-          }}
-        />
+        <ScreenPrompt id="grow-question" tone="question" flush className="!mt-3">{content.grow.question}</ScreenPrompt>
+        <div className="mt-[21px]">
+          <ScreenGuidance flush>{content.grow.guidance}</ScreenGuidance>
+          <GroupedTickMenu
+            groups={groups}
+            selected={kept}
+            onToggle={(id) => {
+              if (kept.includes(id)) setDraft({ ...draft, ideas: kept.filter((item) => item !== id) });
+              else if (kept.length < 3) setDraft({ ...draft, ideas: [...kept, id] });
+            }}
+          />
+        </div>
       </>
     );
   } else {

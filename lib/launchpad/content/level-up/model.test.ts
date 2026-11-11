@@ -32,7 +32,7 @@ describe("Level Up check-in date", () => {
   it("keeps the Grow picker to one question and the five idea headings", () => {
     const grow = levelUpContent().grow;
     expect(grow.question).toBe("What will you try?");
-    expect(grow.guidance).toBe("Tick one to three ideas to try.");
+    expect(grow.guidance).toBe("Pick up to three ideas to try.");
     expect("context" in grow).toBe(false);
     expect("salesLabel" in grow).toBe(false);
     expect("startOptions" in grow).toBe(false);

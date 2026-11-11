@@ -45,7 +45,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
       weekLabels: ["Week 1", "Week 2", "Week 3", "Week 4"],
     },
     grow: {
-      guidance: "Tick one to three ideas to try.",
+      guidance: "Pick up to three ideas to try.",
       question: "What will you try?",
       closerHeadline: "See you in three months.",
       closerContext: "Checking in every three months shows you how your business is going. Set a reminder so you don't forget.",

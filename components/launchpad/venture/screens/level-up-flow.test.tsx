@@ -236,7 +236,11 @@ describe("Level Up screens", () => {
     render(<LevelUpFlow screen={grow} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);
     const cont = () => screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
     expect(cont().disabled).toBe(true);
-    expect(screen.getByText("Tick one to three ideas to try.")).toBeTruthy();
+    const guidance = screen.getByText("Pick up to three ideas to try.");
+    const question = screen.getByText("What will you try?");
+    const menu = document.querySelector("[data-grow-menu]");
+    expect(question.compareDocumentPosition(guidance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(guidance.nextElementSibling).toBe(menu);
     expect(screen.queryByText("Grow your sales")).toBeNull();
     expect(screen.queryByText("Grow your service")).toBeNull();
     openGrowMenu();

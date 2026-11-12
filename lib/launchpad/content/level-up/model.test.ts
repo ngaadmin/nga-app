@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseLevelUpAnswer } from "@/lib/launchpad/content/answers";
 import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
@@ -123,24 +124,37 @@ describe("Level Up check-in date", () => {
     expect(expandJobsFor(expand.options, "maverick")).toHaveLength(5);
   });
 
-  it("keeps the locked statement labels and their pace by position", () => {
+  it("keeps the locked statement labels by position", () => {
     const content = levelUpContent();
-    expect(content.statements.map((item) => [item.section, item.pace, item.label])).toEqual([
-      ["customers", "quick", "Using more than one way to get my name out"],
-      ["customers", "quick", "Following up with everyone who shows interest"],
-      ["customers", "longer", "Asking every customer if they know someone"],
-      ["customers", "longer", "Asking every customer if they'd like to book me again"],
-      ["ready", "quick", "Keeping track of every job that comes in"],
-      ["ready", "quick", "Confirming each job with the customer beforehand"],
-      ["ready", "longer", "Nobody's appointment slipping my mind"],
-      ["job", "quick", "Always showing up on time at each job"],
-      ["job", "quick", "Always bringing everything I need"],
-      ["job", "longer", "Having enough time to deliver a good service"],
-      ["happy", "quick", "Remembering all customer names and their pets' names"],
-      ["happy", "quick", "Asking every customer for feedback"],
-      ["happy", "longer", "Always sending the owner a photo of their pet when I'm with them"],
-      ["happy", "longer", "The customer always knowing what to expect from me"],
+    expect(content.statements.map((item) => [item.section, item.label])).toEqual([
+      ["customers", "Using more than one way to get my name out"],
+      ["customers", "Following up with everyone who shows interest"],
+      ["customers", "Asking every customer if they know someone"],
+      ["customers", "Asking every customer if they'd like to book me again"],
+      ["ready", "Keeping track of every job that comes in"],
+      ["ready", "Confirming each job with the customer beforehand"],
+      ["ready", "Nobody's appointment slipping my mind"],
+      ["job", "Always showing up on time at each job"],
+      ["job", "Always bringing everything I need"],
+      ["job", "Having enough time to deliver a good service"],
+      ["happy", "Remembering all customer names and their pets' names"],
+      ["happy", "Asking every customer for feedback"],
+      ["happy", "Always sending the owner a photo of their pet when I'm with them"],
+      ["happy", "The customer always knowing what to expect from me"],
     ]);
+    expect(JSON.stringify(content.statements)).not.toContain("pace");
+    const old = parseLevelUpAnswer({
+      kind: "level-up",
+      version: 1,
+      selected: ["followed-up"],
+      picks: {},
+      pace: { "followed-up": "quick" },
+      improvePlan: [],
+      ideas: [],
+      growPlans: [],
+    });
+    expect(old).toEqual({ kind: "level-up", version: 1, selected: ["followed-up"], picks: {}, improvePlan: [], ideas: [], growPlans: [] });
+    expect(old && "pace" in old).toBe(false);
     const screen = launchpadTestVentureSeed().floors.find((floor) => floor.level === 7)!.silvers[0]!.bronzes[1]!.tasks[0]!.screens[0] as LaunchpadLevelUpScreen;
     expect(screen.content.statements.map((item) => item.label)).toEqual(content.statements.map((item) => item.label));
   });

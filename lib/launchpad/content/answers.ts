@@ -310,9 +310,7 @@ export type LevelUpAnswer = {
   version: 1;
   selected: readonly string[];
   picks: Readonly<Record<string, string>>;
-  /** Silent quick / longer mark for each picked statement. Never shown. */
-  pace: Readonly<Record<string, "quick" | "longer">>;
-  /** Improve week order. Old saves used `starts` instead; that field is ignored. */
+  /** Improve week order. Old saves used `starts` instead; that field is ignored. An old `pace` object is ignored. */
   improvePlan: readonly { statementId: string; week: number }[];
   /** Grow idea ids, in the order shown on the menu. At most three. */
   ideas: readonly string[];
@@ -650,15 +648,6 @@ export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string)
   return value?.kind === "tell-people" ? value : undefined;
 }
 
-function paceMap(value: unknown): Record<string, "quick" | "longer"> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, "quick" | "longer"> = {};
-  for (const [key, raw] of Object.entries(value)) {
-    if (ID_RE.test(key) && (raw === "quick" || raw === "longer")) out[key] = raw;
-  }
-  return out;
-}
-
 function improvePlanOf(value: unknown): { statementId: string; week: number }[] {
   if (!Array.isArray(value)) return [];
   const out: { statementId: string; week: number }[] = [];
@@ -709,7 +698,6 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
     version: 1,
     selected: idList(value.selected),
     picks: stringIdMap(value.picks),
-    pace: paceMap(value.pace),
     improvePlan: improvePlanOf(value.improvePlan),
     ideas: idList(value.ideas),
     growPlans: growPlansOf(value.growPlans),

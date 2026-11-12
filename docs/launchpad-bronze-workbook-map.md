@@ -79,7 +79,6 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 6 | l6-s1 | l6-s1-b1 | picture, story pages | none | no answer captured | none | Story pages are not workbook lines | not a capture |
 | 7 | l7-s1 Level Up | l7-s1-b1 Reflect | level-up reflect | l7-reflect | selected | what-went-well | Statement lines under the four section labels | played |
 | 7 | l7-s1 | l7-s1-b2 Improve | level-up improve | l7-improve | picks, improvePlan | weekly-focus | Week label and the statement | played |
-| 7 | l7-s1 | l7-s1-b2 | level-up improve | l7-improve | pace | none | Stored, comment in the answer type says it is never shown | GAP |
 | 7 | l7-s1 | l7-s1-b3 Grow | level-up grow | l7-grow | ideas, growPlans.options, growPlans.when, growPlans.successCount, growPlans.checkIn | growth-plan | Idea label and bullets | played |
 | 7 | l7-s1 | l7-s1-b3 | level-up grow | l7-grow | growPlans.checkInDate | none | The check-in period is shown. The date is not | GAP |
 
@@ -152,7 +151,7 @@ Not part of the bronze map. These are blank print layouts. Headings and field la
 
 ## Counts
 
-- GAP: 5. Struck-out why items (`l1-why.notApplicable`), logo font, logo name color, Improve `pace`, Grow `checkInDate`.
+- GAP: 4. Struck-out why items (`l1-why.notApplicable`), logo font, logo name color, Grow `checkInDate`. The Improve quick and longer tags were removed with Cath's approval.
 - ORPHAN: 1. Money I earned on `budget-split`, and the dollar amounts calculated from it. No bronze captures that amount.
 - What I did placeholders, both passes: 0.
 

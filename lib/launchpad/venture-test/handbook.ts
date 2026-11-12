@@ -437,13 +437,13 @@ export function withShortcutSampleAnswers(
               const content = screen.content;
               if (screen.step === "reflect") {
                 const selected = content.sections.flatMap((section) => content.statements.filter((item) => item.section === section.id).slice(0, 1).map((item) => item.id));
-                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected, picks: {}, pace: {}, improvePlan: [], ideas: [], growPlans: [] });
+                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected, picks: {}, improvePlan: [], ideas: [], growPlans: [] });
               } else if (screen.step === "improve") {
                 const improvePlan = content.sections.slice(0, 4).map((section, index) => {
                   const statement = content.statements.find((item) => item.section === section.id);
                   return statement ? { statementId: statement.id, week: index + 1 } : null;
                 }).filter((row): row is { statementId: string; week: number } => row !== null);
-                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan, ideas: [], growPlans: [] });
+                next = setProgressAnswer(next, screen.answerKey, { kind: "level-up", version: 1, selected: [], picks: {}, improvePlan, ideas: [], growPlans: [] });
               } else if (screen.step === "grow") {
                 const idea = content.grow.ideas[0];
                 const when = content.grow.startOptions?.[0]?.id ?? "";
@@ -454,7 +454,6 @@ export function withShortcutSampleAnswers(
                     version: 1,
                     selected: [],
                     picks: {},
-                    pace: {},
                     improvePlan: [],
                     ideas: [idea.id],
                     growPlans: [{ idea: idea.id, options: [idea.options[0]!.id], when, successCount: 2, checkIn, checkInDate: "2027-02-11" }],

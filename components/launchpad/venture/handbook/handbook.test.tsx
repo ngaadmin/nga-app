@@ -522,7 +522,6 @@ describe("L7 weekly focus and the Templates tab", () => {
       version: 1,
       selected: [],
       picks: {},
-      pace: {},
       improvePlan: [
         { statementId: "feedback", week: 3 },
         { statementId: "confirmed", week: 1 },

@@ -279,7 +279,7 @@ function statementPrint(value: unknown): string {
   if (!Array.isArray(value)) return "";
   return JSON.stringify(
     value.map((item) =>
-      isObj(item) ? { id: item.id, section: item.section, label: item.label, pace: item.pace } : item,
+      isObj(item) ? { id: item.id, section: item.section, label: item.label } : item,
     ),
   );
 }
@@ -313,7 +313,6 @@ function checkLevelUp(screen: Obj, where: string): void {
     if (typeof raw.section !== "string" || !(LEVEL_SECTION_IDS as readonly string[]).includes(raw.section)) {
       fail(`${sw} has an unknown section.`);
     }
-    if (raw.pace !== "quick" && raw.pace !== "longer") fail(`${sw} pace is missing.`);
     text(raw.label, `${sw} label`);
     bySection.set(String(raw.section), (bySection.get(String(raw.section)) ?? 0) + 1);
   });

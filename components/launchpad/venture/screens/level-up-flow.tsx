@@ -12,7 +12,6 @@ import {
   formatCheckInDate,
   joinList,
   soonestGrowCheckIn,
-  paceFor,
   pickedStatements,
   sectionLabel,
   statementsIn,
@@ -28,7 +27,7 @@ import { OrderedSlots } from "@/components/launchpad/venture/screens/rank-order-
 import { BronzeFirstLead, LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 function blankAnswer(): LevelUpAnswer {
-  return { kind: "level-up", version: 1, selected: [], picks: {}, pace: {}, improvePlan: [], ideas: [], growPlans: [] };
+  return { kind: "level-up", version: 1, selected: [], picks: {}, improvePlan: [], ideas: [], growPlans: [] };
 }
 
 function planFor(ids: readonly string[]): { statementId: string; week: number }[] {
@@ -237,7 +236,6 @@ export function LevelUpFlow({
     const next = { ...draft };
     if (screen.step === "improve" && page === pickPages - 1) {
       const rows = pickedStatements(content, next.picks);
-      next.pace = paceFor(content, next.picks);
       const covered = rows.every((item) => next.improvePlan.some((row) => row.statementId === item.id)) && next.improvePlan.length === rows.length;
       if (rows.length === 0 || !planAvailable) {
         save(next, true);

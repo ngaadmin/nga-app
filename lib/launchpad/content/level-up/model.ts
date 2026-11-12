@@ -1,13 +1,9 @@
 /**
  * Level 7 Level Up types and rules. Learner-facing copy lives on the
  * level-up screen in the venture payload, not in this file.
- * `pace` is stored with the learner's picks for a later planning step.
- * It is never shown on these screens.
  */
 
 export type LevelSectionId = "customers" | "ready" | "job" | "happy";
-/** Silent classification. Not rendered. */
-export type LevelPace = "quick" | "longer";
 export type GrowIdeaId = "referral" | "prepaid" | "bundle" | "new-service" | "expand";
 export type LevelCohort = "explorer" | "pathfinder" | "maverick";
 
@@ -19,7 +15,6 @@ export type LevelStatement = {
   id: string;
   /** Same words on Reflect and Improve. */
   label: string;
-  pace: LevelPace;
   section: LevelSectionId;
 };
 
@@ -175,10 +170,6 @@ export function pickedStatements(
     const item = id ? statementsIn(content.statements, section.id).find((row) => row.id === id) : undefined;
     return item ? [item] : [];
   });
-}
-
-export function paceFor(content: LaunchpadLevelUpContent, picks: Readonly<Record<string, string>>): Record<string, LevelPace> {
-  return Object.fromEntries(pickedStatements(content, picks).map((item) => [item.id, item.pace]));
 }
 
 /** Today plus three calendar months. 10 Nov 2026 becomes 10 Feb 2027. */

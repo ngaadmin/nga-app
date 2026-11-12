@@ -70,7 +70,6 @@ describe("Level Up screens", () => {
         version: 1,
         selected: ["kept-track", "confirmed", "slipped", "more-than-one-way"],
         picks: {},
-        pace: {},
         improvePlan: [],
         ideas: [],
         growPlans: [],
@@ -108,7 +107,7 @@ describe("Level Up screens", () => {
       { statementId: "on-time", week: 2 },
       { statementId: "feedback", week: 3 },
     ]);
-    expect(saved.pace["followed-up"]).toBe("quick");
+    expect(saved.pace).toBeUndefined();
     expect(saved.picks.ready).toBeUndefined();
     expect(saved.starts).toBeUndefined();
     expect(screen.queryByText("quick")).toBeNull();
@@ -121,7 +120,6 @@ describe("Level Up screens", () => {
         version: 1,
         selected: ["more-than-one-way"],
         picks: {},
-        pace: {},
         improvePlan: [],
         ideas: [],
         growPlans: [],
@@ -131,7 +129,6 @@ describe("Level Up screens", () => {
         version: 1,
         selected: [],
         picks: { customers: "followed-up" },
-        pace: {},
         improvePlan: [],
         ideas: [],
         growPlans: [],
@@ -160,7 +157,6 @@ describe("Level Up screens", () => {
             version: 1,
             selected: all,
             picks: {},
-            pace: {},
             improvePlan: [],
             ideas: [],
         growPlans: [],
@@ -270,7 +266,6 @@ describe("Level Up screens", () => {
       version: 1 as const,
       selected: [],
       picks: {},
-      pace: {},
       improvePlan: [],
       ideas: ["referral", "prepaid"],
       growPlans: [

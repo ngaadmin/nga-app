@@ -460,7 +460,8 @@ describe("Level Up screens", () => {
     expect((within(offer).getByRole("option", { name: "Dog sitting" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(offer).getByRole("option", { name: "Grooming" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(offer).getByRole("option", { name: "Dog training" }) as HTMLOptionElement).disabled).toBe(false);
-    expect((within(offer).getByRole("option", { name: "Manage bookings for others" }) as HTMLOptionElement).disabled).toBe(false);
+    expect((within(offer).getByRole("option", { name: "Holiday care" }) as HTMLOptionElement).disabled).toBe(false);
+    expect(within(offer).queryByRole("option", { name: "Manage bookings for others" })).toBeNull();
     expect(document.querySelector("[data-grow-options]")).toBeNull();
     unmount();
     render(<LevelUpFlow screen={grow} cohort="explorer" onExit={() => {}} onSave={() => {}} onFinish={() => {}} />);

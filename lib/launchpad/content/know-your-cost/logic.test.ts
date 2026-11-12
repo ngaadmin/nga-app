@@ -55,18 +55,14 @@ describe("starter gear follows the services chosen in Gold 1", () => {
     ]);
   });
 
-  it("dog sitting and manage bookings add no starter gear", () => {
+  it("dog sitting adds restock and no starter gear", () => {
     expect(starterGearFor(screen.starterGear, ["dog-sitting"])).toEqual([]);
-    expect(starterGearFor(screen.starterGear, ["manage-bookings-for-others"])).toEqual([]);
     const sitting = seedCosts(screen, [{ id: "dog-sitting", label: "Dog sitting" }]);
     expect(sitting.startup.starterGear).toEqual([]);
     expect(sitting.ongoing[0]?.lines.map((line) => [line.label, line.amount])).toEqual([
       ["Treats", 0.3],
       ["Poop bags", 0.1],
     ]);
-    const bookings = seedCosts(screen, [{ id: "manage-bookings-for-others", label: "Manage bookings for others" }]);
-    expect(bookings.startup.starterGear).toEqual([]);
-    expect(bookings.ongoing[0]?.lines).toEqual([]);
   });
 
   it("grooming keeps its own gear and leaves the walking pack off", () => {

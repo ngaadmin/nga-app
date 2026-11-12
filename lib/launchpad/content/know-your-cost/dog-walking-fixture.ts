@@ -62,7 +62,6 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       { id: "train-lead", label: "Training lead", amount: 15, serviceIds: ["dog-training"] },
     ],
     // Fields restock lists. Dog sitting has restock and no starter gear.
-    // Manage bookings is grow-only, so it is not a Know your cost service.
     ongoing: [
       {
         serviceId: "dog-walking",

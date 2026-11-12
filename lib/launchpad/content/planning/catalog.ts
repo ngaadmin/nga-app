@@ -131,11 +131,6 @@ export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [
     packages: chips(["Basic manners session", "Puppy session", "Walk-and-train"]),
     extras: chips(["Homework card", "Progress notes", "Extra practice round"]),
   },
-  {
-    serviceId: "manage-bookings-for-others",
-    packages: chips(["Take bookings", "Send owner reminders", "Collect payments"]),
-    extras: chips(["Weekly summary", "Extra reminder texts"]),
-  },
 ];
 
 /** Row 17 N-T. One competitor check, written for dog walkers. */

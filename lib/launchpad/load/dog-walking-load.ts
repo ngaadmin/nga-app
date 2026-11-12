@@ -74,10 +74,10 @@ export const KEYS = {
 export const RETIRED_WHY_ITEM_IDS: readonly string[] = ["prove-i-can-do-it"];
 
 /**
- * Level 1 offer options Cath moved to Grow (12 Nov 2026, D32).
- * The sheet still lists them. Level 7 Add a new service keeps the option.
+ * Offer ids Cath retired (12 Nov 2026, D32). The sheet may still list them.
+ * The reader drops them. They are not Level 1 options and not Grow options.
  */
-export const L1_GROW_ONLY_OFFER_IDS: readonly string[] = ["manage-bookings-for-others"];
+export const RETIRED_OFFER_IDS: readonly string[] = ["manage-bookings-for-others"];
 
 /** Help others benefit labels Cath reworded (12 Nov 2026, D32). Ids stay with the sheet option. */
 export const HELP_OTHERS_BENEFIT_LABELS: Readonly<Record<string, string>> = {
@@ -117,7 +117,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D29", topic: "Offer option Dog sitting", applied: "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.", status: "decided-cath", rows: [2] },
   { id: "D30", topic: "No silver wrap-ups", applied: "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) the flow goes straight back to the corridor (no end screen; Cath, 5 Nov 5:19pm) and a small workbook icon button pops in (Open your workbook); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).", status: "decided-cath", rows: [11, 14] },
   { id: "D31", topic: "Goal dropdowns", applied: "AC5 / J7 / J8: Help others picks one customer benefit from N7 to Q7 (four sheet options, none invented); Learn new skills picks one skill from N8 to R8 (text before the bar) and prefills the success line (text after the bar), which swaps on a new pick until the learner types their own. Options keep the sheet's lower case because they sit mid-sentence.", status: "decided-cath", rows: [7, 8] },
-  { id: "D32", topic: "Level 1 offer and help-others benefits", applied: "Cath 12 Nov 2026: Manage bookings for others is a growth service, so the Level 1 offer drops it even if the sheet still lists it. The option stays on Level 7 Add a new service. Help others keeps four benefits and the same ids. have a washed and groomed dog becomes have the dog washed while you're out. manage their dog's behavior problems becomes manage the dog's behavior problems.", status: "decided-cath", rows: [2, 7] },
+  { id: "D32", topic: "Retired offer and help-others benefits", applied: "Cath 12 Nov 2026, about 8:21pm: the bookings-for-others service is retired. The reader drops that sheet option. It is not a Level 1 offer and not a Level 7 option. Help others keeps four benefits and the same ids. have a washed and groomed dog becomes have the dog washed while you're out. manage their dog's behavior problems becomes manage the dog's behavior problems.", status: "decided-cath", rows: [2, 7] },
 ];
 
 /**
@@ -305,9 +305,9 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
 
   // Bronze 1: offer (multi-select capture).
   expectInput(ctx, rOffer, ["multi-choice"]);
-  // D32: Manage bookings for others stays on Grow, not on the Level 1 offer.
+  // D32: the retired bookings-for-others option is dropped when the sheet still lists it.
   const offerOptions = rowOptions(rOffer, () => optionsAfter(rOffer.dataInput, /not the payload:\s*/)).filter(
-    (option) => !L1_GROW_ONLY_OFFER_IDS.includes(option.id),
+    (option) => !RETIRED_OFFER_IDS.includes(option.id),
   );
   if (offerOptions.length < 2) issue(ctx, rOffer.row, "Could not read the offer options.");
   const b1 = "l1-s1-b1";

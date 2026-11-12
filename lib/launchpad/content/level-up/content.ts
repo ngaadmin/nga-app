@@ -158,7 +158,6 @@ export function levelUpContent(): LaunchpadLevelUpContent {
             { id: "grooming", label: "Grooming", sentence: "grooming" },
             { id: "dog-training", label: "Dog training", sentence: "dog training" },
             { id: "holiday-care", label: "Holiday care", sentence: "holiday care" },
-            { id: "manage-bookings-for-others", label: "Manage bookings for others", sentence: "manage bookings for others" },
           ],
         },
         {

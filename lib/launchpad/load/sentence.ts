@@ -71,7 +71,7 @@ function parseBody(body: string): ParsedSentence {
   return { tokens, slots };
 }
 
-/** "Manage bookings for others" -> "manage-bookings-for-others". */
+/** "Dog walking" -> "dog-walking". */
 export function kebab(label: string): string {
   return label
     .toLowerCase()

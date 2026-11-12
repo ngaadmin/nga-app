@@ -1075,6 +1075,8 @@ describe("My growth plan check-in dates", () => {
       ],
     );
     expect(screen.getByRole("heading", { name: "Start a referral program" })).toBeTruthy();
+    expect(screen.getByText("Free dog walk")).toBeTruthy();
+    expect(screen.queryByText("Free dog walk for the person who referred")).toBeNull();
     expect(screen.getByRole("heading", { name: "Offer subscriptions and prepays" })).toBeTruthy();
     expect(screen.getByText("That's February 11, 2027.")).toBeTruthy();
     expect(screen.getByText("That's January 11, 2027.")).toBeTruthy();

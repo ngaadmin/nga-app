@@ -90,7 +90,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
           statement: "I'll start a referral program {start}, offering {offer} to customers who send a new customer my way. My experiment works if {count} new customers book through a referral, and I'll check in on how it's going in {checkIn}.",
           successLine: "{count} new customers book through a referral",
           options: [
-            { id: "free-walk", label: "Free dog walk for the person who referred", sentence: "a free dog walk for the person who referred" },
+            { id: "free-walk", label: "Free dog walk", sentence: "a free dog walk" },
             { id: "add-on", label: "Free add-on of their choice on their next visit", sentence: "a free add-on of their choice on their next visit" },
             { id: "priority", label: "Priority booking for their preferred time slot", sentence: "a priority booking for their preferred time slot" },
           ],

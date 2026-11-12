@@ -92,6 +92,14 @@ describe("Level Up check-in date", () => {
       "A new service means new income from the same customer.",
       "Grow past the core job and offer new services to existing customers.",
     ]);
+    const referral = grow.ideas.find((idea) => idea.id === "referral");
+    expect(referral?.options.map((option) => [option.id, option.label, option.sentence])).toEqual([
+      ["free-walk", "Free dog walk", "a free dog walk"],
+      ["add-on", "Free add-on of their choice on their next visit", "a free add-on of their choice on their next visit"],
+      ["priority", "Priority booking for their preferred time slot", "a priority booking for their preferred time slot"],
+    ]);
+    expect(referral?.stacked && "offerNote" in referral.stacked ? referral.stacked.offerNote : "").toBe("to customers who send a new customer my way");
+    expect(referral?.statement).toBe("I'll start a referral program {start}, offering {offer} to customers who send a new customer my way. My experiment works if {count} new customers book through a referral, and I'll check in on how it's going in {checkIn}.");
     expect(grow.joinWord).toBe("and");
     expect(grow.dateLine).toBe("That's {date}.");
     expect(grow.startOptions?.map((option) => option.label)).toEqual(["this week", "in two weeks", "in a month"]);

@@ -371,6 +371,8 @@ describe("Level Up screens", () => {
     expect(screen.getByText("Reward customers who send a new customer your way, so your best customers help find the next ones.")).toBeTruthy();
     expect(document.querySelector("[data-scribble-large='growth']")).toBeTruthy();
     fillIdea();
+    expect(screen.getAllByText("a free dog walk").length).toBeGreaterThan(0);
+    expect(screen.queryByText("a free dog walk for the person who referred")).toBeNull();
     expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 3")).toBeTruthy();

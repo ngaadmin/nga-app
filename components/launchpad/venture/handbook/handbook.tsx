@@ -21,7 +21,7 @@ import { HandbookPage, PosterTemplatePage, TemplatesComingSoon, WorkbookTemplate
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
-import { placeRhythmDoodles } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { layoutWorkbookDoodles } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const READ_ONLY_SAVE = () => {};
 
@@ -153,7 +153,7 @@ export function Handbook({
 
   const paperRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    if (paperRef.current) placeRhythmDoodles(paperRef.current, page?.number ?? 1);
+    if (paperRef.current) layoutWorkbookDoodles(paperRef.current, page?.number ?? 1, page?.sheet ?? "");
   });
   useEffect(() => {
     closeRef.current?.focus();
@@ -250,7 +250,7 @@ export function Handbook({
             }}
           >
             <SpiralBinding />
-            {((pagingTemplates && templatePages[templateAt]?.kind !== "poster") || (!templatesOpen && page && (page.number === 2 || page.number === 6))) && <Washi page={!templatesOpen && page?.number === 6 ? 6 : 2} />}
+            {((pagingTemplates && templatePages[templateAt]?.kind !== "poster") || (!templatesOpen && page && (page.number === 2 || page.sheet === "costs-a"))) && <Washi page={!templatesOpen && page?.sheet === "costs-a" ? 6 : 2} />}
             <div ref={paperRef} className={`h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6 ${WORKBOOK_BODY}`} data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}

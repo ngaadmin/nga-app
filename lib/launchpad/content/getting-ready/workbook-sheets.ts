@@ -112,6 +112,6 @@ export function gettingReadyWorkbookSheets(
   return [
     { id: "ready-a", blocks: findBlocks, largeScribble: "kit" },
     { id: "ready-b", blocks: deliverBlocks },
-    { id: "ready-c", blocks: practiceBlocks },
+    { id: "ready-c", blocks: practiceBlocks, compact: true },
   ];
 }

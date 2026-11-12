@@ -21,12 +21,12 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
   return (
     <div data-scripted-sheet={sheet.id}>
       {sheet.blocks.map((block, index) => {
-        if (block.kind === "section") return <AccentLabel key={index} as="h2">{block.text}</AccentLabel>;
+        if (block.kind === "section") return <AccentLabel key={index} as="h2" tight={sheet.compact}>{block.text}</AccentLabel>;
         if (block.kind === "sub") {
           const mark = block.underline;
           const at = mark ? block.text.indexOf(mark) : -1;
           return (
-            <h3 key={index} className={`mt-4 ${WORKBOOK_SUB}`}>
+            <h3 key={index} className={`${sheet.compact ? "mt-2" : "mt-4"} ${WORKBOOK_SUB}`}>
               <span>
                 {at >= 0 && mark ? (
                   <>
@@ -54,7 +54,7 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
           );
         }
         return (
-          <p key={index} className={`mb-4 ${WORKBOOK_BODY}`}>
+          <p key={index} className={`${sheet.compact ? "mb-1.5" : "mb-4"} ${WORKBOOK_BODY}`}>
             {block.parts.map((part, partIndex) => (
               <Part key={partIndex} part={part} />
             ))}

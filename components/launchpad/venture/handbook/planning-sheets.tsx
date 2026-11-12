@@ -331,7 +331,7 @@ export function PricingPlaybackPage() {
           : s.price.notCheckedShort}
       </p>
       {competitor && (
-        <p className={`mt-1 ${WORKBOOK_BODY}`}>
+        <p className={`mt-1 ${WORKBOOK_BODY}`} data-doodle-anchor="differently">
           {s.competitor.couldDifferently} <ChosenValue>{differently}</ChosenValue>.
         </p>
       )}
@@ -344,7 +344,7 @@ export function PricingPlaybackPage() {
             <ChosenValue>{formatWorkbookMoney(row.price, currency)}</ChosenValue>
           </p>
           <p className={WORKBOOK_BODY}>{s.jobs.iKeep} <ChosenValue>{formatWorkbookMoney(row.keptPerJob, currency)}</ChosenValue></p>
-          <p className={WORKBOOK_HINT}>
+          <p className={WORKBOOK_HINT} data-doodle-anchor={row === price?.prices[0] ? "price-calc" : undefined}>
             {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
           </p>
           {row.comparedToOthers ? <p className={WORKBOOK_BODY}>{s.price.mineIs} <ChosenValue>{row.comparedToOthers}</ChosenValue></p> : null}
@@ -368,14 +368,14 @@ export function TypicalWeekPage() {
     <div>
       <AccentLabel>{s.jobs.coverMine}</AccentLabel>
       <h3 className={`mt-2 ${WORKBOOK_SUB}`}>{s.jobs.typicalWeek}</h3>
-      <p className={`mt-1 ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
+      <p className={`mt-1 max-w-[248px] ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
-      <p className={WORKBOOK_BODY}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> {s.jobs.weeksToCoverShort} <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
       {math && (
-        <p className={`mt-1 ${WORKBOOK_HINT}`}>
+        <p className={WORKBOOK_HINT}>
           {math} = {formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)} {s.jobs.aWeekPeriod}
         </p>
       )}
+      <p className={`max-w-[248px] ${WORKBOOK_BODY}`}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> {s.jobs.weeksToCoverShort} <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
       <div className="mt-4 flex justify-end">
         <LargeScribble name="jar" />
       </div>

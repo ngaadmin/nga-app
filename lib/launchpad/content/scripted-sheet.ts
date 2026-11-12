@@ -13,4 +13,6 @@ export type ScriptedSheet = {
   blocks: readonly ScriptedBlock[];
   /** Approved scribble name, about 80px, right-aligned at the end. */
   largeScribble?: "kit" | "coins" | "growth" | "wallet" | "jar" | "pawtrail";
+  /** Tighter block gaps so a full page fits the paper without scrolling. */
+  compact?: boolean;
 };

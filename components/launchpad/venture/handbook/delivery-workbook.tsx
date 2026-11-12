@@ -8,11 +8,12 @@ import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const BODY = "mb-3 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]";
+const TIGHT = "mb-2 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]";
 const PICK = "font-semibold text-[#0CC1E0]";
 
-function Line({ before, pick, after }: { before: string; pick?: string; after?: string }) {
+function Line({ before, pick, after, className = BODY }: { before: string; pick?: string; after?: string; className?: string }) {
   return (
-    <p className={BODY}>
+    <p className={className}>
       {before}
       {pick ? <span className={PICK}>{pick}</span> : null}
       {after}
@@ -50,13 +51,13 @@ export function DeliveryWorkbook({ silver, sheet }: { silver: LaunchpadSilver; s
     return (
       <div data-delivery-workbook="ready-before">
         <AccentLabel as="h2">{screen.playbackTitle}</AccentLabel>
-        <Line before={copy.remindBefore} pick={lookups.remind} after={copy.remindAfter} />
-        <Line before={copy.aboutBefore} pick={labelOf(copy.aboutOptions, saved?.remindAbout)} after={copy.aboutAfter} />
-        <Line before={copy.travelBefore} pick={labelOf(copy.travelOptions, saved?.travelHow)} after={copy.travelAfter} />
-        <Line before={copy.leaveBefore} pick={labelOf(copy.leaveOptions, saved?.leaveEarly)} after={copy.leaveAfter} />
-        <Line before={copy.packBefore} pick={labelOf(copy.packOptions, saved?.packWhen)} after={copy.packAfter} />
-        <p className={BODY}>{gear}</p>
-        <LargeScribble name={scribbleName(screen.doodles[2])} />
+        <Line className={TIGHT} before={copy.remindBefore} pick={lookups.remind} after={copy.remindAfter} />
+        <Line className={TIGHT} before={copy.aboutBefore} pick={labelOf(copy.aboutOptions, saved?.remindAbout)} after={copy.aboutAfter} />
+        <Line className={TIGHT} before={copy.travelBefore} pick={labelOf(copy.travelOptions, saved?.travelHow)} after={copy.travelAfter} />
+        <Line className={TIGHT} before={copy.leaveBefore} pick={labelOf(copy.leaveOptions, saved?.leaveEarly)} after={copy.leaveAfter} />
+        <Line className={TIGHT} before={copy.packBefore} pick={labelOf(copy.packOptions, saved?.packWhen)} after={copy.packAfter} />
+        <p className={TIGHT}>{gear}</p>
+        <LargeScribble name={scribbleName(screen.doodles[2])} className="mt-2" />
       </div>
     );
   }
@@ -66,14 +67,13 @@ export function DeliveryWorkbook({ silver, sheet }: { silver: LaunchpadSilver; s
     return (
       <div data-delivery-workbook="ready-after">
         <AccentLabel as="h2">{screen.playbackTitle}</AccentLabel>
-        <Line before={copy.proofBefore} pick={lookups.proof} after={copy.proofAfter} />
-        <Line before={copy.paymentBefore} pick={lookups.payment} after={copy.paymentAfter} />
-        <Line before={copy.askPayBefore} pick={labelOf(copy.askPayOptions, saved?.paymentWhen)} after={copy.askPayAfter} />
-        <Line before={copy.feedbackBefore} pick={lookups.feedback} after={copy.feedbackAfter} />
-        <Line before={copy.askBefore} pick={labelOf(copy.askOptions, saved?.feedbackQuestion)} after={copy.askAfter} />
-        <p className={BODY}>{copy.trackerLine}</p>
-        <Line before={copy.whenBefore} pick={labelOf(copy.whenOptions, saved?.trackerWhen)} after={copy.whenAfter} />
-        <LargeScribble name={scribbleName(screen.doodles[2])} />
+        <Line className={TIGHT} before={copy.proofBefore} pick={lookups.proof} after={copy.proofAfter} />
+        <Line className={TIGHT} before={copy.paymentBefore} pick={lookups.payment} after={copy.paymentAfter} />
+        <Line className={TIGHT} before={copy.askPayBefore} pick={labelOf(copy.askPayOptions, saved?.paymentWhen)} after={copy.askPayAfter} />
+        <Line className={TIGHT} before={copy.feedbackBefore} pick={lookups.feedback} after={copy.feedbackAfter} />
+        <Line className={TIGHT} before={copy.askBefore} pick={labelOf(copy.askOptions, saved?.feedbackQuestion)} after={copy.askAfter} />
+        <p className={TIGHT}>{copy.trackerLine}</p>
+        <Line className={TIGHT} before={copy.whenBefore} pick={labelOf(copy.whenOptions, saved?.trackerWhen)} after={copy.whenAfter} />
       </div>
     );
   }

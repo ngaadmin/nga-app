@@ -247,7 +247,7 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   pack(pieces).forEach((page, index) => {
     const blocks: ScriptedBlock[] = [{ kind: "section", text: "My marketing materials" }];
     for (const piece of page) blocks.push(...blocksFor(piece));
-    sheets.push({ id: `sales-market-${index + 1}`, blocks });
+    sheets.push({ id: `sales-market-${index + 1}`, blocks, compact: page.some((piece) => piece.id === "online" || piece.id === "card") });
   });
   const tell = tellPeopleOf(answers, TELL_PEOPLE_KEY);
   if (tell && sales) {

@@ -92,19 +92,19 @@ export function CostWorkbookBody({
       {part !== "startup" && (
         <>
           {part === "rest" && startupHead}
-          <p className={`mb-1 mt-2 ${WORKBOOK_GROUP}`}>{starterLabel}</p>
+          <p className={`mb-0.5 mt-1 ${WORKBOOK_GROUP}`}>{starterLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.starterGear.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}
           </div>
-          <div className={`${WORKBOOK_PRICE_ROW} mt-2.5 ${WORKBOOK_BODY}`}>
+          <div className={`${WORKBOOK_PRICE_ROW} mt-1 ${WORKBOOK_BODY}`}>
             <span>{s.costs.startupTotal}</span>
             <span className="text-left tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
-          <HandRule />
-          <h3 className={`mb-1.5 ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>
-          <div className="flex flex-col gap-1">
+          <HandRule className="mb-1 mt-2" />
+          <h3 className={`mb-1 ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>
+          <div className="flex flex-col gap-0">
             {view.ongoing.map((service) => (
               <div key={service.serviceId} className={`${WORKBOOK_PRICE_ROW} ${WORKBOOK_BODY}`}>
                 <span className="flex min-w-0 items-center gap-1">
@@ -119,7 +119,7 @@ export function CostWorkbookBody({
               </div>
             ))}
           </div>
-          <HandRule />
+          <HandRule className="mb-1 mt-2" />
           <p className={WORKBOOK_HINT}>{hint}</p>
         </>
       )}

@@ -89,9 +89,9 @@ export function HandRule({ className = "mb-3.5 mt-5" }: { className?: string }) 
 }
 
 /** Accent section label (Fredoka heading weight, aqua) with the long curved swash. */
-export function AccentLabel({ children, doodle, as: Tag = "h3" }: { children: ReactNode; doodle?: ReactNode; as?: "h2" | "h3" }) {
+export function AccentLabel({ children, doodle, as: Tag = "h3", tight = false }: { children: ReactNode; doodle?: ReactNode; as?: "h2" | "h3"; tight?: boolean }) {
   return (
-    <div className="mt-[38px] flex items-end gap-2 first:mt-2.5">
+    <div className={`${tight ? "mt-2" : "mt-[38px]"} flex items-end gap-2 first:mt-2.5`}>
       <Tag className={`${FREDOKA_HEADING_CLASS} inline-flex flex-col gap-px text-[18px] font-bold leading-6 text-[#0CC1E0]`}>
         {children}
         <svg width="286" height="7" viewBox="0 0 74 7" preserveAspectRatio="none" aria-hidden="true">

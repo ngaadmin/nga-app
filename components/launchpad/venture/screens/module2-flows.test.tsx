@@ -3,8 +3,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { selectionAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
-import { customerScreen, offerLoopScreen } from "@/lib/launchpad/content/planning/screens";
-import { CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
+import { customerScreen, competitorScreen, offerLoopScreen } from "@/lib/launchpad/content/planning/screens";
+import { CustomerCheckFlow, CompetitorFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
 import { availabilityPhrase, packageServiceId } from "@/lib/launchpad/content/planning/catalog";
 
 afterEach(cleanup);
@@ -26,6 +26,9 @@ describe("Decide what to sell chips", () => {
     expect(screen.getByText("Optional").className).toContain("text-[16px]");
     expect(screen.queryByRole("button", { name: "Add another service" })).toBeNull();
     expect(screen.getByRole("button", { name: "Add another extra" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Extra play time" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();
     expect(screen.queryByText(/bronze|gold|silver/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "30-minute walk" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -57,6 +60,62 @@ describe("Decide what to sell chips", () => {
     expect(availabilityPhrase(["weekday_morning", "weekday_afternoon", "weekend_morning"])).toBe("weekday mornings and afternoons, and weekend mornings");
     expect(screen.getByRole("columnheader", { name: "Weekdays" }).tagName).toBe("TH");
     expect(screen.queryByRole("checkbox", { name: "Weekdays" })).toBeNull();
+  });
+
+  it("shows a payload edit of the walk-one-dog extra on the offer page", () => {
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    const edited = structuredClone(offerLoopScreen());
+    const extra = edited.catalogs[0]?.extras.find((item) => item.id === "solo-walk-one-dog");
+    if (!extra) throw new Error("missing extra");
+    extra.label = "A payload walk label";
+    render(
+      <OfferLoopFlow
+        screen={edited}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking"]) }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "A payload walk label" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Walk one dog only" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Extra play time" })).toBeTruthy();
+  });
+});
+
+describe("Research what competitors offer", () => {
+  it("shows the plain-language extra and leaves Walk one dog at a time", () => {
+    render(
+      <CompetitorFlow
+        screen={competitorScreen()}
+        answers={{
+          "l2-offer": {
+            kind: "offer",
+            version: 1,
+            offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], addons: ["solo-walk-one-dog"] }],
+            availability: [],
+          },
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Walk one dog at a time" })).toBeTruthy();
+    const edited = structuredClone(competitorScreen());
+    const addon = edited.addons.find((item) => item.id === "solo-walk-one-dog-only");
+    if (!addon) throw new Error("missing addon");
+    addon.label = "A payload addon label";
+    cleanup();
+    render(<CompetitorFlow screen={edited} answers={{
+      "l2-offer": {
+        kind: "offer",
+        version: 1,
+        offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], addons: [] }],
+        availability: [],
+      },
+    }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("button", { name: "A payload addon label" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Walk one dog only" })).toBeNull();
   });
 });
 

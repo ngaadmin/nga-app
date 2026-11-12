@@ -112,7 +112,7 @@ export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [
     packages: chips(["15-minute walk", "30-minute walk", "45-minute walk", "60-minute walk"]),
     extras: [
       ...chips(["Photo updates", "Treats"]),
-      { id: "solo-walk-one-dog", label: "Solo walk (one dog only)" },
+      { id: "solo-walk-one-dog", label: "Walk one dog only" },
       { id: "play-session", label: "Extra play time" },
     ],
   },
@@ -134,15 +134,19 @@ export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [
 ];
 
 /** Row 17 N-T. One competitor check, written for dog walkers. */
-export const COMPETITOR_ADDONS: readonly ChipOption[] = chips([
-  "Photo of the dog after every walk",
-  "Short note of how the walk went + anything spotted",
-  "Solo walk (one dog only)",
-  "Weekend or after-school slots",
-  "Meet and greet first for new customers",
-  "Same person every visit",
-  "Pickup and drop-off available",
-]);
+export const COMPETITOR_ADDONS: readonly ChipOption[] = [
+  ...chips([
+    "Photo of the dog after every walk",
+    "Short note of how the walk went + anything spotted",
+  ]),
+  { id: "solo-walk-one-dog-only", label: "Walk one dog only" },
+  ...chips([
+    "Weekend or after-school slots",
+    "Meet and greet first for new customers",
+    "Same person every visit",
+    "Pickup and drop-off available",
+  ]),
+];
 
 /** Row 17 do-differently ideas (AC17). "Something else" reveals an optional own-words field. */
 export const DO_DIFFERENTLY: readonly ChipOption[] = chips([

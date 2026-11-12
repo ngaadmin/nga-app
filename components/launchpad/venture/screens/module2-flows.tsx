@@ -111,7 +111,7 @@ export function OfferLoopFlow({
   const onWhen = step >= whenStep;
   const service = services[Math.min(step, Math.max(0, services.length - 1))];
   const offering = draft.offerings.find((row) => row.serviceId === service?.id) ?? (service ? emptyOffering(service.id) : undefined);
-  const catalog = service ? catalogFor(service.id) ?? screen.catalogs.find((row) => row.serviceId === service.id) : undefined;
+  const catalog = service ? screen.catalogs.find((row) => row.serviceId === service.id) ?? catalogFor(service.id) : undefined;
 
   const write = (next: OfferAnswer) => {
     setDraft(next);

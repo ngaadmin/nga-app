@@ -79,8 +79,7 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 6 | l6-s1 | l6-s1-b1 | picture, story pages | none | no answer captured | none | Story pages are not workbook lines | not a capture |
 | 7 | l7-s1 Level Up | l7-s1-b1 Reflect | level-up reflect | l7-reflect | selected | what-went-well | Statement lines under the four section labels | played |
 | 7 | l7-s1 | l7-s1-b2 Improve | level-up improve | l7-improve | picks, improvePlan | weekly-focus | Week label and the statement | played |
-| 7 | l7-s1 | l7-s1-b3 Grow | level-up grow | l7-grow | ideas, growPlans.options, growPlans.when, growPlans.successCount, growPlans.checkIn | growth-plan | Idea label and bullets | played |
-| 7 | l7-s1 | l7-s1-b3 | level-up grow | l7-grow | growPlans.checkInDate | none | The check-in period is shown. The date is not | GAP |
+| 7 | l7-s1 | l7-s1-b3 Grow | level-up grow | l7-grow | ideas, growPlans.options, growPlans.when, growPlans.successCount, growPlans.checkIn, growPlans.checkInDate | growth-plan | Idea label, bullets, and that idea's check-in date | played |
 
 ## B. Every workbook item back to its source
 
@@ -135,7 +134,7 @@ Repeated chrome on every page after the cover: small logo and business name from
 | weekly-focus | Week labels | payload | l7-improve | week labels | label only |
 | weekly-focus | Focus line | l7-s1-b2 | l7-improve | improvePlan, from picks | played |
 | growth-plan | My growth plan title | payload | none | none | label only |
-| growth-plan | Idea label and bullets | l7-s1-b3 | l7-grow | ideas, options, successCount, checkIn, when | played |
+| growth-plan | Idea label, bullets, and that idea's check-in date | l7-s1-b3 | l7-grow | ideas, options, successCount, checkIn, checkInDate, when | played |
 
 ## Templates tab
 
@@ -151,7 +150,7 @@ Not part of the bronze map. These are blank print layouts. Headings and field la
 
 ## Counts
 
-- GAP: 4. Struck-out why items (`l1-why.notApplicable`), logo font, logo name color, Grow `checkInDate`. The Improve quick and longer tags were removed with Cath's approval.
+- GAP: 3. Struck-out why items (`l1-why.notApplicable`), logo font, logo name color. Each Grow check-in date is played on its idea. The Improve quick and longer tags were removed with Cath's approval.
 - ORPHAN: 1. Money I earned on `budget-split`, and the dollar amounts calculated from it. No bronze captures that amount.
 - What I did placeholders, both passes: 0.
 

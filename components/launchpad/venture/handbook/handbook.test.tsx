@@ -33,6 +33,8 @@ import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy
 import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
+import { GrowthPlanSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
+import { levelUpContent } from "@/lib/launchpad/content/level-up/content";
 
 afterEach(cleanup);
 
@@ -1004,6 +1006,73 @@ describe("template and L4 workbook placement", () => {
     const order = sheets.indexOf("order-system");
     expect(market).toBeGreaterThanOrEqual(0);
     expect(order).toBeGreaterThan(market);
+  });
+});
+
+describe("My growth plan check-in dates", () => {
+  const content = levelUpContent();
+  function renderPlan(ideas: string[], growPlans: { idea: string; options: string[]; when: string; successCount: number; checkIn: string; checkInDate: string }[]) {
+    render(
+      <LaunchpadAnswersProvider value={{
+        iconVentureId: "dog-walking",
+        answers: { "l7-grow": { kind: "level-up", version: 1, selected: [], picks: {}, improvePlan: [], ideas, growPlans } },
+        setAnswer: () => {},
+        floors: FLOORS,
+      }}>
+        <GrowthPlanSheet content={content} title={content.workbookPages?.find((page) => page.id === "growth-plan")?.title ?? ""} />
+      </LaunchpadAnswersProvider>,
+    );
+  }
+
+  it("shows every saved check-in date, one under each idea", () => {
+    renderPlan(
+      ["referral", "prepaid"],
+      [
+        { idea: "referral", options: ["free-walk"], when: "two-weeks", successCount: 2, checkIn: "three-months", checkInDate: "February 11, 2027" },
+        { idea: "prepaid", options: ["subscription"], when: "in-a-month", successCount: 2, checkIn: "one-month", checkInDate: "January 11, 2027" },
+      ],
+    );
+    expect(screen.getByRole("heading", { name: "Start a referral program" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Offer subscriptions and prepays" })).toBeTruthy();
+    expect(screen.getByText("That's February 11, 2027.")).toBeTruthy();
+    expect(screen.getByText("That's January 11, 2027.")).toBeTruthy();
+    expect(screen.getByText("three months")).toBeTruthy();
+    expect(screen.getByText("one month")).toBeTruthy();
+  });
+
+  it("shows the one date when only one idea was planned, and hides a missing date", () => {
+    renderPlan(
+      ["bundle"],
+      [{ idea: "bundle", options: ["walk-wash"], when: "this-week", successCount: 1, checkIn: "two-months", checkInDate: "March 4, 2027" }],
+    );
+    expect(screen.getByText("That's March 4, 2027.")).toBeTruthy();
+    cleanup();
+    const edited = levelUpContent();
+    edited.grow.dateLine = "Check-in day: {date}.";
+    render(
+      <LaunchpadAnswersProvider value={{
+        iconVentureId: "dog-walking",
+        answers: { "l7-grow": { kind: "level-up", version: 1, selected: [], picks: {}, improvePlan: [], ideas: ["bundle"], growPlans: [{ idea: "bundle", options: ["walk-wash"], when: "this-week", successCount: 1, checkIn: "two-months", checkInDate: "March 4, 2027" }] } },
+        setAnswer: () => {},
+        floors: FLOORS,
+      }}>
+        <GrowthPlanSheet content={edited} title="My growth plan" />
+      </LaunchpadAnswersProvider>,
+    );
+    expect(screen.getByText("Check-in day: March 4, 2027.")).toBeTruthy();
+    expect(screen.queryByText("That's March 4, 2027.")).toBeNull();
+    cleanup();
+    renderPlan(
+      ["referral", "prepaid"],
+      [
+        { idea: "referral", options: ["free-walk"], when: "this-week", successCount: 1, checkIn: "one-month", checkInDate: "December 10, 2026" },
+        { idea: "prepaid", options: ["subscription"], when: "this-week", successCount: 1, checkIn: "two-months", checkInDate: "" },
+      ],
+    );
+    expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
+    expect(screen.getByText("two months")).toBeTruthy();
+    expect(screen.queryByText(/That's \./)).toBeNull();
+    expect(screen.queryByText("Not answered yet")).toBeNull();
   });
 });
 

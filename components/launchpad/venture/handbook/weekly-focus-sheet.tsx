@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { levelUpOf } from "@/lib/launchpad/content/answers";
-import { weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { fillToken, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import type { LaunchpadLevelUpContent } from "@/lib/launchpad/content/level-up/model";
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
@@ -79,6 +79,7 @@ export function GrowthPlanSheet({ content, title }: { content: LaunchpadLevelUpC
                 {idea?.stacked?.countAfter ? ` ${idea.stacked.countAfter}` : null}
               </AquaBullet>
               {checkIn ? <AquaBullet>{checkIn.label}</AquaBullet> : null}
+              {plan.checkInDate && content.grow.dateLine ? <AquaBullet>{fillToken(content.grow.dateLine, "date", plan.checkInDate)}</AquaBullet> : null}
               {start ? <AquaBullet>{start.label}</AquaBullet> : null}
             </ul>
           </div>

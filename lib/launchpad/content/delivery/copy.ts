@@ -74,8 +74,14 @@ export const WRAP_UP_JOB = {
   ],
   feedbackBefore: "I will ask for feedback by ",
   feedbackAfter: ".",
-  askBefore: "I will ask ",
-  askAfter: "",
+  feedbackLines: [
+    { id: "in_person", sentence: "I will ask for feedback in person." },
+    { id: "text", sentence: "I will ask for feedback by text." },
+    { id: "email", sentence: "I will ask for feedback by email." },
+    { id: "note", sentence: "I will ask for feedback with a short note." },
+  ],
+  askBefore: "I will ask, '",
+  askAfter: "'",
   askOptions: [
     { id: "how-went", label: "How did it go?" },
     { id: "better", label: "Is there anything I could do better?" },

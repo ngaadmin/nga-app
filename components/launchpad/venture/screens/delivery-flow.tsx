@@ -233,7 +233,7 @@ function WrapScreens({
           <BronzeFirstLead flush question={screen.question} context={screen.context} guidance={screen.guidance} />
           <Replay before={copy.proofBefore} value={proof} after={copy.proofAfter} />
           <Replay before={copy.paymentBefore} value={payment} after={copy.paymentAfter} />
-          <Replay before={copy.feedbackBefore} value={feedback} after={copy.feedbackAfter} />
+          <Replay before={copy.feedbackLines?.length && feedback ? "" : copy.feedbackBefore} value={feedback} after={copy.feedbackLines?.length && feedback ? "" : copy.feedbackAfter} />
         </>
       ) : null}
       {page === 1 ? (

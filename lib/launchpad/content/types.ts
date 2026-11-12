@@ -631,9 +631,11 @@ export type LaunchpadDeliveryScreen = TaskScreenBase & {
     askPayBefore: string;
     askPayAfter: string;
     askPayOptions: readonly DeliveryOption[];
-    feedbackBefore: string;
-    feedbackAfter: string;
-    askBefore: string;
+      feedbackBefore: string;
+      feedbackAfter: string;
+      /** Complete sentence for each saved feedback method. Replaces the shared "by" prefix. */
+      feedbackLines: readonly { id: string; sentence: string }[];
+      askBefore: string;
     askAfter: string;
     askOptions: readonly DeliveryOption[];
     trackerLine: string;

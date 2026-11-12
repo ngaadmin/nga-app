@@ -100,7 +100,8 @@ describe("Level 5 Delivery", () => {
     expect(screen.queryByText("Keep the payment private.")).toBeNull();
     expect(screen.getByText("a photo").className).toContain("font-semibold");
     expect(screen.getByText("bank transfer").className).toContain("font-semibold");
-    expect(screen.getByText("text").className).toContain("font-semibold");
+    expect(screen.getByText("I will ask for feedback by text.").className).toContain("font-semibold");
+    expect(screen.queryByText(/by in person/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.change(screen.getByRole("combobox", { name: edited.wrap!.askPayBefore.trim() }), { target: { value: "with-proof" } });
     fireEvent.change(screen.getByRole("combobox", { name: edited.wrap!.askBefore.trim() }), { target: { value: "how-went" } });
@@ -116,6 +117,47 @@ describe("Level 5 Delivery", () => {
       feedbackQuestion: "how-went",
       trackerWhen: "same-evening",
     });
+  });
+
+  it("plays each feedback sentence and quotes the question from the payload", () => {
+    const spec = deliveryScreen("Wrap up the job");
+    expect(spec.wrap?.feedbackLines.map((row) => row.sentence)).toEqual([
+      "I will ask for feedback in person.",
+      "I will ask for feedback by text.",
+      "I will ask for feedback by email.",
+      "I will ask for feedback with a short note.",
+    ]);
+    const edited = structuredClone(spec);
+    edited.wrap!.feedbackLines = edited.wrap!.feedbackLines.map((row) =>
+      row.id === "in_person" ? { ...row, sentence: "I will ask for feedback face to face." } : row,
+    );
+    edited.wrap!.askOptions = edited.wrap!.askOptions.map((row) => (row.id === "how-went" ? { ...row, label: "Was it good?" } : row));
+    const inPerson = {
+      ...answers,
+      wrap_up: { kind: "wrap-job" as const, version: 1 as const, paymentHow: ["cash"], feedbackHow: ["in_person"] },
+    };
+    render(<DeliveryFlow screen={edited} answers={inPerson} floors={floors} onExit={() => {}} onFinish={() => {}} />);
+    expect(screen.getByText("I will ask for feedback face to face.")).toBeTruthy();
+    expect(screen.queryByText("I will ask for feedback in person.")).toBeNull();
+    expect(document.body.textContent).not.toContain("by in person");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByRole("combobox", { name: edited.wrap!.askBefore.trim() }), { target: { value: "how-went" } });
+    const editedLine = screen.getByRole("combobox", { name: edited.wrap!.askBefore.trim() }).closest("p")?.textContent ?? "";
+    expect(editedLine.startsWith("I will ask, 'Was it good?")).toBe(true);
+    expect(editedLine.endsWith("'")).toBe(true);
+    expect(editedLine).not.toContain("I will ask How did it go?");
+    cleanup();
+    renderDelivery(spec);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const askName = spec.wrap!.askBefore.trim();
+    const show = (id: string) => {
+      fireEvent.change(screen.getByRole("combobox", { name: askName }), { target: { value: id } });
+      return screen.getByRole("combobox", { name: askName }).closest("p")?.textContent ?? "";
+    };
+    expect(show("better").startsWith("I will ask, 'Is there anything I could do better?")).toBe(true);
+    expect(show("book-again").startsWith("I will ask, 'Would you book me again?")).toBe(true);
+    expect(show("how-went").startsWith("I will ask, 'How did it go?")).toBe(true);
+    expect(show("how-went").endsWith("'")).toBe(true);
   });
 
   it("works out what was kept and can record another job", () => {

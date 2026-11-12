@@ -739,6 +739,15 @@ function checkDeliveryOptions(value: unknown, where: string): void {
   });
 }
 
+function checkFeedbackLines(value: unknown, where: string): void {
+  const seen = new Set<string>();
+  list(value, where, 1).forEach((raw, i) => {
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id) || seen.has(raw.id)) fail(`${where} line ${i + 1} has no valid id.`);
+    if (isObj(raw) && typeof raw.id === "string") seen.add(raw.id);
+    text(isObj(raw) ? raw.sentence : undefined, `${where} line ${i + 1} sentence`);
+  });
+}
+
 function checkDelivery(screen: Obj, where: string, answers: Answers): void {
   const step = screen.step;
   const kind = step === "ready" ? "get-ready" : step === "wrap" ? "wrap-up-job" : step === "record" ? "record-job" : "";
@@ -778,6 +787,7 @@ function checkDelivery(screen: Obj, where: string, answers: Answers): void {
       }
       if (block.askAfter !== undefined && typeof block.askAfter !== "string") fail(`${where} wrap askAfter must be text.`);
       checkDeliveryOptions(block.askPayOptions, `${where} wrap askPayOptions`);
+      checkFeedbackLines(block.feedbackLines, `${where} wrap feedbackLines`);
       checkDeliveryOptions(block.askOptions, `${where} wrap askOptions`);
       checkDeliveryOptions(block.whenOptions, `${where} wrap whenOptions`);
     }

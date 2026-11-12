@@ -79,6 +79,7 @@ function wrapScreen(id: string): LaunchpadDeliveryScreen {
       askPayOptions: WRAP_UP_JOB.askPayOptions.map((row) => ({ ...row })),
       feedbackBefore: WRAP_UP_JOB.feedbackBefore,
       feedbackAfter: WRAP_UP_JOB.feedbackAfter,
+      feedbackLines: WRAP_UP_JOB.feedbackLines.map((row) => ({ ...row })),
       askBefore: WRAP_UP_JOB.askBefore,
       askAfter: WRAP_UP_JOB.askAfter,
       askOptions: WRAP_UP_JOB.askOptions.map((row) => ({ ...row })),

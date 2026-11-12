@@ -70,7 +70,7 @@ export function DeliveryWorkbook({ silver, sheet }: { silver: LaunchpadSilver; s
         <Line className={TIGHT} before={copy.proofBefore} pick={lookups.proof} after={copy.proofAfter} />
         <Line className={TIGHT} before={copy.paymentBefore} pick={lookups.payment} after={copy.paymentAfter} />
         <Line className={TIGHT} before={copy.askPayBefore} pick={labelOf(copy.askPayOptions, saved?.paymentWhen)} after={copy.askPayAfter} />
-        <Line className={TIGHT} before={copy.feedbackBefore} pick={lookups.feedback} after={copy.feedbackAfter} />
+        <Line className={TIGHT} before={copy.feedbackLines?.length && lookups.feedback ? "" : copy.feedbackBefore} pick={lookups.feedback} after={copy.feedbackLines?.length && lookups.feedback ? "" : copy.feedbackAfter} />
         <Line className={TIGHT} before={copy.askBefore} pick={labelOf(copy.askOptions, saved?.feedbackQuestion)} after={copy.askAfter} />
         <p className={TIGHT}>{copy.trackerLine}</p>
         <Line className={TIGHT} before={copy.whenBefore} pick={labelOf(copy.whenOptions, saved?.trackerWhen)} after={copy.whenAfter} />

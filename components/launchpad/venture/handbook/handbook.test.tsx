@@ -778,6 +778,12 @@ describe("L5 delivery workbook", () => {
     expect(screen.queryByRole("heading", { name: original })).toBeNull();
     expect(screen.getByText("text").className).toContain("text-[#0CC1E0]");
     expect(screen.getByText(/Water bottle and fold-up bowl/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    const after = document.querySelector("[data-delivery-workbook='ready-after']");
+    expect(after?.textContent).toContain("I will ask for feedback in person.");
+    expect(after?.textContent).not.toContain("by in person");
+    expect(after?.textContent).toContain("I will ask, 'How did it go?'");
+    expect(after?.textContent).not.toContain("I will ask How did it go?");
   });
 });
 

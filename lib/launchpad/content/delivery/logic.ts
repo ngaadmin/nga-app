@@ -6,6 +6,17 @@ import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 
+export function feedbackSentences(
+  lines: readonly { id: string; sentence: string }[] | undefined,
+  ids: readonly string[],
+): string {
+  if (!lines?.length) return "";
+  return ids
+    .map((id) => lines.find((row) => row.id === id)?.sentence.trim() ?? "")
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function joinWords(words: readonly string[], joinWord: string): string {
   const items = words.map((word) => word.trim()).filter(Boolean);
   if (items.length === 0) return "";
@@ -76,11 +87,12 @@ export function deliveryLookups(
   const costs = costsOf(answers, screen.costsFrom);
   const price = priceOf(answers, screen.priceFrom);
   const services = chosenServices(floors, answers, screen.servicesFrom);
+  const played = feedbackSentences(screen.wrap?.feedbackLines, wrapAnswer?.feedbackHow ?? []);
   return {
     remind: phrase(deliver?.beforeOptions, deliverAnswer?.beforeHow),
     proof: phrase(deliver?.afterOptions, deliverAnswer?.afterHow),
     payment: joinWords(phrases(wrap?.payment?.options, wrapAnswer?.paymentHow ?? []), screen.joinWord),
-    feedback: joinWords(phrases(wrap?.feedback?.options, wrapAnswer?.feedbackHow ?? []), screen.joinWord),
+    feedback: played || joinWords(phrases(wrap?.feedback?.options, wrapAnswer?.feedbackHow ?? []), screen.joinWord),
     gear: (costs?.startup.starterGear ?? []).map((line) => line.label.trim()).filter(Boolean),
     services,
     priceFor: (serviceId) => price?.prices.find((row) => row.serviceId === serviceId)?.price ?? null,

@@ -75,7 +75,8 @@ Status `played` means the saved value is rendered when it is filled. `GAP` means
 | 5 | l5-s2 Do the job | l5-s2-b1 Get ready for the job | delivery ready | get_ready_for_job | remindAbout, travelHow, leaveEarly, packWhen | ready-before | My plan before the job | played |
 | 5 | l5-s2 | l5-s2-b2 Wrap up the job | delivery wrap | wrap_up_job | paymentWhen, feedbackQuestion, trackerWhen | ready-after | My plan after the job | played |
 | 5 | l5-s3 Know your profit | l5-s3-b1 Record the job | delivery record | record_the_job | jobs.serviceId, jobs.paid | job-record | My job record. Cost is looked up from l2-costs. Kept is calculated | played |
-| 6 | l6-s1 Budgeting | l6-s1-b1 Budgeting | picture, split page | none | four jar percents, device storage `lp-venture-test:budget-split` | budget-split | Jar percents | played |
+| 6 | l6-s1 Budgeting | l6-s1-b1 Budgeting | picture, split page | none | four jar percents, device storage `lp-venture-test:budget-split` | budget-split | Jar percents. They do not change when the earned total is typed | played |
+| 6 | l6-s1 | the workbook page | Money I earned | none. Device key `lp-venture-test:budget-earned` | entered total | budget-split | Money I earned, and the dollar column (that total × the bronze percents) | captured on the page |
 | 6 | l6-s1 | l6-s1-b1 | picture, story pages | none | no answer captured | none | Story pages are not workbook lines | not a capture |
 | 7 | l7-s1 Level Up | l7-s1-b1 Reflect | level-up reflect | l7-reflect | selected | what-went-well | Statement lines under the four section labels | played |
 | 7 | l7-s1 | l7-s1-b2 Improve | level-up improve | l7-improve | picks, improvePlan | weekly-focus | Week label and the statement | played |
@@ -128,7 +129,8 @@ Repeated chrome on every page after the cover: small logo and business name from
 | job-record | Tracker instruction sentence | none | none | none | label only |
 | budget-split | My budget split, jar names | none | none | none | label only |
 | budget-split | Jar percents | l6-s1-b1 split page | none. Device key `lp-venture-test:budget-split` | four percents | played |
-| budget-split | Money I earned, and the dollar column | none | none. Device key `lp-venture-test:budget-earned` | none | ORPHAN |
+| budget-split | Money I earned | the workbook page itself | none. Device key `lp-venture-test:budget-earned` | entered total | captured |
+| budget-split | Dollar column | computed on the page | none | entered total × the bronze percents, whole-dollar largest remainder | played |
 | what-went-well | Section labels | payload statements | l7-reflect | section labels | label only |
 | what-went-well | Statement lines | l7-s1-b1 | l7-reflect | selected | played |
 | weekly-focus | Week labels | payload | l7-improve | week labels | label only |
@@ -151,7 +153,7 @@ Not part of the bronze map. These are blank print layouts. Headings and field la
 ## Counts
 
 - GAP: 3. Struck-out why items (`l1-why.notApplicable`), logo font, logo name color. Each Grow check-in date is played on its idea. The Improve quick and longer tags were removed with Cath's approval.
-- ORPHAN: 1. Money I earned on `budget-split`, and the dollar amounts calculated from it. No bronze captures that amount.
+- ORPHAN: 0. Money I earned is captured on the `budget-split` page (Cath, 12 Nov 2026, 2:47pm). The dollar column is that total times the bronze percents.
 - What I did placeholders, both passes: 0.
 
 ## Dropped-items check

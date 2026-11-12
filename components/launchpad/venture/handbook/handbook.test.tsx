@@ -877,18 +877,26 @@ describe("L2 playback extras and L7 workbook pages", () => {
 });
 
 describe("workbook playback only", () => {
+  /**
+   * Cath, 12 Nov 2026, 2:47pm: My budget split keeps one approved field, Money I earned.
+   * The pencil focuses that field. Every other workbook input and editor button stays blocked.
+   */
   function paperOffenders(label: string) {
     const paper = document.querySelector("[data-paper-scroll]");
     expect(paper, label).toBeTruthy();
-    const inputs = paper!.querySelectorAll("input, textarea, [contenteditable='true']");
+    const earnedPage = label === "budget-split";
+    const inputs = [...paper!.querySelectorAll("input, textarea, [contenteditable='true']")].filter(
+      (el) => !(earnedPage && el.id === "budget-earned"),
+    );
     const buttons = [...paper!.querySelectorAll("button")].filter(
-      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]"),
+      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]") && !(earnedPage && btn.hasAttribute("data-budget-earned-edit")),
     );
     expect(inputs, label).toHaveLength(0);
     expect(buttons.map((btn) => (btn.getAttribute("aria-label") || btn.textContent || "").replace(/\s+/g, " ").trim()), label).toEqual([]);
+    if (earnedPage) expect(paper!.querySelector("#budget-earned"), label).toBeTruthy();
   }
 
-  it("renders no input, textarea, or editor button on any page, including Templates", () => {
+  it("renders no input, textarea, or editor button on any page, including Templates, except the approved Money I earned field", () => {
     const progress = withShortcutSampleAnswers(ALL, FLOORS, "dog-walking", "Happy Paws");
     render(<Harness entry="building" initial={progress} />);
     const seen = new Set<string>();

@@ -1,22 +1,35 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
+import { useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import { BUDGET_JARS, budgetPercents, earnedAmount, earnedDigits, readBudgetSplit, splitDollars, storedGivingPercent } from "@/lib/launchpad/content/budgeting/split";
 import { formatWholeMoney } from "@/lib/dashboard/currency/format-money";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 
 const EARNED_KEY = "lp-venture-test:budget-earned";
+
+function Pencil() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#4A5568" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </svg>
+  );
+}
 
 export function budgetPercentsFor(floors: readonly LaunchpadFloor[], answers: LaunchpadAnswers | undefined): number[] {
   return budgetPercents(storedGivingPercent(floors, answers));
 }
 
-/** "My budget split" on the shared workbook page. A saved earned amount plays back as text. */
+/**
+ * "My budget split" on the shared workbook page.
+ * Cath, 12 Nov 2026, 2:47pm: the earned total is typed on this page.
+ * Jar percents stay the Budgeting bronze split. Dollars are that total times those percents.
+ */
 export function BudgetSplit({
   heading = "My budget split",
   earnedLabel = "Money I earned",
@@ -24,24 +37,46 @@ export function BudgetSplit({
 }: {
   heading?: string;
   earnedLabel?: string;
-  /** Jar percents. When omitted, Giving comes from Module 1 or falls back to 5. */
+  /** Jar percents. When omitted, the saved bronze split wins, then Giving from Module 1 or 5. */
   percents?: readonly number[];
 }) {
   const ctx = useLaunchpadAnswers();
-  const s = useSurfaceCopy();
   const shares = percents ?? readBudgetSplit() ?? budgetPercentsFor(ctx?.floors ?? [], ctx?.answers);
-  const raw = typeof window === "undefined" ? "" : (window.localStorage.getItem(EARNED_KEY) ?? "");
-  const filled = earnedDigits(raw).length > 0;
+  const s = useSurfaceCopy();
+  const [raw, setRaw] = useState(() => {
+    if (typeof window === "undefined") return s.workbook.earnedPlaceholder;
+    const saved = window.localStorage.getItem(EARNED_KEY);
+    return saved == null ? s.workbook.earnedPlaceholder : earnedDigits(saved);
+  });
   const currency = readCurrencyPreference();
-  const amounts = filled ? splitDollars(earnedAmount(raw), shares) : [];
+  const amounts = splitDollars(earnedAmount(raw), shares);
   return (
     <div data-budget-sheet="">
       <AccentLabel as="h2">{heading}</AccentLabel>
-      {filled ? (
-        <p className={`mt-4 ${WORKBOOK_BODY}`} data-budget-earned="">
-          {earnedLabel} <ChosenValue>{formatWholeMoney(earnedAmount(raw), currency)}</ChosenValue>
-        </p>
-      ) : null}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <h3 className={WORKBOOK_SUB}>{earnedLabel}</h3>
+        <button type="button" aria-label={s.workbook.editEarned} data-budget-earned-edit="" className="flex size-11 items-center justify-center" onClick={() => document.getElementById("budget-earned")?.focus()}>
+          <Pencil />
+        </button>
+      </div>
+      <label className="mt-1 inline-flex min-w-[88px] items-baseline border-b-2 border-[#0CC1E0] pb-0.5" htmlFor="budget-earned">
+        <span className={WORKBOOK_ANSWER}>$</span>
+        <input
+          id="budget-earned"
+          data-budget-earned=""
+          aria-label={earnedLabel}
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder={s.workbook.earnedPlaceholder}
+          value={raw}
+          onChange={(event) => {
+            const next = earnedDigits(event.target.value);
+            setRaw(next);
+            window.localStorage.setItem(EARNED_KEY, next);
+          }}
+          className={`w-[6ch] bg-transparent outline-none placeholder:text-[#19347D]/40 ${WORKBOOK_ANSWER}`}
+        />
+      </label>
       <ul className="mt-4 flex flex-col gap-[22px]">
         {BUDGET_JARS.map((jar, index) => (
           <li key={jar.id} className="grid grid-cols-[minmax(0,1fr)_3.25rem_4.25rem] items-center gap-x-3">
@@ -50,7 +85,7 @@ export function BudgetSplit({
               <span className={WORKBOOK_BODY}>{s.jars[jar.id]}</span>
             </span>
             <span className={`text-right ${WORKBOOK_ANSWER}`}>{shares[index] ?? 0}%</span>
-            <span className={`text-right ${WORKBOOK_ANSWER}`} data-budget-amount={jar.id}>{filled ? formatWholeMoney(amounts[index] ?? 0, currency) : ""}</span>
+            <span className={`text-right ${WORKBOOK_ANSWER}`} data-budget-amount={jar.id}>{formatWholeMoney(amounts[index] ?? 0, currency)}</span>
           </li>
         ))}
       </ul>

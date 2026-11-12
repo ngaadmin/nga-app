@@ -7,7 +7,7 @@ import {
 } from "@/lib/academy/lessons/lesson-close-rewards";
 import { cn } from "@/lib/utils/cn";
 
-const PENNY_SRC = "/assets/illustrations/characters/penny/penny-master-512.webp";
+const HOLLY_SRC = "/assets/illustrations/characters/holly/holly-waving-512.webp";
 
 type LessonCloseRewardViewProps = {
   xpReward: number;
@@ -36,7 +36,7 @@ function node(
   return createElement(type, props, ...children);
 }
 
-/** Receipt rows and the Penny total on the lesson close screen. */
+/** Receipt rows and the character beside the total on the lesson close screen. */
 export function LessonCloseRewardView({
   xpReward,
   perfectStreakBonus,
@@ -134,8 +134,8 @@ export function LessonCloseRewardView({
         ),
       },
       node("img", {
-        src: PENNY_SRC,
-        alt: "Penny",
+        src: HOLLY_SRC,
+        alt: "Holly waving",
         className: "h-[92px] w-auto object-contain",
         decoding: "async",
       }),

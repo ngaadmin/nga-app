@@ -1,0 +1,2059 @@
+{
+  "loadVersion": 1,
+  "ventureId": "dog-walking",
+  "ventureNoun": "dog walking service",
+  "source": {
+    "file": "lib/launchpad/content/source/dog-walking/service-business-framework.xlsx",
+    "sheet": "Final Service Business Framewor",
+    "md5": "803d6cb41ce815ee423eba5ac928db13",
+    "rows": "2-16",
+    "notes": [
+      {
+        "date": "4 Nov 2026",
+        "note": "Multi-select screens: Launchpad's multi-select screens are different from the Academy's multiple choice template. Academy multiple choice grades against a correct-answer key, while Launchpad's version is pure capture: any combination of taps is valid, with no right or wrong. Plan: reuse the Academy multiple choice design template but tweak the logic to multi-select. Melvin will build it; no action needed yet."
+      },
+      {
+        "date": "4 Nov 2026",
+        "note": "Task screens: each bronze task has Context, Guidance, Question and Data Input. A task may span one or multiple screens. If context, guidance, question and interaction fit on one screen, use one; otherwise split context and guidance onto screen one and the interaction onto screen two. That split may be the better default for every task."
+      },
+      {
+        "date": "4 Nov 2026",
+        "note": "Two-bucket rule: wrap-ups and bronzes have a service and a make-and-sell payload version (make-and-sell covers craft and digital products). The business picked on the Launchpad home screen sets the flag, so there is no new decision tree. The Payload version column marks each row Shared, Service, Make-and-sell, or Shared with skin-specific examples. See Build Specs section 8."
+      },
+      {
+        "date": "4 Nov 2026",
+        "note": "Templates: screen template cells use the agreed shared template set (Jasper list, Cath approved 4 Nov). Reuse: multiple-choice, bucket-sort, tap-reveal, true-false, completion. Tweak: multiple-choice capture, rank-order, word-drop, budget-select, allocation slider, savings-goal meter. New: workbook template screen (wrap-ups), money calculator, short text box. Illustrations are optional per screen; mark no-picture screens explicitly."
+      },
+      {
+        "date": "4 Nov 2026",
+        "note": "Wrap-up (silver summary) screens: Context, Guidance and Question are N/A. The wrap-up shows the workbook page filled in with the silver's answers, and the clearly marked edit icons tell the learner they can change things there (Cath, 4 Nov)."
+      },
+      {
+        "date": "5 Nov 2026",
+        "note": "Hybrid: Module 1 from lib/launchpad/content/source/dog-walking/service-business-framework.xlsx; Level 2 from lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx."
+      }
+    ]
+  },
+  "levels": [
+    {
+      "level": 1,
+      "name": "Vision and Goals",
+      "gold": {
+        "id": "l1-gold"
+      },
+      "silvers": [
+        {
+          "id": "l1-s1",
+          "title": "Define the business",
+          "sheetLabel": "1 Define the business",
+          "build": "load",
+          "bronzes": [
+            {
+              "id": "l1-s1-b1",
+              "title": "Pick what kind of business you'll run",
+              "sheetLabel": "1 Pick what kind of business you'll run",
+              "sourceRow": 2,
+              "tasks": [
+                {
+                  "id": "l1-s1-b1-t1",
+                  "title": "Pick what kind of business you'll run",
+                  "kind": "in-app",
+                  "paged": true,
+                  "canComeBackLater": false,
+                  "screens": [
+                    {
+                      "sourceRow": 2,
+                      "validation": [
+                        "at least one pick"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [
+                        "l1-s3-wrap"
+                      ],
+                      "flags": [
+                        "D14"
+                      ],
+                      "screenId": "l1-s1-b1-t1-s2",
+                      "index": "1",
+                      "template": "choice-capture:multi",
+                      "question": "What will your business offer?",
+                      "options": [
+                        {
+                          "id": "dog-walking",
+                          "label": "Dog walking"
+                        },
+                        {
+                          "id": "grooming",
+                          "label": "Grooming"
+                        },
+                        {
+                          "id": "dog-sitting",
+                          "label": "Dog sitting"
+                        },
+                        {
+                          "id": "dog-training",
+                          "label": "Dog training"
+                        }
+                      ],
+                      "answer": {
+                        "answerKey": "l1-offer",
+                        "kind": "selection",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "selected",
+                            "type": "option ids",
+                            "required": true,
+                            "limits": "one or more"
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "id": "l1-s1-b1-t1-s2",
+                        "type": "choice-capture",
+                        "mode": "multi",
+                        "answerKey": "l1-offer",
+                        "prompt": "What will your business offer?",
+                        "options": [
+                          {
+                            "id": "dog-walking",
+                            "label": "Dog walking"
+                          },
+                          {
+                            "id": "grooming",
+                            "label": "Grooming"
+                          },
+                          {
+                            "id": "dog-sitting",
+                            "label": "Dog sitting"
+                          },
+                          {
+                            "id": "dog-training",
+                            "label": "Dog training"
+                          }
+                        ],
+                        "handbookLabel": "What my business will offer",
+                        "context": "Every business starts with a picture of what it could become.",
+                        "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
+                      },
+                      "context": "Every business starts with a picture of what it could become.",
+                      "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "l1-s1-b2",
+              "title": "Find the why",
+              "sheetLabel": "2 Find the why",
+              "sourceRow": 3,
+              "tasks": [
+                {
+                  "id": "l1-s1-b2-t1",
+                  "title": "Find the why",
+                  "kind": "in-app",
+                  "paged": true,
+                  "canComeBackLater": false,
+                  "screens": [
+                    {
+                      "sourceRow": 3,
+                      "validation": [
+                        "all four items always shown; the shown order is a valid answer"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [
+                        "l1-s2-b1-t1-s2",
+                        "l1-s2-b1-t1-goal-make-money",
+                        "l1-s2-b1-t1-goal-help-others",
+                        "l1-s2-b1-t1-goal-learn-new-skills",
+                        "l1-s2-b1-t1-goal-be-my-own-boss"
+                      ],
+                      "flags": [
+                        "D3",
+                        "D16"
+                      ],
+                      "screenId": "l1-s1-b2-t1-s2",
+                      "index": "1",
+                      "template": "rank-order",
+                      "question": "Rank these in order of importance to you.",
+                      "options": [
+                        {
+                          "id": "make-money",
+                          "label": "Make money"
+                        },
+                        {
+                          "id": "help-others",
+                          "label": "Help others"
+                        },
+                        {
+                          "id": "learn-new-skills",
+                          "label": "Learn new skills"
+                        },
+                        {
+                          "id": "be-my-own-boss",
+                          "label": "Be my own boss"
+                        }
+                      ],
+                      "answer": {
+                        "answerKey": "l1-why",
+                        "kind": "ranking",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "order",
+                            "type": "option ids (all four, most important first)",
+                            "required": true
+                          },
+                          {
+                            "name": "notApplicable",
+                            "type": "option ids",
+                            "required": false
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "id": "l1-s1-b2-t1-s2",
+                        "type": "rank-order",
+                        "answerKey": "l1-why",
+                        "prompt": "Rank these in order of importance to you.",
+                        "items": [
+                          {
+                            "id": "make-money",
+                            "label": "Make money"
+                          },
+                          {
+                            "id": "help-others",
+                            "label": "Help others"
+                          },
+                          {
+                            "id": "learn-new-skills",
+                            "label": "Learn new skills"
+                          },
+                          {
+                            "id": "be-my-own-boss",
+                            "label": "Be my own boss"
+                          }
+                        ],
+                        "notApplicableLabel": "Not applicable",
+                        "belowTitle": "Doesn't apply to me",
+                        "belowHint": "Drag any reason that doesn't apply to you here. This is optional.",
+                        "handbookLabel": "My why",
+                        "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
+                        "guidance": "Drag the reasons into order, most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to."
+                      },
+                      "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
+                      "guidance": "Drag the reasons into order, most important at the top. If a reason doesn't apply to you, drag it below the line. You don't have to."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "l1-s1-b3",
+              "title": "Know your impact",
+              "sheetLabel": "3 Know your impact",
+              "sourceRow": 4,
+              "tasks": [
+                {
+                  "id": "l1-s1-b3-t1",
+                  "title": "Know your impact",
+                  "kind": "in-app",
+                  "paged": true,
+                  "canComeBackLater": false,
+                  "screens": [
+                    {
+                      "sourceRow": 4,
+                      "validation": [
+                        "exactly one pick"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [
+                        "l1-s2-b1-t1-goal-support-a-cause"
+                      ],
+                      "flags": [],
+                      "screenId": "l1-s1-b3-t1-s2",
+                      "index": "1",
+                      "template": "choice-capture:single",
+                      "question": "Pick one area you would love your business to support as your success grows.",
+                      "options": [
+                        {
+                          "id": "animals",
+                          "label": "Animals"
+                        },
+                        {
+                          "id": "the-environment",
+                          "label": "The environment"
+                        },
+                        {
+                          "id": "kids-in-need",
+                          "label": "Kids in need"
+                        },
+                        {
+                          "id": "people-who-are-hungry",
+                          "label": "People who are hungry"
+                        },
+                        {
+                          "id": "older-people",
+                          "label": "Older people"
+                        }
+                      ],
+                      "answer": {
+                        "answerKey": "l1-cause",
+                        "kind": "selection",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "selected",
+                            "type": "option id",
+                            "required": true,
+                            "limits": "exactly one"
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "id": "l1-s1-b3-t1-s2",
+                        "type": "choice-capture",
+                        "mode": "single",
+                        "answerKey": "l1-cause",
+                        "prompt": "Pick one area you would love your business to support as your success grows.",
+                        "options": [
+                          {
+                            "id": "animals",
+                            "label": "Animals"
+                          },
+                          {
+                            "id": "the-environment",
+                            "label": "The environment"
+                          },
+                          {
+                            "id": "kids-in-need",
+                            "label": "Kids in need"
+                          },
+                          {
+                            "id": "people-who-are-hungry",
+                            "label": "People who are hungry"
+                          },
+                          {
+                            "id": "older-people",
+                            "label": "Older people"
+                          }
+                        ],
+                        "handbookLabel": "My cause",
+                        "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
+                        "guidance": "Think about what you care about most. Pick the one area you'd love to help."
+                      },
+                      "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
+                      "guidance": "Think about what you care about most. Pick the one area you'd love to help."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "l1-s2",
+          "title": "Set your goals",
+          "sheetLabel": "2 Set your goals",
+          "build": "load",
+          "bronzes": [
+            {
+              "id": "l1-s2-b1",
+              "title": "Set your goals",
+              "sheetLabel": "1 Set your goals (sequence)",
+              "sourceRow": 5,
+              "tasks": [
+                {
+                  "id": "l1-s2-b1-t1",
+                  "title": "Set your goals",
+                  "kind": "in-app",
+                  "paged": true,
+                  "canComeBackLater": true,
+                  "screens": [
+                    {
+                      "sourceRow": 5,
+                      "validation": [
+                        "skips none",
+                        "context and guidance above the first goal",
+                        "Support a cause after the ranked goals (from Know your impact, not the ranking)",
+                        "Add another goal last"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-why",
+                          "use": "goal order; not-applicable reasons skipped"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D1",
+                        "D3",
+                        "D11",
+                        "D12",
+                        "D22"
+                      ],
+                      "screenId": "l1-s2-b1-t1-s2",
+                      "index": "1",
+                      "template": "goal-loop",
+                      "context": "Goals turn your \"Why\" into something you can measure and check.",
+                      "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
+                      "question": "One goal screen per inherited reason (see rows below).",
+                      "payload": {
+                        "id": "l1-s2-b1-t1-s2",
+                        "type": "goal-loop",
+                        "context": "Goals turn your \"Why\" into something you can measure and check.",
+                        "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
+                        "handbookLabel": "My goals",
+                        "orderFrom": "l1-why",
+                        "skipRankItemIds": [],
+                        "goals": [
+                          {
+                            "rankItemId": "make-money",
+                            "position": "ranked",
+                            "title": "Make money",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-make-money",
+                              "type": "short-text",
+                              "mode": "goal",
+                              "answerKey": "l1-goal-make-money",
+                              "heading": "Make money",
+                              "parts": [
+                                {
+                                  "kind": "text",
+                                  "text": "I want to earn "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "amount"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "currency"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " in "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": ". I'm saving for "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "savingFor"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "."
+                                }
+                              ],
+                              "fields": [
+                                {
+                                  "name": "amount",
+                                  "input": "integer",
+                                  "label": "Amount",
+                                  "hint": "amount",
+                                  "min": 1,
+                                  "max": 9999999
+                                },
+                                {
+                                  "name": "currency",
+                                  "input": "currency",
+                                  "label": "Currency"
+                                },
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number",
+                                  "hint": "1–99",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
+                                  "name": "timeframeUnit",
+                                  "input": "choice",
+                                  "label": "Weeks or months",
+                                  "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
+                                    {
+                                      "id": "months",
+                                      "label": "months"
+                                    }
+                                  ],
+                                  "defaultValue": "weeks"
+                                },
+                                {
+                                  "name": "savingFor",
+                                  "input": "text",
+                                  "label": "Saving for",
+                                  "hint": "free text",
+                                  "maxLength": 60
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "rankItemId": "help-others",
+                            "position": "ranked",
+                            "title": "Help others",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-help-others",
+                              "type": "short-text",
+                              "mode": "goal",
+                              "answerKey": "l1-goal-help-others",
+                              "heading": "Help others",
+                              "parts": [
+                                {
+                                  "kind": "text",
+                                  "text": "I want "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "customerCount"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " customers to "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "benefit"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " in "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "."
+                                }
+                              ],
+                              "fields": [
+                                {
+                                  "name": "customerCount",
+                                  "input": "integer",
+                                  "label": "Number of customers",
+                                  "hint": "number",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
+                                  "name": "benefit",
+                                  "input": "choice",
+                                  "label": "What your customers get",
+                                  "hint": "pick one",
+                                  "options": [
+                                    {
+                                      "id": "come-home-to-a-happy-well-looked-after-dog",
+                                      "label": "come home to a happy, well looked-after dog"
+                                    },
+                                    {
+                                      "id": "have-a-washed-and-groomed-dog",
+                                      "label": "have the dog washed while you're out"
+                                    },
+                                    {
+                                      "id": "manage-their-dog-s-behavior-problems",
+                                      "label": "manage the dog's behavior problems"
+                                    },
+                                    {
+                                      "id": "go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
+                                      "label": "go away for the weekend or holidays without having to worry about their pet"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number",
+                                  "hint": "1–99",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
+                                  "name": "timeframeUnit",
+                                  "input": "choice",
+                                  "label": "Weeks or months",
+                                  "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
+                                    {
+                                      "id": "months",
+                                      "label": "months"
+                                    }
+                                  ],
+                                  "defaultValue": "weeks"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "rankItemId": "learn-new-skills",
+                            "position": "ranked",
+                            "title": "Learn new skills",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-learn-new-skills",
+                              "type": "short-text",
+                              "mode": "goal",
+                              "answerKey": "l1-goal-learn-new-skills",
+                              "heading": "Learn new skills",
+                              "parts": [
+                                {
+                                  "kind": "text",
+                                  "text": "I want to get better at "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "skill"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": ". I'll know I've done it when I can "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "achievement"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " in the next "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "."
+                                }
+                              ],
+                              "fields": [
+                                {
+                                  "name": "skill",
+                                  "input": "choice",
+                                  "label": "Skill",
+                                  "hint": "pick one",
+                                  "options": [
+                                    {
+                                      "id": "talking-to-customers",
+                                      "label": "talking to customers",
+                                      "prefill": "handle a new customer's questions from first contact to booking without help"
+                                    },
+                                    {
+                                      "id": "selling-my-product-or-services",
+                                      "label": "selling my product or services",
+                                      "prefill": "win a paying customer who found me through my own marketing"
+                                    },
+                                    {
+                                      "id": "managing-my-money",
+                                      "label": "managing my money",
+                                      "prefill": "track every dollar coming in and going out of my business"
+                                    },
+                                    {
+                                      "id": "solving-problems",
+                                      "label": "solving problems",
+                                      "prefill": "sort out a problem on a job and still keep the customer"
+                                    },
+                                    {
+                                      "id": "planning-my-time",
+                                      "label": "planning my time",
+                                      "prefill": "deliver every job I have booked on time while keeping up with school or work"
+                                    }
+                                  ],
+                                  "prefills": "achievement"
+                                },
+                                {
+                                  "name": "achievement",
+                                  "input": "text",
+                                  "label": "I'll know I've done it when I can",
+                                  "hint": "pick a skill first",
+                                  "maxLength": 120,
+                                  "multiline": true
+                                },
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number",
+                                  "hint": "1–99",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
+                                  "name": "timeframeUnit",
+                                  "input": "choice",
+                                  "label": "Weeks or months",
+                                  "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
+                                    {
+                                      "id": "months",
+                                      "label": "months"
+                                    }
+                                  ],
+                                  "defaultValue": "weeks"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "rankItemId": "be-my-own-boss",
+                            "position": "ranked",
+                            "title": "Be my own boss",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-be-my-own-boss",
+                              "type": "choice-capture",
+                              "mode": "single",
+                              "answerKey": "l1-goal-be-my-own-boss",
+                              "heading": "Be my own boss",
+                              "prompt": "You said being your own boss matters. What's your top reason for wanting to be your own boss?",
+                              "options": [
+                                {
+                                  "id": "choosing-when-i-work-my-own-schedule-and-hours",
+                                  "label": "Choosing when I work (my own schedule and hours)"
+                                },
+                                {
+                                  "id": "keeping-the-money-i-make",
+                                  "label": "Keeping the money I make"
+                                },
+                                {
+                                  "id": "working-where-i-want",
+                                  "label": "Working where I want"
+                                },
+                                {
+                                  "id": "making-things-my-own-way",
+                                  "label": "Making things my own way"
+                                }
+                              ],
+                              "summaryLabel": "My top reason to be my own boss"
+                            }
+                          },
+                          {
+                            "position": "after-ranked",
+                            "title": "Support a cause",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-support-a-cause",
+                              "type": "short-text",
+                              "mode": "goal",
+                              "answerKey": "l1-goal-support-a-cause",
+                              "heading": "Support a cause",
+                              "parts": [
+                                {
+                                  "kind": "text",
+                                  "text": "I will give "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "donatePercent"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "% of every sale to support "
+                                },
+                                {
+                                  "kind": "carried",
+                                  "answerKey": "l1-cause",
+                                  "label": "cause area"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "."
+                                }
+                              ],
+                              "fields": [
+                                {
+                                  "name": "donatePercent",
+                                  "input": "integer",
+                                  "label": "Percent",
+                                  "hint": "number",
+                                  "min": 1,
+                                  "max": 100
+                                }
+                              ],
+                              "optional": true
+                            }
+                          },
+                          {
+                            "position": "last",
+                            "title": "Add another goal",
+                            "screen": {
+                              "id": "l1-s2-b1-t1-goal-other",
+                              "type": "short-text",
+                              "mode": "goal",
+                              "answerKey": "l1-goal-other",
+                              "heading": "Add another goal",
+                              "prompt": "One more goal? Is there another goal that matters to you? Add it here, or skip it.",
+                              "guidance": "This one's optional. You can skip it and keep going.",
+                              "parts": [
+                                {
+                                  "kind": "text",
+                                  "text": "My goal is to "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "goalText"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " in the next "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": "."
+                                }
+                              ],
+                              "fields": [
+                                {
+                                  "name": "goalText",
+                                  "input": "text",
+                                  "label": "My goal",
+                                  "hint": "free text",
+                                  "maxLength": 120,
+                                  "optional": true
+                                },
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number",
+                                  "hint": "1–99",
+                                  "min": 1,
+                                  "max": 99,
+                                  "optional": true
+                                },
+                                {
+                                  "name": "timeframeUnit",
+                                  "input": "choice",
+                                  "label": "Weeks or months",
+                                  "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
+                                    {
+                                      "id": "months",
+                                      "label": "months"
+                                    }
+                                  ],
+                                  "defaultValue": "weeks",
+                                  "optional": true
+                                }
+                              ],
+                              "optional": true
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "sourceRow": 6,
+                      "validation": [
+                        "amount: whole number 1 to 9,999,999",
+                        "currency: Parent Hub currency (10 codes, USD default), read-only",
+                        "timeframeNumber: whole number 1 to 99",
+                        "timeframeUnit: one of weeks | months",
+                        "savingFor: up to 60 characters"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-why",
+                          "use": "goal order and not-applicable skip"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D12",
+                        "D23",
+                        "D2",
+                        "D15"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-make-money",
+                      "index": "2.1",
+                      "template": "short-text:goal",
+                      "question": "I want to earn [amount] [currency] in [number] [weeks/months]. I'm saving for [free text].",
+                      "answer": {
+                        "answerKey": "l1-goal-make-money",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "amount",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 9,999,999"
+                          },
+                          {
+                            "name": "currency",
+                            "type": "currency",
+                            "required": true,
+                            "limits": "Parent Hub currency (10 codes, USD default), read-only"
+                          },
+                          {
+                            "name": "timeframeNumber",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "timeframeUnit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of weeks | months"
+                          },
+                          {
+                            "name": "savingFor",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 60 characters"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    },
+                    {
+                      "sourceRow": 7,
+                      "validation": [
+                        "customerCount: whole number 1 to 99",
+                        "benefit: one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
+                        "timeframeNumber: whole number 1 to 99",
+                        "timeframeUnit: one of weeks | months"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-why",
+                          "use": "goal order and not-applicable skip"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D12",
+                        "D23",
+                        "D15",
+                        "D31"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-help-others",
+                      "index": "2.2",
+                      "template": "short-text:goal",
+                      "question": "I want [number] customers to [pick one] in [number] [weeks/months].",
+                      "answer": {
+                        "answerKey": "l1-goal-help-others",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "customerCount",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "benefit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
+                          },
+                          {
+                            "name": "timeframeNumber",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "timeframeUnit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of weeks | months"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    },
+                    {
+                      "sourceRow": 8,
+                      "validation": [
+                        "skill: one of talking-to-customers | selling-my-product-or-services | managing-my-money | solving-problems | planning-my-time",
+                        "achievement: up to 120 characters",
+                        "timeframeNumber: whole number 1 to 99",
+                        "timeframeUnit: one of weeks | months"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-why",
+                          "use": "goal order and not-applicable skip"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D12",
+                        "D23",
+                        "D13",
+                        "D15",
+                        "D31"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-learn-new-skills",
+                      "index": "2.3",
+                      "template": "short-text:goal",
+                      "question": "I want to get better at [pick one: the skill, text before the bar in N8 to R8]. I'll know I've done it when I can [prefilled with that skill's success line, text after the bar, editable] in the next [number] [weeks/months].\n\nExample: I want to get better at talking to customers. I'll know I've done it when I can handle a new customer's questions from first contact to booking without help in the next 4 weeks.",
+                      "answer": {
+                        "answerKey": "l1-goal-learn-new-skills",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "skill",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of talking-to-customers | selling-my-product-or-services | managing-my-money | solving-problems | planning-my-time"
+                          },
+                          {
+                            "name": "achievement",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 120 characters"
+                          },
+                          {
+                            "name": "timeframeNumber",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "timeframeUnit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of weeks | months"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    },
+                    {
+                      "sourceRow": 9,
+                      "validation": [
+                        "exactly one pick"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-why",
+                          "use": "goal order and not-applicable skip"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D12",
+                        "D23",
+                        "D17"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-be-my-own-boss",
+                      "index": "2.4",
+                      "template": "choice-capture:single",
+                      "question": "You said being your own boss matters. What's your top reason for wanting to be your own boss?",
+                      "options": [
+                        {
+                          "id": "choosing-when-i-work-my-own-schedule-and-hours",
+                          "label": "Choosing when I work (my own schedule and hours)"
+                        },
+                        {
+                          "id": "keeping-the-money-i-make",
+                          "label": "Keeping the money I make"
+                        },
+                        {
+                          "id": "working-where-i-want",
+                          "label": "Working where I want"
+                        },
+                        {
+                          "id": "making-things-my-own-way",
+                          "label": "Making things my own way"
+                        }
+                      ],
+                      "answer": {
+                        "answerKey": "l1-goal-be-my-own-boss",
+                        "kind": "selection",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "selected",
+                            "type": "option id",
+                            "required": true,
+                            "limits": "exactly one"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    },
+                    {
+                      "sourceRow": 10,
+                      "validation": [
+                        "donatePercent: whole number 1 to 100"
+                      ],
+                      "feeds": [
+                        {
+                          "answerKey": "l1-cause",
+                          "use": "cause area carried into the sentence"
+                        }
+                      ],
+                      "feedsInto": [],
+                      "flags": [
+                        "D23",
+                        "D11"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-support-a-cause",
+                      "index": "2.5",
+                      "template": "short-text:goal",
+                      "question": "I will give [number]% of every sale to support [cause area from Know your impact].",
+                      "answer": {
+                        "answerKey": "l1-goal-support-a-cause",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "donatePercent",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 100"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    },
+                    {
+                      "sourceRow": 11,
+                      "validation": [
+                        "goalText: up to 120 characters (optional)",
+                        "timeframeNumber: whole number 1 to 99 (optional)",
+                        "timeframeUnit: one of weeks | months (optional)",
+                        "the whole page is optional"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [],
+                      "flags": [
+                        "D13",
+                        "D15"
+                      ],
+                      "screenId": "l1-s2-b1-t1-goal-other",
+                      "index": "2.6",
+                      "template": "short-text:goal",
+                      "guidance": "This one's optional. You can skip it and keep going.",
+                      "question": "One more goal? (optional) Is there another goal that matters to you? Add it here, or skip it. Starter: My goal is to [free text] in the next [number] [weeks/months].",
+                      "answer": {
+                        "answerKey": "l1-goal-other",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "goalText",
+                            "type": "text",
+                            "required": false,
+                            "limits": "up to 120 characters"
+                          },
+                          {
+                            "name": "timeframeNumber",
+                            "type": "integer",
+                            "required": false,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "timeframeUnit",
+                            "type": "choice",
+                            "required": false,
+                            "limits": "one of weeks | months"
+                          }
+                        ]
+                      },
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "l1-s3",
+          "seedSilverId": "l2-s2",
+          "title": "The Brand",
+          "sheetLabel": "3 The Brand",
+          "build": "locked",
+          "bronzes": [],
+          "lockedRows": [
+            {
+              "sourceRow": 12,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [
+                "l1-s3-wrap"
+              ],
+              "flags": [
+                "D20",
+                "D27"
+              ],
+              "screenId": "l1-s3-b2-t1",
+              "index": "1",
+              "template": "logo-picker",
+              "context": "A logo is your business's signature. Have fun designing one here.",
+              "guidance": "",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "shape",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "color",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "icon",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "sourceRow": 13,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [],
+              "flags": [
+                "D20",
+                "D27"
+              ],
+              "screenId": "l1-s3-b1-t1",
+              "index": "1",
+              "template": "name-picker",
+              "context": "Every business needs a name people remember. Good names are easy to remember, easy to say, and say what you do or who you are.",
+              "guidance": "Keep it short and easy to pronounce. It can say what you do or who you are, like Wag Squad or Leo's Leads (dog walking). Keep your last name and street out of it. Say it out loud. Want a second opinion? Ask a friend for feedback.",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "required": true,
+                    "limits": "up to 24 characters"
+                  },
+                  {
+                    "name": "font",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "nameColor",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ],
+          "wrapUp": {
+            "sourceRow": 14,
+            "validation": [
+              "locked build: unchanged"
+            ],
+            "feeds": [
+              {
+                "answerKey": "l2-s2-identity",
+                "use": "logo and name"
+              },
+              {
+                "answerKey": "l1-offer",
+                "use": "handbook Our vision"
+              }
+            ],
+            "feedsInto": [],
+            "flags": [
+              "D19",
+              "D20",
+              "D24",
+              "D25",
+              "D26",
+              "D27",
+              "D30"
+            ],
+            "screenId": "l1-s3-wrap",
+            "index": "wrap-up",
+            "template": "identity-wrap-up",
+            "context": "",
+            "guidance": "",
+            "handbookSections": [
+              {
+                "id": "our-vision",
+                "label": "Our vision",
+                "display": "list",
+                "sources": [
+                  {
+                    "answerKey": "l1-offer"
+                  }
+                ]
+              }
+            ],
+            "vision": {
+              "label": "Our vision",
+              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}. [[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
+              "businessType": "dog walking",
+              "offerKey": "l1-offer",
+              "whyKey": "l1-why",
+              "causeKey": "l1-cause",
+              "causeGoalKey": "l1-goal-support-a-cause",
+              "causePercentField": "donatePercent",
+              "goalLoopId": "l1-s2-b1-t1-s2",
+              "placeholder": "Your vision appears here when you finish Level 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "name": "Planning",
+      "gold": {
+        "id": "l2-gold"
+      },
+      "silvers": [
+        {
+          "id": "l2-s1",
+          "title": "The product and its buyers",
+          "sheetLabel": "2 Know the product and its buyers",
+          "build": "load",
+          "bronzes": [
+            {
+              "id": "l2-s1-b1",
+              "title": "Decide what to sell",
+              "sheetLabel": "1 Decide what to sell",
+              "sourceRow": 14,
+              "tasks": [
+                {
+                  "id": "l2-s1-b1-t1",
+                  "title": "Decide what to sell",
+                  "kind": "in-app",
+                  "paged": true,
+                  "canComeBackLater": false,
+                  "screens": [
+                    {
+                      "sourceRow": 14,
+                      "validation": [
+                        "serviceDescription: up to 200 characters",
+                        "availability: up to 120 characters"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [
+                        "l2-s1-wrap"
+                      ],
+                      "flags": [
+                        "D4",
+                        "D13"
+                      ],
+                      "screenId": "l2-s1-b1-t1-s2",
+                      "index": "1",
+                      "template": "short-text:paragraph",
+                      "question": "Your paragraph: I offer ___. I am available ___.",
+                      "options": [],
+                      "answer": {
+                        "answerKey": "l2-sell",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "serviceDescription",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 200 characters"
+                          },
+                          {
+                            "name": "availability",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 120 characters"
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "id": "l2-s1-b1-t1-s2",
+                        "type": "short-text",
+                        "mode": "paragraph",
+                        "answerKey": "l2-sell",
+                        "prompt": "Your paragraph",
+                        "parts": [
+                          {
+                            "kind": "text",
+                            "text": "I offer "
+                          },
+                          {
+                            "kind": "field",
+                            "field": "serviceDescription"
+                          },
+                          {
+                            "kind": "text",
+                            "text": ". I am available "
+                          },
+                          {
+                            "kind": "field",
+                            "field": "availability"
+                          },
+                          {
+                            "kind": "text",
+                            "text": "."
+                          }
+                        ],
+                        "fields": [
+                          {
+                            "name": "serviceDescription",
+                            "input": "text",
+                            "label": "Service description",
+                            "maxLength": 200
+                          },
+                          {
+                            "name": "availability",
+                            "input": "text",
+                            "label": "Availability",
+                            "hint": "days and times",
+                            "maxLength": 120
+                          }
+                        ],
+                        "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
+                        "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define."
+                      },
+                      "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
+                      "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "l2-s1-b2",
+              "title": "Know who your customers are",
+              "sheetLabel": "2 Find out if people want it",
+              "sourceRow": 15,
+              "tasks": [
+                {
+                  "id": "l2-s1-b2-t1",
+                  "title": "Know who your customers are",
+                  "kind": "real-world",
+                  "paged": true,
+                  "canComeBackLater": true,
+                  "screens": [
+                    {
+                      "sourceRow": 15,
+                      "validation": [
+                        "numberAsked: whole number 1 to 99",
+                        "yesNo: one of yes | no",
+                        "specificInterest: up to 120 characters"
+                      ],
+                      "feeds": [],
+                      "feedsInto": [
+                        "l2-s1-wrap"
+                      ],
+                      "flags": [
+                        "D5",
+                        "D6",
+                        "D10",
+                        "D13",
+                        "D15",
+                        "D22"
+                      ],
+                      "screenId": "l2-s1-b2-t1-s2",
+                      "index": "1",
+                      "template": "short-text:paragraph",
+                      "question": "Your paragraph: I asked ___ [number] people about my {product}. They said [Yes/No] to my idea. They were specifically interested in ___ [e.g. a time, day or type of service].",
+                      "options": [
+                        {
+                          "id": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "no",
+                          "label": "No"
+                        }
+                      ],
+                      "answer": {
+                        "answerKey": "l2-demand",
+                        "kind": "fields",
+                        "version": 1,
+                        "fields": [
+                          {
+                            "name": "numberAsked",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "yesNo",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of yes | no"
+                          },
+                          {
+                            "name": "specificInterest",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 120 characters"
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "id": "l2-s1-b2-t1-s2",
+                        "type": "short-text",
+                        "mode": "paragraph",
+                        "answerKey": "l2-demand",
+                        "prompt": "Your paragraph",
+                        "parts": [
+                          {
+                            "kind": "text",
+                            "text": "I asked "
+                          },
+                          {
+                            "kind": "field",
+                            "field": "numberAsked"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " people about my dog walking service. They said "
+                          },
+                          {
+                            "kind": "field",
+                            "field": "yesNo"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " to my idea. They were specifically interested in "
+                          },
+                          {
+                            "kind": "field",
+                            "field": "specificInterest"
+                          },
+                          {
+                            "kind": "text",
+                            "text": "."
+                          }
+                        ],
+                        "fields": [
+                          {
+                            "name": "numberAsked",
+                            "input": "integer",
+                            "label": "Number of people asked",
+                            "hint": "number",
+                            "min": 1,
+                            "max": 99
+                          },
+                          {
+                            "name": "yesNo",
+                            "input": "choice",
+                            "label": "Yes or No",
+                            "options": [
+                              {
+                                "id": "yes",
+                                "label": "Yes"
+                              },
+                              {
+                                "id": "no",
+                                "label": "No"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "specificInterest",
+                            "input": "text",
+                            "label": "What they were specifically interested in",
+                            "hint": "a time, day or type of service",
+                            "maxLength": 120
+                          }
+                        ],
+                        "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
+                        "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard."
+                      },
+                      "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
+                      "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "wrapUp": {
+            "sourceRow": 16,
+            "validation": [
+              "read-only except the values listed in wrapup-edit-calls.md"
+            ],
+            "feeds": [
+              {
+                "answerKey": "l2-sell",
+                "use": "What I am selling (serviceDescription) and When (availability), editable"
+              },
+              {
+                "answerKey": "l2-demand",
+                "use": "Who might want it, editable"
+              }
+            ],
+            "feedsInto": [],
+            "flags": [
+              "D4",
+              "D7",
+              "D8",
+              "D18"
+            ],
+            "screenId": "l2-s1-wrap",
+            "index": "wrap-up",
+            "template": "workbook-summary",
+            "payload": {
+              "type": "workbook-summary",
+              "heading": "Your workbook page",
+              "body": "Check your answers. Tap the pencil to change one, then tap Continue.",
+              "finalizeLabel": "Continue",
+              "sections": [
+                {
+                  "id": "what-i-am-selling",
+                  "label": "What I am selling",
+                  "display": "text",
+                  "sources": [
+                    {
+                      "answerKey": "l2-sell",
+                      "field": "serviceDescription",
+                      "editFields": [
+                        "serviceDescription"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "when",
+                  "label": "When",
+                  "display": "text",
+                  "sources": [
+                    {
+                      "answerKey": "l2-sell",
+                      "field": "availability",
+                      "editFields": [
+                        "availability"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "who-might-want-it",
+                  "label": "Who might want it",
+                  "display": "sentences",
+                  "sources": [
+                    {
+                      "answerKey": "l2-demand",
+                      "editFields": [
+                        "numberAsked",
+                        "yesNo",
+                        "specificInterest"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "placeholder": true
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "topic": "Level 1 silvers",
+      "applied": "Superseded by D26: three L1 silvers from Final rows 2–14 (Define the business, Set your goals, The Brand). Kept for history.",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        3,
+        4,
+        5,
+        11,
+        12
+      ]
+    },
+    {
+      "id": "D2",
+      "topic": "Money cap",
+      "applied": "Amount is a whole number, 7 digits (1 to 9,999,999). K5 still says 1 billion cap.",
+      "status": "default-pending-cath",
+      "rows": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "D3",
+      "topic": "Why items",
+      "applied": "Per Cath's 4 Nov calls, Find the why ranks four items: Make money, Help others, Learn new skills, Be my own boss (Support a cause removed 8:44pm). The reader drops the retired item if the sheet still lists it, so every ranked item has a goal row.",
+      "status": "decided-cath",
+      "rows": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "D4",
+      "topic": "What I am selling display",
+      "applied": "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.",
+      "status": "default-pending-cath",
+      "rows": [
+        14,
+        16
+      ]
+    },
+    {
+      "id": "D24",
+      "topic": "Vision sentence",
+      "applied": "H19 template filled from saved answers (I19). {business-type} is \"dog walking\" (I19 example). {goal-list} leaves out the Support a cause goal, which the [[ ]] clause covers (I19 example). Label \"Our vision\" by default; mission vs vision and cover page vs lift preview are open with Cath.",
+      "status": "default-pending-cath",
+      "rows": [
+        19
+      ]
+    },
+    {
+      "id": "D5",
+      "topic": "{product}",
+      "applied": "Filled from the venture noun: \"dog walking service\".",
+      "status": "default-pending-cath",
+      "rows": [
+        15
+      ]
+    },
+    {
+      "id": "D6",
+      "topic": "[Yes/No]",
+      "applied": "A two-option choice (Yes, No) shown as an inline dropdown in the sentence.",
+      "status": "default-pending-cath",
+      "rows": [
+        15
+      ]
+    },
+    {
+      "id": "D7",
+      "topic": "Wrap-up button",
+      "applied": "Cath 4 Nov 9:59pm: Continue (compact navy button; was Confirm and continue, tracker I12/I16)",
+      "status": "decided-cath",
+      "rows": [
+        12,
+        16
+      ]
+    },
+    {
+      "id": "D8",
+      "topic": "Wrap-up editing",
+      "applied": "Per Cath's 4 Nov correction: a wrap-up value is edited in place (pencil on its section) only when that does not rewire logic owned by another screen; the rest stays read-only. No navigating back to earlier screens. See wrapup-edit-calls.md.",
+      "status": "decided-cath",
+      "rows": [
+        12,
+        16
+      ]
+    },
+    {
+      "id": "D9",
+      "topic": "Level 2 gold",
+      "applied": "No L2 gold row in the sheet; the seed gold (Readiness to make) stays and there is no L2 gold screen.",
+      "status": "default-pending-cath",
+      "rows": []
+    },
+    {
+      "id": "D10",
+      "topic": "K15 interest level",
+      "applied": "Ignored. Row 15 captures number asked, Yes/No and the specific interest only. K15 still says the payload lists interest level.",
+      "status": "pending-cath",
+      "rows": [
+        15
+      ]
+    },
+    {
+      "id": "D11",
+      "topic": "Support a cause goal position",
+      "applied": "Support a cause is no longer a Find the why reason (Cath, 4 Nov 8:44pm). Its goal comes from the Know your impact pick: always shown after the ranked goals (K4, E10) and never skipped by the ranking. Like every shown goal it must be filled in (D23).",
+      "status": "build-assumption",
+      "rows": [
+        3,
+        4,
+        10
+      ]
+    },
+    {
+      "id": "D12",
+      "topic": "Struck reasons",
+      "applied": "A reason marked not applicable in Find the why gets no goal page.",
+      "status": "build-assumption",
+      "rows": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "D23",
+      "topic": "Goal not applicable",
+      "applied": "Per Cath (4 Nov 8:49pm), goal pages have no Not applicable chip: a goal is dropped only in the Find the why ranking, and every goal shown must be filled in, except Add another goal, which stays optional. The sheet's goal rows (I5, I10, X6 to X10) still mention not applicable.",
+      "status": "decided-cath",
+      "rows": [
+        5,
+        6,
+        7,
+        8,
+        10
+      ]
+    },
+    {
+      "id": "D13",
+      "topic": "Text caps",
+      "applied": "Goal text up to 120 characters, the added goal 120, the service description 200, availability and specific interest 120.",
+      "status": "build-assumption",
+      "rows": [
+        7,
+        8,
+        11,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "D14",
+      "topic": "Minimum picks",
+      "applied": "Pick what kind of business you'll run needs at least one pick before Next.",
+      "status": "build-assumption",
+      "rows": [
+        2
+      ]
+    },
+    {
+      "id": "D15",
+      "topic": "Number caps",
+      "applied": "Timeframe number 1 to 99, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has the timeframe again (Cath, 5 Nov 5:20pm; I7/J7/V7 updated in the sheet); people asked 1 to 99 (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).",
+      "status": "build-assumption",
+      "rows": [
+        6,
+        7,
+        8,
+        11,
+        15
+      ]
+    },
+    {
+      "id": "D16",
+      "topic": "Ranking control",
+      "applied": "AC3 (Cath, 5 Nov): drag and drop replaces the up and down arrows. Drag a reason by its grip (mouse or touch) to reorder it or move it below the line; with the keyboard, focus a reason and use the up and down arrow keys. G3 “Drag the reasons into order” is shown as written.",
+      "status": "decided-cath",
+      "rows": [
+        3
+      ]
+    },
+    {
+      "id": "D17",
+      "topic": "Be my own boss check-in",
+      "applied": "The six-month check-in in I9 is not built.",
+      "status": "build-assumption",
+      "rows": [
+        9
+      ]
+    },
+    {
+      "id": "D18",
+      "topic": "Wrap-up copy and art",
+      "applied": "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.",
+      "status": "build-assumption",
+      "rows": [
+        12,
+        16
+      ]
+    },
+    {
+      "id": "D19",
+      "topic": "Identity handbook sections",
+      "applied": "Our vision lists the offer picks (row 2); What we sell (row 14) is left off the identity page since identity moved to Level 1 (D25) and shows on the Level 2 page. A section with no answer is hidden.",
+      "status": "build-assumption",
+      "rows": [
+        19
+      ]
+    },
+    {
+      "id": "D20",
+      "topic": "Identity titles",
+      "applied": "Superseded by D27: The Brand (l1-s3) uses Name the business then Design the logo (Revised order). Seed titles stay Design your logo / Name your business for the locked picker copy.",
+      "status": "build-assumption",
+      "rows": [
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "D21",
+      "topic": "One screen per bronze",
+      "applied": "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals shows its context and guidance above the first goal on step 1 (Cath, 4 Nov 8:45pm), then one goal per step.",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        3,
+        4,
+        5,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "D25",
+      "topic": "Identity in Level 1",
+      "applied": "Superseded by D26/D27: The Brand is l1-s3 after Set your goals (l1-s2). Answer key stays l2-s2-identity; seedSilverId stays l2-s2.",
+      "status": "decided-cath",
+      "rows": [
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "D22",
+      "topic": "Come back later",
+      "applied": "Sample, pending tracker column: the tracker has no \"Come back later\" column yet, so a TEST override turns it on for Set your goals (row 5 → task l1-s2-b1-t1) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.",
+      "status": "sample-pending-tracker-column",
+      "rows": [
+        5,
+        15
+      ]
+    },
+    {
+      "id": "D26",
+      "topic": "Module 1 three silvers + floors 1–6",
+      "applied": "Cath 5 Nov: Module 1 = Final rows 2–14 as three silvers (Define the business; Set your goals; The Brand). Handbook column (AB) is TEST validation only — never built. Building wires levels 1–6 (Vision and Goals, Planning, Getting Ready, Sales, Delivery, Growing). Level 7 Budgeting is the rooftop (future, not a floor). L2 keeps current Decide what to sell + demand screens working; Pricing and L3–6 are structure/placeholder doors with Final titles (Revised order where Final D/E say so).",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "D27",
+      "topic": "The Brand logo-then-name",
+      "applied": "AC13 (Cath, 5 Nov): Design the logo comes first and Name the business second, so the name color can use the logo color. The sheet's D12/D13/E12/E13 still say name first; AC13 wins. Bronze ids keep their seed numbers (logo l1-s3-b2, name l1-s3-b1) so saved answers stay put; only the order changes. Answer key l2-s2-identity unchanged.",
+      "status": "decided-cath",
+      "rows": [
+        12,
+        13
+      ]
+    },
+    {
+      "id": "D28",
+      "topic": "Level outcome statements",
+      "applied": "Cath locked the seven floor lines on 12 Nov 2026. They live in service-level-outcomes.ts and the seed copies them onto floor.gold.title. The lift reads that payload field.",
+      "status": "decided-cath",
+      "rows": []
+    },
+    {
+      "id": "D29",
+      "topic": "Offer option Dog sitting",
+      "applied": "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.",
+      "status": "decided-cath",
+      "rows": [
+        2
+      ]
+    },
+    {
+      "id": "D30",
+      "topic": "No silver wrap-ups",
+      "applied": "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) the flow goes straight back to the corridor (no end screen; Cath, 5 Nov 5:19pm) and a small workbook icon button pops in (Open your workbook); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).",
+      "status": "decided-cath",
+      "rows": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "D31",
+      "topic": "Goal dropdowns",
+      "applied": "AC5 / J7 / J8: Help others picks one customer benefit from N7 to Q7 (four sheet options, none invented); Learn new skills picks one skill from N8 to R8 (text before the bar) and prefills the success line (text after the bar), which swaps on a new pick until the learner types their own. Options keep the sheet's lower case because they sit mid-sentence.",
+      "status": "decided-cath",
+      "rows": [
+        7,
+        8
+      ]
+    },
+    {
+      "id": "D32",
+      "topic": "Retired offer and help-others benefits",
+      "applied": "Cath 12 Nov 2026, about 8:21pm: the bookings-for-others service is retired. The reader drops that sheet option. It is not a Level 1 offer and not a Level 7 option. Help others keeps four benefits and the same ids. have a washed and groomed dog becomes have the dog washed while you're out. manage their dog's behavior problems becomes manage the dog's behavior problems.",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        7
+      ]
+    }
+  ]
+}

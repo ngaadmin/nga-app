@@ -17,6 +17,8 @@ type StoryAudioPlayerProps = {
   preloadSrc?: string;
   /** The footer is taller when a credit sits above Next. */
   aboveCredit?: boolean;
+  /** In the lesson footer, on its own row. Academy beats keep the floating pill. */
+  inline?: boolean;
 };
 
 /**
@@ -24,7 +26,7 @@ type StoryAudioPlayerProps = {
  * A beat plays when it opens, after the lesson tap has unlocked sound.
  * Sound on or off is the master switch, not a control on this pill.
  */
-export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: StoryAudioPlayerProps) {
+export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false, inline = false }: StoryAudioPlayerProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -54,22 +56,25 @@ export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: Stor
       {preloadSrc ? <link rel="preload" as="audio" href={preloadSrc} /> : null}
       {clip ? (
         <div
+          data-story-player=""
           className={cn(
-            "pointer-events-none absolute inset-x-0 flex justify-center px-5",
-            aboveCredit ? "bottom-[8rem]" : "bottom-28",
-            LAYER_CLASS.chrome,
+            "flex justify-center",
+            inline
+              ? "relative mb-2"
+              : cn("pointer-events-none absolute inset-x-0 px-5", aboveCredit ? "bottom-[8rem]" : "bottom-28", LAYER_CLASS.chrome),
           )}
         >
-          <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-sm ring-1 ring-[#031F82]/10">
+          <div className={cn("flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-sm ring-1 ring-[#031F82]/10", inline ? "" : "pointer-events-auto")}>
             <button
               type="button"
+              data-story-replay=""
               onClick={replay}
-              className="font-sans text-sm font-semibold text-[#031F82]"
+              className={cn("font-sans font-semibold text-[#031F82]", inline ? "text-[16px] leading-[23px]" : "text-sm")}
             >
               Replay
             </button>
             {lengthLabel ? (
-              <span className="font-sans text-xs font-medium text-[#5A6A99]">{lengthLabel}</span>
+              <span className={cn("font-sans font-medium text-[#5A6A99]", inline ? "text-[16px] leading-[23px]" : "text-xs")}>{lengthLabel}</span>
             ) : null}
           </div>
         </div>

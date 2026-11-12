@@ -46,8 +46,8 @@ const TRACK_AVATAR_SRC: Record<
   },
 };
 
-const PENNY_AVATAR_SRC =
-  "/assets/illustrations/characters/penny/penny-master-512.webp";
+const HOLLY_AVATAR_SRC =
+  "/assets/illustrations/characters/holly/holly-waving-512.webp";
 
 export function CohortTrackPicker() {
   const router = useRouter();
@@ -99,7 +99,7 @@ export function CohortTrackPicker() {
       <div className="mx-auto flex w-full max-w-[960px] flex-col min-[721px]:translate-y-6">
         <div className="flex flex-col items-center text-center">
           <Image
-            src={PENNY_AVATAR_SRC}
+            src={HOLLY_AVATAR_SRC}
             alt=""
             width={508}
             height={512}

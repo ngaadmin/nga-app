@@ -309,7 +309,10 @@ export function isStoryAudioUnlocked(): boolean {
 /** Hard refresh onto a beat: the first tap or key starts the clip that was blocked. */
 export function installStoryAudioFallback(): () => void {
   if (typeof document === "undefined") return () => {};
-  const onGesture = () => {
+  const onGesture = (event: Event) => {
+    const target = event.target;
+    // Replay handles its own gesture. A second play() here aborts that one.
+    if (target instanceof Element && target.closest("[data-story-replay]")) return;
     const active = session();
     if (!active) return;
     if (active.isBlocked()) {

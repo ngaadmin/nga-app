@@ -60,8 +60,8 @@ export function CostWorkbookBody({
   const view = workbookView(answer);
   const money = (amount: number) => formatStartupMoney(amount, currency);
   const job = (amount: number) => formatWorkbookMoney(amount, currency);
-  const startupHead = (
-    <div className="mb-1.5 flex items-center justify-between gap-2">
+  const startupHead = (tight = false) => (
+    <div className={`${tight ? "mb-0" : "mb-1.5"} flex items-center justify-between gap-2`}>
       <h3 className="font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">{s.costs.startupTitle}</h3>
       {editable && onEditStartup && (
         <button type="button" aria-label={s.costs.editStartup} onClick={onEditStartup} className="flex size-11 items-center justify-center rounded-lg" data-pencil="">
@@ -75,7 +75,7 @@ export function CostWorkbookBody({
       <AccentLabel as="h2">{s.workbook.myCosts}</AccentLabel>
       {part !== "rest" && (
         <div className="mt-3.5">
-          {startupHead}
+          {startupHead()}
           <p className={`mb-1 ${WORKBOOK_GROUP}`}>{marketingLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.marketing.map((line) => (
@@ -91,8 +91,8 @@ export function CostWorkbookBody({
       )}
       {part !== "startup" && (
         <>
-          {part === "rest" && startupHead}
-          <p className={`mb-0.5 mt-1 ${WORKBOOK_GROUP}`}>{starterLabel}</p>
+          {part === "rest" && startupHead(true)}
+          <p className={`${part === "rest" ? "mb-0 mt-0" : "mb-0.5 mt-1"} ${WORKBOOK_GROUP}`}>{starterLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.starterGear.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
@@ -102,8 +102,8 @@ export function CostWorkbookBody({
             <span>{s.costs.startupTotal}</span>
             <span className="text-left tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
-          <HandRule className="mb-1 mt-2" />
-          <h3 className={`mb-1 ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>
+          <HandRule className={part === "rest" ? "mb-0 mt-1" : "mb-1 mt-2"} />
+          <h3 className={`${part === "rest" ? "mb-0.5" : "mb-1"} ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>
           <div className="flex flex-col gap-0">
             {view.ongoing.map((service) => (
               <div key={service.serviceId} className={`${WORKBOOK_PRICE_ROW} ${WORKBOOK_BODY}`}>
@@ -119,7 +119,7 @@ export function CostWorkbookBody({
               </div>
             ))}
           </div>
-          <HandRule className="mb-1 mt-2" />
+          <HandRule className={part === "rest" ? "mb-0 mt-1" : "mb-1 mt-2"} />
           <p className={WORKBOOK_HINT}>{hint}</p>
         </>
       )}

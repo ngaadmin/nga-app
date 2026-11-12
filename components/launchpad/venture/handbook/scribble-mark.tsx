@@ -74,6 +74,10 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
     if (el.closest("[data-scribble-large], [data-weekly-focus], [data-workbook-templates], button, [data-inline-editor], [data-cost-workbook], [data-price-sheet], [data-jobs-sheet], [data-cost-row], [data-budget-sheet]")) return false;
     return (el.textContent ?? "").trim().length > 0;
   });
+  scroll.querySelectorAll("[data-doodle-spacer]").forEach((node) => node.remove());
+  scroll.querySelectorAll("p, li, h3").forEach((node) => {
+    (node as HTMLElement).style.paddingRight = "";
+  });
   const flyer = (scroll.textContent ?? "").includes("What my flyer will say");
   const online = (scroll.textContent ?? "").includes("What my online post");
   const pins: Pin[] = [...(FRAME_PINS[sheet] ?? [])];
@@ -109,6 +113,7 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
       const para = el.getBoundingClientRect();
       const box = card.getBoundingClientRect();
       img.dataset.pinnedDoodle = name;
+      img.dataset.doodleKind = "rhythm";
       img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
       img.style.width = "32px";
       img.style.height = "32px";
@@ -132,6 +137,7 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
     img.width = size;
     img.height = size;
     img.dataset.pinnedDoodle = pin.name;
+    img.dataset.doodleKind = "pin";
     img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
     img.style.left = `${pin.x - originX}px`;
     img.style.top = `${pin.y - originY}px`;
@@ -143,10 +149,11 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
     placeAnchorDoodle(card, scroll, "differently", "star", 32);
     placeAnchorDoodle(card, scroll, "price-calc", "sparkle", 28);
   }
+  if (punch) settleDoodles(card, scroll);
 }
 
 function placeAnchorDoodle(card: HTMLElement, scroll: HTMLElement, anchor: string, name: ScribbleName, size: number) {
-  const el = scroll.querySelector(`[data-doodle-anchor='${anchor}']`);
+  const el = scroll.querySelector(`[data-doodle-anchor='${anchor}']`) as HTMLElement | null;
   if (!el) return;
   const para = el.getBoundingClientRect();
   const box = card.getBoundingClientRect();
@@ -154,12 +161,148 @@ function placeAnchorDoodle(card: HTMLElement, scroll: HTMLElement, anchor: strin
   img.src = SCRIBBLE_SRC[name];
   img.alt = "";
   img.dataset.pinnedDoodle = name;
+  img.dataset.doodleKind = "anchor";
   img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
   img.style.width = `${size}px`;
   img.style.height = `${size}px`;
   img.style.left = `${Math.max(0, box.width - size - 16)}px`;
   img.style.top = `${Math.max(0, para.top - box.top)}px`;
   card.appendChild(img);
+}
+
+/** jsdom's Range#getClientRects is not iterable, so walk the list by index. */
+function boxList(range: Range): DOMRect[] {
+  const rects = typeof range.getClientRects === "function" ? range.getClientRects() : undefined;
+  if (!rects || typeof rects.length !== "number") return [];
+  const boxes: DOMRect[] = [];
+  for (let i = 0; i < rects.length; i += 1) {
+    const box = rects.item(i);
+    if (box) boxes.push(box);
+  }
+  return boxes;
+}
+
+/** Keep punch-list doodles off the words and at least 12px above the page number. */
+function settleDoodles(card: HTMLElement, scroll: HTMLElement) {
+  const hosts = [...scroll.querySelectorAll("p, li, h3")].filter((el) => !el.closest("[data-scribble-large], button, [data-cost-workbook]")) as HTMLElement[];
+  const doodles = () => [...card.querySelectorAll("[data-pinned-doodle]")] as HTMLImageElement[];
+  const stacked = doodles().sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  for (let i = 1; i < stacked.length; i += 1) {
+    const above = stacked[i - 1]!;
+    const below = stacked[i]!;
+    const prev = above.getBoundingClientRect();
+    const cur = below.getBoundingClientRect();
+    const ix = Math.min(prev.right, cur.right) - Math.max(prev.left, cur.left);
+    const iy = Math.min(prev.bottom, cur.bottom) - Math.max(prev.top, cur.top);
+    if (ix <= 6 || iy <= 6) continue;
+    const mover = below.dataset.doodleKind === "pin" && above.dataset.doodleKind !== "pin" ? above : below;
+    if (mover.dataset.doodleKind === "pin") continue;
+    const stay = mover === below ? above : below;
+    const stayBox = stay.getBoundingClientRect();
+    const moveBox = mover.getBoundingClientRect();
+    if (moveBox.top < stayBox.bottom + 4) mover.style.top = `${parseFloat(mover.style.top) + (stayBox.bottom + 4 - moveBox.top)}px`;
+  }
+  const label = [...card.children].find((el) => el instanceof HTMLElement && el.tagName === "P" && /^Page \d+/.test((el.textContent ?? "").trim()));
+  if (label instanceof HTMLElement) {
+    const lr = label.getBoundingClientRect();
+    const art = [...doodles(), ...([...card.querySelectorAll("[data-scribble-large] img")] as HTMLImageElement[])];
+    for (const img of art) {
+      const r = img.getBoundingClientRect();
+      const ix = Math.min(r.right, lr.right) - Math.max(r.left, lr.left);
+      if (ix > 0 && r.bottom > lr.top - 12) {
+        const shift = r.bottom - (lr.top - 12);
+        if (img.dataset.pinnedDoodle) img.style.top = `${parseFloat(img.style.top) - shift}px`;
+        else img.style.transform = `translateY(-${shift}px)`;
+      }
+    }
+  }
+  for (const para of hosts) {
+    const paraBox = para.getBoundingClientRect();
+    const pending: { drop: number; width: number; height: number }[] = [];
+    for (const img of doodles()) {
+      const dr = img.getBoundingClientRect();
+      let width = 0;
+      const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        if ((node.textContent ?? "").trim()) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const box of boxList(range)) {
+            const ix = Math.min(box.right, dr.right) - Math.max(box.left, dr.left);
+            const iy = Math.min(box.bottom, dr.bottom) - Math.max(box.top, dr.top);
+            if (ix > 6 && iy > 2) width = Math.max(width, Math.ceil(box.right - dr.left + 8));
+          }
+        }
+        node = walker.nextNode();
+      }
+      if (width <= 0) continue;
+      pending.push({ drop: Math.max(0, Math.round(dr.top - paraBox.top)), width, height: Math.ceil(dr.height) });
+    }
+    pending.sort((a, b) => b.drop - a.drop);
+    for (const block of pending) {
+      const spacer = document.createElement("span");
+      spacer.dataset.doodleSpacer = "";
+      spacer.setAttribute("aria-hidden", "true");
+      spacer.style.float = "right";
+      spacer.style.width = `${block.width}px`;
+      spacer.style.height = `${block.height}px`;
+      spacer.style.marginTop = `${block.drop}px`;
+      para.insertBefore(spacer, para.firstChild);
+    }
+  }
+  const pageLabel = [...card.children].find((el) => el instanceof HTMLElement && el.tagName === "P" && /^Page \d+/.test((el.textContent ?? "").trim()));
+  const textHit = (img: HTMLImageElement, minX: number) => {
+    let worst = 0;
+    for (const para of hosts) {
+      const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        if ((node.textContent ?? "").trim()) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const box of boxList(range)) {
+            const dr = img.getBoundingClientRect();
+            const ix = Math.min(box.right, dr.right) - Math.max(box.left, dr.left);
+            const iy = Math.min(box.bottom, dr.bottom) - Math.max(box.top, dr.top);
+            if (ix > minX && iy > 2) worst = Math.max(worst, ix);
+          }
+        }
+        node = walker.nextNode();
+      }
+    }
+    return worst;
+  };
+  for (const img of doodles()) {
+    if (img.dataset.doodleKind !== "pin" || textHit(img, 6) === 0) continue;
+    for (const para of hosts) {
+      if (!para.querySelector("[data-doodle-spacer]")) continue;
+      const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      let hit = false;
+      while (node && !hit) {
+        if ((node.textContent ?? "").trim()) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const box of boxList(range)) {
+            const dr = img.getBoundingClientRect();
+            const ix = Math.min(box.right, dr.right) - Math.max(box.left, dr.left);
+            const iy = Math.min(box.bottom, dr.bottom) - Math.max(box.top, dr.top);
+            if (ix > 6 && iy > 2) hit = true;
+          }
+        }
+        node = walker.nextNode();
+      }
+      if (hit) para.querySelectorAll("[data-doodle-spacer]").forEach((spacer) => spacer.remove());
+    }
+  }
+  for (const img of doodles()) {
+    if (img.dataset.doodleKind === "pin" || textHit(img, 6) === 0) continue;
+    const floor = pageLabel instanceof HTMLElement ? pageLabel.getBoundingClientRect().top - 12 - img.getBoundingClientRect().height : Number.POSITIVE_INFINITY;
+    for (let step = 0; step < 14 && textHit(img, 6) > 0 && img.getBoundingClientRect().top < floor; step += 1) {
+      img.style.top = `${parseFloat(img.style.top) + 22}px`;
+    }
+  }
 }
 
 /** End-of-page scribble, about 80px, right aligned. */

@@ -27,7 +27,22 @@ export type ScribbleName = keyof typeof SCRIBBLE_SRC;
 const RHYTHM = ["paw", "bone", "heart", "star", "sparkle", "treats"] as const;
 const RHYTHM_ROT = [-8, 6, -4, 9];
 
-type Pin = { name: ScribbleName; x: number; y: number; size?: number };
+type Pin = { name: ScribbleName; x: number; y: number; size?: number; /** Keep the gutter copy of this art. The pin is an extra placement, not a replacement. */ keepRhythm?: boolean };
+
+/** Longer side in, native pixels out. A square box stretches the wide bone. */
+const ART_RATIO: Partial<Record<ScribbleName, { w: number; h: number }>> = {
+  bone: { w: 185, h: 108 },
+  treats: { w: 165, h: 162 },
+};
+
+function artSize(name: ScribbleName, longSide: number): { width: number; height: number } {
+  const ratio = ART_RATIO[name];
+  if (!ratio) return { width: longSide, height: longSide };
+  const landscape = ratio.w >= ratio.h;
+  const width = landscape ? longSide : Math.max(1, Math.round((longSide * ratio.w) / ratio.h));
+  const height = landscape ? Math.max(1, Math.round((longSide * ratio.h) / ratio.w)) : longSide;
+  return { width, height };
+}
 
 /** Phone-pixel pins for the pages Jasper marked. The paper card maps them onto the 390×844 frame. */
 const FRAME_PINS: Record<string, readonly Pin[]> = {
@@ -39,17 +54,18 @@ const FRAME_PINS: Record<string, readonly Pin[]> = {
     { name: "sparkle", x: 310, y: 600, size: 28 },
   ],
   "ready-c": [
-    { name: "paw", x: 326, y: 258 },
+    { name: "paw", x: 350, y: 248 },
     { name: "bone", x: 326, y: 456 },
-    { name: "bone", x: 326, y: 640 },
+    { name: "treats", x: 326, y: 640 },
   ],
   "sales-tell": [
     { name: "star", x: 330, y: 206 },
     { name: "sparkle", x: 330, y: 308, size: 28 },
   ],
-  "ready-before": [{ name: "bone", x: 255, y: 600, size: 70 }],
+  // 255,620 clears the packing list. 255,600 still covered its last line.
+  "ready-before": [{ name: "treats", x: 255, y: 620, size: 70, keepRhythm: true }],
   "ready-after": [
-    { name: "bone", x: 326, y: 380 },
+    { name: "bone", x: 344, y: 368 },
     { name: "bone", x: 250, y: 630, size: 80 },
   ],
 };
@@ -82,7 +98,7 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
   const online = (scroll.textContent ?? "").includes("What my online post");
   const pins: Pin[] = [...(FRAME_PINS[sheet] ?? [])];
   if (flyer) pins.push({ name: "paw", x: 326, y: 662 });
-  const pinned = new Set(pins.map((pin) => pin.name));
+  const pinned = new Set(pins.filter((pin) => !pin.keepRhythm).map((pin) => pin.name));
   const punch = pins.length > 0 || sheet === "pricing" || online;
   if (!punch || sheet !== "week") {
     const names = rhythmNames(pageNumber, paras.length);
@@ -97,8 +113,9 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
       const img = document.createElement("img");
       img.src = SCRIBBLE_SRC[name];
       img.alt = "";
-      img.width = 32;
-      img.height = 32;
+      const rhythm = artSize(name, 32);
+      img.width = rhythm.width;
+      img.height = rhythm.height;
       img.dataset.rhythmDoodle = name;
       const turn = Math.floor(placed / 1);
       if (!punch || !card) {
@@ -115,8 +132,8 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
       img.dataset.pinnedDoodle = name;
       img.dataset.doodleKind = "rhythm";
       img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
-      img.style.width = "32px";
-      img.style.height = "32px";
+      img.style.width = `${rhythm.width}px`;
+      img.style.height = `${rhythm.height}px`;
       img.style.left = `${Math.max(0, box.width - 44)}px`;
       img.style.top = `${Math.max(0, para.top - box.top)}px`;
       img.style.transform = `rotate(${RHYTHM_ROT[turn % RHYTHM_ROT.length]}deg)`;
@@ -130,25 +147,26 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
   const originX = cardBox.left - dialogBox.left;
   const originY = cardBox.top - dialogBox.top;
   for (const pin of pins) {
-    const size = pin.size ?? 32;
+    const size = artSize(pin.name, pin.size ?? 32);
     const img = document.createElement("img");
     img.src = SCRIBBLE_SRC[pin.name];
     img.alt = "";
-    img.width = size;
-    img.height = size;
+    img.width = size.width;
+    img.height = size.height;
     img.dataset.pinnedDoodle = pin.name;
     img.dataset.doodleKind = "pin";
     img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
     img.style.left = `${pin.x - originX}px`;
     img.style.top = `${pin.y - originY}px`;
-    img.style.width = `${size}px`;
-    img.style.height = `${size}px`;
+    img.style.width = `${size.width}px`;
+    img.style.height = `${size.height}px`;
     card.appendChild(img);
   }
   if (sheet === "pricing") {
     placeAnchorDoodle(card, scroll, "differently", "star", 32);
     placeAnchorDoodle(card, scroll, "price-calc", "sparkle", 28);
   }
+  if (sheet === "growth-plan") parkGrowthPlanDoodles(card, scroll);
   if (punch) settleDoodles(card, scroll);
 }
 
@@ -168,6 +186,88 @@ function placeAnchorDoodle(card: HTMLElement, scroll: HTMLElement, anchor: strin
   img.style.left = `${Math.max(0, box.width - size - 16)}px`;
   img.style.top = `${Math.max(0, para.top - box.top)}px`;
   card.appendChild(img);
+}
+
+/**
+ * Page 26. The treats cluster sits on "prepays" and the paw sits on "upfront"
+ * when two growth ideas are saved. Park those two in the right margin.
+ * Other doodles stay on their lines.
+ */
+function parkGrowthPlanDoodles(card: HTMLElement, scroll: HTMLElement) {
+  const plan = scroll.querySelector("[data-growth-plan]");
+  if (!plan) return;
+  const cardBox = card.getBoundingClientRect();
+  const words = ["prepays", "upfront"];
+  const imgs = [...plan.querySelectorAll("[data-rhythm-doodle]")] as HTMLImageElement[];
+  for (const img of imgs) {
+    const word = words.find((item) => doodleHitsText(img, plan, item));
+    if (!word) continue;
+    const name = (img.dataset.rhythmDoodle || "paw") as ScribbleName;
+    const size = artSize(name, 32);
+    const hostBox = textBox(plan, word) ?? plan.getBoundingClientRect();
+    img.className = "pointer-events-none absolute z-raised mix-blend-multiply";
+    img.style.transform = "";
+    img.style.right = "";
+    img.style.width = `${size.width}px`;
+    img.style.height = `${size.height}px`;
+    img.dataset.pinnedDoodle = name;
+    img.dataset.doodleKind = "rhythm";
+    const left = Math.max(0, cardBox.width - size.width - 14);
+    let top = hostBox.bottom - cardBox.top + 10;
+    if (hostBox.right + 16 + size.width <= cardBox.right - 6) {
+      img.style.left = `${hostBox.right - cardBox.left + 16}px`;
+      top = hostBox.top - cardBox.top + (hostBox.height - size.height) / 2;
+    } else {
+      img.style.left = `${left}px`;
+    }
+    img.style.top = `${Math.max(0, top)}px`;
+    card.appendChild(img);
+  }
+  const parked = [...card.querySelectorAll("[data-pinned-doodle]")] as HTMLImageElement[];
+  parked.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  for (let i = 1; i < parked.length; i += 1) {
+    const above = parked[i - 1]!.getBoundingClientRect();
+    const below = parked[i]!;
+    const cur = below.getBoundingClientRect();
+    const ix = Math.min(above.right, cur.right) - Math.max(above.left, cur.left);
+    const iy = Math.min(above.bottom, cur.bottom) - Math.max(above.top, cur.top);
+    if (ix > 4 && iy > 4) below.style.top = `${parseFloat(below.style.top) + (above.bottom + 8 - cur.top)}px`;
+  }
+}
+
+function textBox(root: Element, word: string): DOMRect | null {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    if ((node.textContent ?? "").toLowerCase().includes(word)) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const boxes = boxList(range);
+      return boxes[0] ?? range.getBoundingClientRect();
+    }
+    node = walker.nextNode();
+  }
+  return null;
+}
+
+function doodleHitsText(img: HTMLImageElement, root: Element, word: string): boolean {
+  const dr = img.getBoundingClientRect();
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    const text = node.textContent ?? "";
+    if (text.toLowerCase().includes(word)) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const box of boxList(range)) {
+        const ix = Math.min(box.right, dr.right) - Math.max(box.left, dr.left);
+        const iy = Math.min(box.bottom, dr.bottom) - Math.max(box.top, dr.top);
+        if (ix > 2 && iy > 2) return true;
+      }
+    }
+    node = walker.nextNode();
+  }
+  return false;
 }
 
 /** jsdom's Range#getClientRects is not iterable, so walk the list by index. */

@@ -57,7 +57,6 @@ export function DeliveryWorkbook({ silver, sheet }: { silver: LaunchpadSilver; s
         <Line className={TIGHT} before={copy.leaveBefore} pick={labelOf(copy.leaveOptions, saved?.leaveEarly)} after={copy.leaveAfter} />
         <Line className={TIGHT} before={copy.packBefore} pick={labelOf(copy.packOptions, saved?.packWhen)} after={copy.packAfter} />
         <p className={TIGHT}>{gear}</p>
-        <LargeScribble name={scribbleName(screen.doodles[2])} className="mt-2" />
       </div>
     );
   }

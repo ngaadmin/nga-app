@@ -7,16 +7,18 @@ Module 1 lessons are read from the database, one lesson at a time. A content cha
 The workbook is `lib/academy/lessons/payload/source/master/module-1-screens.xlsx`. It is Cath's master, md5 `d1be7cb71278952bdd8772c857e70af7`, and it's named Academy - Screens (All Cohorts).
 
 - The reader takes `--module <n>` and reads `Lesson Details` plus the `M<n> Explorer`, `M<n> Pathfinder`, and `M<n> Maverick` tabs. The older `Explorer M1` tab names still work.
-- Module 2 still plays the old Explorer workbook. `ACADEMY_DB_LESSON_MODULES` in `schema-version.ts` lists the modules that are read from the database. Add a module there once its draft is published.
+- Module 2 is not in the app and not in the database. `ACADEMY_DB_LESSON_MODULES` in `schema-version.ts` lists the modules that are read from the database (Module 1 today). Add a module there only when its published version is the lesson learners should play.
 - Lesson numbers are progress keys (milestones 1–54). A publish that moves a lesson title to another number is refused.
 
 ## Flag
 
 The flags are `ACADEMY_MASTER_PAYLOAD` (server) and `NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD` (the Academy map).
 
-- `1` or `true` turns it on, and `0` or `false` turns it off.
-- When neither is set, the flag is on only for a Vercel preview (`VERCEL_ENV=preview`).
-- With the flag off, Module 1 still plays the bundled Screens1.csv path from `/public`.
+- `1` or `true` turns the flag on. `0` or `false` turns it off.
+- When neither is set, the flag is on only for a Vercel preview (`VERCEL_ENV=preview` or `NEXT_PUBLIC_VERCEL_ENV=preview`).
+- Production is different. When `VERCEL_ENV` or `NEXT_PUBLIC_VERCEL_ENV` is `production`, every module in `ACADEMY_DB_LESSON_MODULES` is read from the database even if the flag is unset or `0`. A failed read shows the lesson-unavailable screen. Production does not load `Screens1.csv`, `lessons.json`, or other bundled `/public` lesson files for those modules.
+- Do not turn the production flag off. That does not switch production back to the bundled sheets.
+- Outside production, with the flag off, Module 1 still plays the bundled sheets. That path is the local authoring source. Preview defaults the flag on.
 
 ## How a lesson loads
 
@@ -26,7 +28,7 @@ A lesson loads in this order:
 2. The last good copy this server fetched, if the read fails. This logs `academy_lesson_served_stale`.
 3. A friendly error screen, "This lesson can't load right now". This logs `academy_lesson_error_screen`.
 
-There is no bundled fallback, and every fallback logs a JSON line.
+There is no bundled fallback on this read, and every fallback logs a JSON line. The lesson page does not add a bundled fallback in production when the flag is off.
 
 An unknown `schemaVersion`, a row for another module, or a version without an https `mediaBase` counts as a failed read.
 
@@ -70,5 +72,5 @@ It uploads the media that isn't held, using the preview's own Supabase env, then
 
 ## Still open
 
-- Screens1.csv (the flag-off path) still names the `beat-ex-m1-l*-r1` scenes on 6 rows where the master now names `-r2`. Those `-r2` files are held Lars art and aren't in `/public`, so the CSV is left alone.
-- M1 pictures stay in `/public` until every M1 object, including the held Lars set, is verified in the bucket and the flag is on in production.
+- Screens1.csv is the local authoring sheet, and the non-production path when the flag is off. It still names the `beat-ex-m1-l*-r1` scenes on 6 rows where the master now names `-r2`. Those `-r2` files are held Lars art and aren't in `/public`, so the CSV is left alone. Production does not serve this CSV.
+- Checked-in M1 pictures stay in `/public` as the authoring copies. Production Module 1 pictures are served from the academy-media bucket. The master-payload flag has been on in production since 1 Nov 2026. Do not turn it off.

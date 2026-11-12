@@ -6,6 +6,7 @@ import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
+import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { PAPER_BACKGROUND, SpiralBinding } from "@/components/launchpad/venture/handbook/paper-art";
 
 const NAVY = "#19347D";
@@ -15,6 +16,7 @@ function PaperIdentity({ businessName }: { businessName: string }) {
   const { answer } = useIdentityAnswer(IDENTITY_ANSWER_KEY);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
   const name = answer.name || businessName;
+  const nameFont = answer.font ?? "poppins-bold";
   if (!hasLogo && !name) return null;
   return (
     <div className="mb-3 flex items-center gap-2" data-paper-identity="">
@@ -22,7 +24,11 @@ function PaperIdentity({ businessName }: { businessName: string }) {
         <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={24} label={logoMarkLabel(answer)} />
       )}
       {name && (
-        <span className="truncate font-heading text-[15px] font-semibold" style={{ color: answer.name ? resolveNameColor(answer) : "#19347D" }}>
+        <span
+          data-name-font={answer.name ? nameFont : undefined}
+          className={`truncate text-[15px] font-semibold ${answer.name ? NAME_FONT_CLASS[nameFont] : "font-heading"}`}
+          style={{ color: answer.name ? resolveNameColor(answer) : "#19347D" }}
+        >
           {name}
         </span>
       )}

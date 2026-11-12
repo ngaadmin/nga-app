@@ -124,6 +124,8 @@ const SIZES = {
    * page card at 390x844 (Cath, 5 Nov 5:35pm; was 112px "hero").
    */
   cover: { mark: 80, width: 246, name: 17, longName: 15 },
+  /** Dense cover: logo and name side by side. 21px, or the font's floor. */
+  coverRow: { mark: 48, width: 220, name: 21, longName: 21 },
   sm: { mark: 76, width: 230, name: 22, longName: 20 },
 } as const;
 

@@ -275,8 +275,8 @@ export function JobsCoverFlow({
 function guidanceBullets(guidance: string): string[] {
   const parts = [
     "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up.",
-    "For example, start-up costs of $80 with $14.60 kept per walk takes 6 walks.",
-    "With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.25 covers $80 in about 2 weeks.",
+    "For example, start-up costs of $80 with $14.70 kept per walk takes 6 walks.",
+    "With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.55 covers $80 in about 2 weeks.",
     "Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
   ];
   return parts.join(" ") === guidance ? parts : [guidance];

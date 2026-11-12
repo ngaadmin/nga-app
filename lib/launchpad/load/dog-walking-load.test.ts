@@ -74,9 +74,8 @@ describe("dog walking load reader (Final framework Module 1 + tracker L2)", () =
   it("Offer options include Dog sitting (Final Option 3 / D29)", () => {
     const offer = screenOf(build().load, "l1-s1-b1");
     if (offer.type !== "choice-capture") throw new Error("expected choice-capture");
-    expect(offer.options.map((o) => o.label)).toEqual(
-      expect.arrayContaining(["Dog walking", "Dog sitting"]),
-    );
+    expect(offer.options.map((o) => o.label)).toEqual(["Dog walking", "Grooming", "Dog sitting", "Dog training"]);
+    expect(offer.options.some((o) => o.id === "manage-bookings-for-others")).toBe(false);
   });
 
   it("Set your goals lives on l1-s2: intro on the loop, Support a cause from Know your impact, weeks or months", () => {

@@ -85,6 +85,8 @@ export type LaunchpadPickerOption<Id extends string = string> = {
   label: string;
   /** choice fields with `prefills`: the text this option drops into that field (row 8 "skill | success line"). */
   prefill?: string;
+  /** choice: shown but not selectable. */
+  disabled?: boolean;
 };
 
 /** Picker screens save into the learner's answer for `answerKey` (see lib/launchpad/content/identity.ts). */
@@ -687,6 +689,8 @@ export type LaunchpadSalesScreen = TaskScreenBase & {
   serviceLabels?: { main: string; second: string };
   hooks?: readonly SalesOption[];
   proofs?: readonly SalesOption[];
+  /** Near-identical proof and flyer-extra ids. The screen disables the partner. */
+  proofFlyerPairs?: readonly { proofId: string; flyerExtraId: string }[];
   pieceFields?: readonly SalesPieceField[];
   /** Set up your order system. Present when step is "order". */
   order?: OrderSystemCopy;

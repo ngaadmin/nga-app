@@ -8,6 +8,7 @@ import {
   MATERIALS_GUIDANCE,
   MATERIALS_QUESTION,
   PIECE_FIELDS,
+  PROOF_FLYER_PAIRS,
   SALES_CHANNELS_KEY,
   SALES_CONTEXT,
   SALES_GUIDANCE,
@@ -49,6 +50,7 @@ function screen(step: LaunchpadSalesScreen["step"], answerKey: string, id: strin
       serviceLabels: { main: "Your main service", second: "Second service to list" },
       hooks: HOOKS.map((row) => ({ ...row })),
       proofs: PROOFS.map((row) => ({ ...row })),
+      proofFlyerPairs: PROOF_FLYER_PAIRS.map((row) => ({ ...row })),
       pieceFields: PIECE_FIELDS.map((field) => ({ ...field, options: field.options.map((row) => ({ ...row })) })),
     };
   }

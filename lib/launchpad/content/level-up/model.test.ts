@@ -82,23 +82,24 @@ describe("Level Up check-in date", () => {
       "Start a referral program",
       "Offer subscriptions and prepays",
       "Build service bundles",
-      "Add a new dog service",
-      "Expand beyond dog walking",
+      "Add a new service",
+      "Expand beyond your main business",
     ]);
     expect(grow.ideas.map((idea) => idea.context)).toEqual([
-      "Reward customers who send a new owner your way, so your best customers help find the next ones.",
+      "Reward customers who send a new customer your way, so your best customers help find the next ones.",
       "You get cash upfront. In return, you offer a discount, typically ten to twenty percent of the total.",
       "Combine two or three services in one booking, with a small discount for taking the lot.",
-      "A new service means new income from the same dogs and the same route.",
-      "Grow past the core job into the homes on your route.",
+      "A new service means new income from the same customer.",
+      "Grow past the core job and offer new services to existing customers.",
     ]);
     expect(grow.joinWord).toBe("and");
     expect(grow.dateLine).toBe("That's {date}.");
     expect(grow.startOptions?.map((option) => option.label)).toEqual(["this week", "in two weeks", "in a month"]);
     const bundles = grow.ideas.find((idea) => idea.id === "bundle");
     expect(bundles?.options.map((option) => [option.label, option.sentence])).toEqual([
+      ["Walk + basic manners session", "a walk and basic manners session"],
       ["Walk and wash", "a walk-and-wash bundle"],
-      ["Walk and manners", "a walk-and-manners bundle"],
+      ["Walk + play/photo update package", "a walk and play/photo update package"],
       ["Neighbor bundle", "a neighbor bundle"],
     ]);
     expect(grow.ideas.map((idea) => idea.successLine)).toEqual([
@@ -129,7 +130,7 @@ describe("Level Up check-in date", () => {
     expect(content.statements.map((item) => [item.section, item.label])).toEqual([
       ["customers", "Using more than one way to get my name out"],
       ["customers", "Following up with everyone who shows interest"],
-      ["customers", "Asking every customer if they know someone"],
+      ["customers", "Asking every customer if they know someone who needs my services"],
       ["customers", "Asking every customer if they'd like to book me again"],
       ["ready", "Keeping track of every job that comes in"],
       ["ready", "Confirming each job with the customer beforehand"],
@@ -140,7 +141,7 @@ describe("Level Up check-in date", () => {
       ["happy", "Remembering all customer names and their pets' names"],
       ["happy", "Asking every customer for feedback"],
       ["happy", "Always sending the owner a photo of their pet when I'm with them"],
-      ["happy", "The customer always knowing what to expect from me"],
+      ["happy", "The customer always knows what to expect from me"],
     ]);
     expect(JSON.stringify(content.statements)).not.toContain("pace");
     const old = parseLevelUpAnswer({

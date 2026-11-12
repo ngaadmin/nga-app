@@ -7,7 +7,7 @@ import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/conte
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type OrderSystemAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
 import { OrderSystemFlow } from "@/components/launchpad/venture/screens/order-system-flow";
-import { OWN_LABEL, SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
+import { OWN_LABEL, SALES_CHANNELS_KEY, pairedIds } from "@/lib/launchpad/content/sales/copy";
 import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
@@ -158,6 +158,20 @@ function MaterialsStep({
   const [hook, setHook] = useState(saved?.hook ?? "");
   const [proof, setProof] = useState(saved?.proof ?? "");
   const [pieces, setPieces] = useState<Record<string, string>>({ ...(saved?.pieces ?? {}) });
+  const pairs = screen.proofFlyerPairs ?? [];
+  const chooseProof = (id: string) => {
+    setProof(id);
+    const blocked = new Set(pairedIds(pairs, "proof", id));
+    setPieces((current) => {
+      const extra = current["flyer-extra"];
+      if (extra && blocked.has(extra)) return { ...current, "flyer-extra": "" };
+      return current;
+    });
+  };
+  const choosePiece = (fieldId: string, id: string) => {
+    setPieces((current) => ({ ...current, [fieldId]: id }));
+    if (fieldId === "flyer-extra" && pairedIds(pairs, "flyer-extra", id).includes(proof)) setProof("");
+  };
   const selected = new Set(sales?.selected ?? []);
   const friends = sales?.where.friends ?? [];
   const fields = (screen.pieceFields ?? []).filter((field) => {
@@ -187,12 +201,12 @@ function MaterialsStep({
     }
     onFinish(answer);
   };
-  const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void) => {
+  const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void, blocked: ReadonlySet<string> = new Set()) => {
     const field: LaunchpadTextField = {
       name: label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "") || "pick",
       input: "choice",
       label,
-      options: options.map((option) => ({ id: option.id, label: option.label })),
+      options: options.map((option) => ({ id: option.id, label: option.label, disabled: blocked.has(option.id) })),
     };
     return (
       <div className="mt-4">
@@ -217,12 +231,18 @@ function MaterialsStep({
             {select(screen.serviceLabels?.main ?? s.sales.mainService, mainService, services.map((row) => ({ id: row.id, label: row.label })), setMain)}
             {select(screen.serviceLabels?.second ?? s.sales.secondService, secondService, services.filter((row) => row.id !== mainService).map((row) => ({ id: row.id, label: row.label })), setSecond)}
             {select(s.sales.hook, hook, screen.hooks ?? [], setHook)}
-            {select(s.sales.proof, proof, screen.proofs ?? [], setProof)}
+            {select(s.sales.proof, proof, screen.proofs ?? [], chooseProof, new Set(pairedIds(pairs, "flyer-extra", pieces["flyer-extra"] ?? "")))}
           </>
         ) : (
           fields.map((field) => (
             <div key={field.id}>
-              {select(field.label, pieces[field.id] ?? "", field.options, (id) => setPieces({ ...pieces, [field.id]: id }))}
+              {select(
+                field.label,
+                pieces[field.id] ?? "",
+                field.options,
+                (id) => choosePiece(field.id, id),
+                field.id === "flyer-extra" ? new Set(pairedIds(pairs, "proof", proof)) : new Set(),
+              )}
             </div>
           ))
         )}

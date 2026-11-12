@@ -804,7 +804,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
     jobComparedExtra: "Park walks",
     priceLow: 10,
     priceHigh: 20,
-    addons: ["photo-updates"],
+    addons: ["photo-of-the-dog-after-every-walk"],
     addonsExtra: "Water bowl",
     doDifferently: "walk-one-dog-at-a-time",
     doDifferentlyExtra: "Send a photo",
@@ -841,7 +841,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
     expect(who.textContent).toContain("30-minute walk plus puppies");
     expect(who.textContent).toContain("weekday afternoons plus after dinner");
     expect(who.textContent).not.toContain(LAUNCHPAD_SURFACE_COPY.offer.timesExtraLine);
-    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates plus water bowl");
+    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo of the dog after every walk plus water bowl");
     expect(document.querySelector("[data-could-differently]")?.textContent).toContain("walk one dog at a time plus send a photo");
     const compared = document.querySelector("[data-job-compared]")!;
     expect(compared.textContent).toContain("Dog walking plus park walks");
@@ -865,7 +865,7 @@ describe("L2 playback extras and L7 workbook pages", () => {
     expect(document.querySelector("[data-who-line]")?.textContent).toContain("30-minute walk.");
     expect(document.querySelector("[data-who-line]")?.textContent).toContain("weekday afternoons.");
     expect(document.querySelector("[data-who-line]")?.textContent).not.toContain("After dinner");
-    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo updates.");
+    expect(document.querySelector("[data-often-include]")?.textContent).toContain("photo of the dog after every walk.");
     expect(document.querySelector("[data-often-include]")?.textContent).not.toContain("Water bowl");
     expect(document.querySelector("[data-job-compared]")?.textContent).toBe("Job compared: Dog walking");
   });

@@ -134,7 +134,7 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-cover-name='filled']")?.textContent).toBe("Happy Paws");
     expect(q("[data-vision-quote]")).toBeNull();
     const s = q("[data-vision-sentence]")!;
-    expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog in 6 months\.$/);
+    expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have the dog washed while you're out in 6 months\.$/);
     expect(s.className).toContain("text-[16px]");
     expect(s.className).toContain("leading-[26px]");
     expect(q("[data-what-we-sell]")).toBeNull();

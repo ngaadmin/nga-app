@@ -80,7 +80,7 @@ export function FieldControl({
           {/* A defaulted dropdown (weeks/months) never shows an empty "Choose" row. */}
           {!field.defaultValue && <option value="">{field.hint ? `[${field.hint}]` : "Choose"}</option>}
           {(field.options ?? []).map((o) => (
-            <option key={o.id} value={o.id}>
+            <option key={o.id} value={o.id} disabled={o.disabled}>
               {o.label}
             </option>
           ))}

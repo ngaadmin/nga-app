@@ -140,7 +140,7 @@ describe("amounts: $0 is allowed, start-up is whole dollars, ongoing keeps cents
     expect(view.startupTotal).toBe(startupTotal(withZero));
     expect(view.grandTotal).toBe(view.startupTotal);
     const walkingJob = view.ongoing.find((service) => service.serviceId === "dog-walking");
-    expect(walkingJob?.perJob).toBe(0.4);
+    expect(walkingJob?.perJob).toBe(0.3);
     expect(view.ongoing.find((service) => service.serviceId === "dog-training")?.perJob).toBe(0.4);
     expect(formatStartupMoney(0, "USD")).toBe("$0");
     expect(formatStartupMoney(view.startupTotal, "USD")).toMatch(/^\$\d+$/);

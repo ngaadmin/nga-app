@@ -61,15 +61,14 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       { id: "train-clicker", label: "Clicker", amount: 5, serviceIds: ["dog-training"] },
       { id: "train-lead", label: "Training lead", amount: 15, serviceIds: ["dog-training"] },
     ],
-    // Fields restock lists on rows 19–23. Dog sitting has restock and no
-    // starter gear. Manage bookings has neither.
+    // Fields restock lists. Dog sitting has restock and no starter gear.
+    // Manage bookings is grow-only, so it is not a Know your cost service.
     ongoing: [
       {
         serviceId: "dog-walking",
         items: [
           { id: "poop-bags", label: "Poop bags", amount: 0.05 },
           { id: "treats", label: "Treats", amount: 0.25 },
-          { id: "sanitizer-top-up", label: "Hand sanitizer top-up", amount: 0.1 },
         ],
       },
       {
@@ -94,7 +93,6 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
           { id: "poop-bags", label: "Poop bags", amount: 0.05 },
         ],
       },
-      { serviceId: "manage-bookings-for-others", items: [] },
     ],
   };
 }

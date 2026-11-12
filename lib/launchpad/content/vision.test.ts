@@ -16,7 +16,7 @@ const spec = floors
 
 /** The I19 dog walking example. */
 const example: LaunchpadAnswers = {
-  "l1-offer": selectionAnswer(["dog-walking", "grooming", "manage-bookings-for-others"]),
+  "l1-offer": selectionAnswer(["dog-walking", "grooming", "dog-sitting"]),
   "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["learn-new-skills", "be-my-own-boss"]),
   "l1-cause": selectionAnswer(["animals"]),
   "l1-goal-make-money": fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 3, timeframeUnit: "months", savingFor: "a new bike" }, false),
@@ -51,7 +51,7 @@ describe("vision template (H19)", () => {
 describe("vision tokens", () => {
   const tokens = visionTokens(spec, example, catalog);
   it("business type is the venture noun, lower case", () => expect(tokens["business-type"]).toBe("dog walking"));
-  it("offer list is the picks as a natural list, lower case", () => expect(tokens["offer-list"]).toMatch(/^dog walk.*, grooming.* and .*bookings/));
+  it("offer list is the picks as a natural list, lower case", () => expect(tokens["offer-list"]).toMatch(/^dog walk.*, grooming.* and .*sitting/));
   it("why list keeps only reasons above the line, in rank order", () => expect(tokens["why-list"]).toBe("make money and help others"));
   it("why list follows the ranking order", () => {
     const t = visionTokens(spec, { ...example, "l1-why": rankingAnswer(["help-others", "make-money", "learn-new-skills", "be-my-own-boss"], ["be-my-own-boss"]) }, catalog);

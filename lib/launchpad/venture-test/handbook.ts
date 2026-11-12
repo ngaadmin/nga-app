@@ -506,7 +506,7 @@ export function withShortcutSampleAnswers(
               }
               const services = payloadServiceIds(floors);
               const hook = screen.hooks?.find((item) => item.id === "too-busy")?.id ?? screen.hooks?.[0]?.id;
-              const proof = screen.proofs?.find((item) => item.id === "photo")?.id ?? screen.proofs?.[0]?.id;
+              const proof = screen.proofs?.[0]?.id;
               const mainService = services.find((id) => id === "dog-walking") ?? services[0];
               const secondService = services.find((id) => id === "grooming") ?? services[1];
               next = setProgressAnswer(next, screen.answerKey, {
@@ -629,7 +629,7 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
       jobComparedId: "dog-walking",
       priceLow: 12,
       priceHigh: 20,
-      addons: ["photo-updates", "treats"],
+      addons: ["photo-of-the-dog-after-every-walk", "solo-walk-one-dog-only"],
       doDifferently: "walk-one-dog-at-a-time",
       addonsExtra: "Water bowl",
       doDifferentlyExtra: "Send a photo after every walk",

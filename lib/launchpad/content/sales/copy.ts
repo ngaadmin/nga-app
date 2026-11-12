@@ -98,10 +98,33 @@ export const HOOKS = [
 ] as const;
 
 export const PROOFS = [
-  { id: "photo", label: "I send a photo after every job" },
-  { id: "happy", label: "I have lots of happy customers" },
-  { id: "careful", label: "I'm careful and reliable" },
+  { id: "photo-walk", label: "I send a photo after every walk" },
+  { id: "same-person", label: "Same person every visit, so you always know who's coming" },
+  { id: "routine", label: "Careful with the dog's routine and any special instructions" },
+  { id: "reliable", label: "Reliable on the day and time we agree" },
+  { id: "meet-greet", label: "Happy to do a first meet-and-greet so you can show me the dog" },
+  { id: "clear-price", label: "Clear price before I start, so no surprises" },
+  { id: "local", label: "Local and available for regular or one-off walks" },
 ] as const;
+
+/** Near-identical proof and flyer-extra pairs. The screen disables one when the other is chosen. */
+export const PROOF_FLYER_PAIRS = [
+  { proofId: "same-person", flyerExtraId: "same-visit" },
+  { proofId: "clear-price", flyerExtraId: "clear-price" },
+] as const;
+
+export function pairedIds(
+  pairs: readonly { proofId: string; flyerExtraId: string }[],
+  chosenSide: "proof" | "flyer-extra",
+  chosenId: string,
+): string[] {
+  if (!chosenId) return [];
+  return pairs.flatMap((pair) => {
+    if (chosenSide === "proof" && pair.proofId === chosenId) return [pair.flyerExtraId];
+    if (chosenSide === "flyer-extra" && pair.flyerExtraId === chosenId) return [pair.proofId];
+    return [];
+  });
+}
 
 export const PIECE_FIELDS = [
   {
@@ -122,7 +145,9 @@ export const PIECE_FIELDS = [
     options: [
       { id: "friendly", label: "Friendly and reliable" },
       { id: "after-school", label: "After school and weekends" },
-      { id: "care", label: "I take good care of every dog" },
+      { id: "same-visit", label: "Same person, every visit" },
+      { id: "clear-price", label: "Clear price before I start" },
+      { id: "careful", label: "Careful with the details" },
     ],
   },
   {

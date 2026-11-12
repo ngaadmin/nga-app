@@ -33,7 +33,7 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
       context:
         "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job.",
       guidance:
-        "Start with the range you found for that job. Pick the service this price is for if you offer more than one (or fill a card per service). Type a price and watch the breakdown. For example, a 30-minute walk at $15: restock for that walk is $0.40, so you keep $14.60. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
+        "Start with the range you found for that job. Pick the service this price is for if you offer more than one (or fill a card per service). Type a price and watch the breakdown. For example, a 30-minute walk at $15: restock for that walk is $0.30, so you keep $14.70. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
       othersMissing: "What others charge isn't in yet.",
       keepLabel: "You keep",
       costLabel: "Cost",
@@ -54,7 +54,7 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
     copy: {
       context: "Your start-up gear has to be paid for before the business really starts making money. Knowing how many jobs that takes gives you a clear first target.",
       guidance:
-        "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up. For example, start-up costs of $80 with $14.60 kept per walk takes 6 walks. With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.25 covers $80 in about 2 weeks. Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
+        "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up. For example, start-up costs of $80 with $14.70 kept per walk takes 6 walks. With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.55 covers $80 in about 2 weeks. Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
       singlePrompt: "How many jobs can you do each week?",
       multiPrompt: "Build a typical week. How many of each job will you do?",
       covered: "Your start-up costs are already covered.",

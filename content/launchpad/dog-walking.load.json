@@ -93,10 +93,6 @@
                         {
                           "id": "dog-training",
                           "label": "Dog training"
-                        },
-                        {
-                          "id": "manage-bookings-for-others",
-                          "label": "Manage bookings for others"
                         }
                       ],
                       "answer": {
@@ -134,10 +130,6 @@
                           {
                             "id": "dog-training",
                             "label": "Dog training"
-                          },
-                          {
-                            "id": "manage-bookings-for-others",
-                            "label": "Manage bookings for others"
                           }
                         ],
                         "handbookLabel": "What my business will offer",
@@ -589,11 +581,11 @@
                                     },
                                     {
                                       "id": "have-a-washed-and-groomed-dog",
-                                      "label": "have a washed and groomed dog"
+                                      "label": "have the dog washed while you're out"
                                     },
                                     {
                                       "id": "manage-their-dog-s-behavior-problems",
-                                      "label": "manage their dog's behavior problems"
+                                      "label": "manage the dog's behavior problems"
                                     },
                                     {
                                       "id": "go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
@@ -2051,6 +2043,16 @@
       "rows": [
         7,
         8
+      ]
+    },
+    {
+      "id": "D32",
+      "topic": "Level 1 offer and help-others benefits",
+      "applied": "Cath 12 Nov 2026: Manage bookings for others is a growth service, so the Level 1 offer drops it even if the sheet still lists it. The option stays on Level 7 Add a new service. Help others keeps four benefits and the same ids. have a washed and groomed dog becomes have the dog washed while you're out. manage their dog's behavior problems becomes manage the dog's behavior problems.",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        7
       ]
     }
   ]

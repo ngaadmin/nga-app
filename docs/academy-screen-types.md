@@ -129,7 +129,7 @@ Audit helper: `REGISTERED_LESSON_SCREEN_TYPES` in `lesson-screen-renderer.tsx`.
 
 ## Standard 8-screen pedagogical map
 
-Retired 8-screen default. The scaffold file is archived under `archive/stage2-lesson-files/`. Live Module 1 order comes from the payload sheets until the master workbook reader lands:
+Retired 8-screen default. The scaffold file is archived under `archive/stage2-lesson-files/`. Live Module 1 order comes from the published database lesson. The checked-in sheets are the local authoring source:
 
 | Screen | Stage | Workbook archetype | Default `type` |
 |--------|-------|--------------------|----------------|
@@ -511,7 +511,7 @@ Fix layout once in these components; future lessons need only content updates.
 
 1. **Follow this doc** — typography, illustrations, feedback, and type-specific locked behaviours.
 2. Pick the closest `type` from [Registered type strings](#registered-type-strings) (or `custom` if truly one-off).
-3. Until the master workbook reader lands, lesson copy lives in `lib/academy/lessons/payload/source/`. Do not add a new baked `m1-l*.ts` file. The old authoring templates are archived under `archive/stage2-lesson-files/`.
+3. Published Module 1 copy lives in `academy_lesson_versions`. Authoring sheets stay in `lib/academy/lessons/payload/source/` until they are retired on purpose. Do not add a new baked `m1-l*.ts` file. The old authoring templates are archived under `archive/stage2-lesson-files/`.
 4. Set `advance.mode` appropriately (`budget-select` → always `on-complete`).
 5. Omit `illustration` on dense types unless you have a strong reason.
 6. For multi-answer checks, mark more than one option `isCorrect: true` on `multiple-choice` — do not create a new type.

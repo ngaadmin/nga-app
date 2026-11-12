@@ -4,7 +4,7 @@ Stage 2 removes old lesson files and importers. It does not add a master-workboo
 
 Base commit for every removed path: `23625f2f21fe3ad5aea812f9c8b4f2cdcc8fe91c` on `explorer-m1-images-b3`. Recover a file with `git show 23625f2f21fe3ad5aea812f9c8b4f2cdcc8fe91c:<path>`. The same bytes are also copied under `archive/stage2-lesson-files/`, which is outside the TypeScript program and the lint set.
 
-The master workbook (sheets Explorer M1, Pathfinder M1, Maverick M1, Lesson Details) wins every difference below. Those were the tab names in the workbook this report compared. Stage 3 now reads `M1 Explorer`, `M1 Pathfinder`, and `M1 Maverick`. See `docs/stage3-master.md`. Production still reads the files in [Kept until stage 3](#kept-until-stage-3).
+The master workbook (sheets Explorer M1, Pathfinder M1, Maverick M1, Lesson Details) wins every difference below. Those were the tab names in the workbook this report compared. Stage 3 now reads `M1 Explorer`, `M1 Pathfinder`, and `M1 Maverick`. See `docs/stage3-master.md`. Present-tense lines in this report ("plays today", "live copy", "Production still reads") describe the end of stage 2. Production Module 1 has been read from `academy_lesson_versions` since 1 Nov 2026. The files in [Kept until stage 3](#kept-until-stage-3) remain the local authoring source. Production does not serve them, and turning the production master-payload flag off does not switch it back.
 
 ## Verification
 
@@ -42,9 +42,9 @@ Baked lessons and the old authoring kit. Nothing in the registry or the lesson r
 
 ### (b) Superseded, kept until stage 3
 
-Removing these breaks Explorer, Pathfinder, or Maverick lesson routes, or the importer that rebuilds `lessons.json`.
+These files were kept because removing them broke lesson routes at the end of stage 2, or the importer that rebuilds `lessons.json`. Production Module 1 no longer plays them. They remain the local authoring source. Do not delete them to change production, and do not point production back at them.
 
-| Bytes | Path | Who plays it |
+| Bytes | Path | Who played it at the end of stage 2 |
 |---:|---|---|
 | 62933 | `lib/academy/lessons/payload/source/Screens1.csv` | Pathfinder and Maverick. Explorer fallback. |
 | 2398 | `lib/academy/lessons/payload/source/Lesson-Details.csv` | Titles, characters, and skill ids for every cohort, including Explorer metadata inside `lessons.json`. |
@@ -105,9 +105,9 @@ Master shape: 110 rows on each cohort sheet (26 scenario beats + 84 playable scr
 
 | Source | Fields that match | Fields that differ | Of those, old-only | Notes |
 |---|---:|---:|---:|---|
-| `Screens1.csv` | 825 | 669 | 533 | Live Pathfinder and Maverick copy. No scenario beats. |
+| `Screens1.csv` | 825 | 669 | 533 | Stage 2 Pathfinder and Maverick copy. No scenario beats. Not what production serves now. |
 | `workbook.xlsx` sheet Explorer M1 Screens | 586 | 48 | 20 | Same grid as the master. 26 of the diffs are an empty Audio column. |
-| `lessons.json` (what Explorer plays) | 528 | 33 | 32 | Includes story beats. |
+| `lessons.json` (what Explorer played at the end of stage 2) | 528 | 33 | 32 | Includes story beats. Production Explorer Module 1 now comes from the database. |
 | `intro.json` | 1 | 2 | 2 | "goes" vs "moves", and a shorter image brief. |
 | `narration.csv` | 21 | 29 | 13 | 25 beats, aligned in order after the intro. |
 | `Lesson-Details.csv` | 143 | 19 | 6 | Shared titles and characters vs per-cohort master rows. |
@@ -169,7 +169,9 @@ This is the preservation list. Master wins, so stage 3 must not assume these str
 
 ## What still renders
 
-| Cohort | Route | Source today |
+This table is the stage 2 end state. It is not how production serves Module 1 now. Production reads Module 1 from `academy_lesson_versions`. The bundled files below are the local and non-production authoring path only.
+
+| Cohort | Route | Source at the end of stage 2 |
 |---|---|---|
 | Explorer | `/dashboard/academy/lesson/1` … `/9` | `lessons.json` |
 | Pathfinder | same routes | `Screens1.csv` + `Lesson-Details.csv` |
@@ -179,6 +181,8 @@ This is the preservation list. Master wins, so stage 3 must not assume these str
 No lesson route was pointed at the deleted files.
 
 ## What blocks stage 3
+
+Stage 3 has landed. Production Module 1 is served from the database. The list below is the stage 2 snapshot of what blocked that reader. It is not a reason to serve the bundled sheets in production.
 
 1. `parseAuthoringTable` reads the first worksheet only. The master has four sheets, and Pathfinder and Maverick are not sheet 1.
 2. The Explorer converter rejects any row whose module is not 1, skips the intro row, and throws when an image brief does not match `narration.csv`. Pointing it at the master fails. The reader has to be new, not a tweak that still requires `intro.json` plus narration.
@@ -202,7 +206,7 @@ Master rows: Explorer 110, Pathfinder 110, Maverick 110, Lesson Details 27. Scen
 
 ### Screens1.csv versus the three cohort sheets
 
-`Screens1.csv` is what Pathfinder and Maverick play today, and it is the Explorer fallback. It has no scenario-beat rows and no audio column. Pathfinder settings live in the `Game Settings` column.
+Stage 2 snapshot: `Screens1.csv` was what Pathfinder and Maverick played, and it was the Explorer fallback. Production no longer serves it. It has no scenario-beat rows and no audio column. Pathfinder settings live in the `Game Settings` column.
 
 
 #### Screens1.csv — explorer
@@ -11901,7 +11905,7 @@ After L9 S7 (beat image 1 of 2)
 
 ### Old-only: Explorer Module 2 sheet inside workbook.xlsx
 
-Sheet `Explorer M2 Screens` is in the checked-in Explorer workbook. The master workbook is Module 1 only. The current converter reads the first sheet and rejects any row whose module is not 1, so this sheet is not played and is not imported into `lessons.json`. The whole sheet stays in the repo because the workbook stays until stage 3. Every screen is listed here so a later reader does not drop it by accident.
+Sheet `Explorer M2 Screens` is in the checked-in Explorer workbook. The master workbook is Module 1 only. The current converter reads the first sheet and rejects any row whose module is not 1, so this sheet is not played and is not imported into `lessons.json`. Module 2 is not in the app or the database. The whole sheet stays in the repo as authoring history. Every screen is listed here so a later reader does not drop it by accident.
 
 Module 2 rows: 99.
 
@@ -14423,7 +14427,7 @@ Lars sitting on his bedroom floor surrounded by scraps of paper, scratching his 
 
 ### explorer-m1/lessons.json versus Explorer M1
 
-This is the file Explorer actually plays. Scenario beats are matched to master scenario beats in play order inside each lesson. A master follow line that lessons.json stores as `FOLLOW:` is stripped before the text compare.
+Stage 2 snapshot: this file was what Explorer played. Production Explorer Module 1 now comes from the database. Scenario beats are matched to master scenario beats in play order inside each lesson. A master follow line that lessons.json stores as `FOLLOW:` is stripped before the text compare.
 
 #### explorer L1 S5 — text (OLD-ONLY)
 

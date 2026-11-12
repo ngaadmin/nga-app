@@ -21,7 +21,8 @@ function readLessons(): LessonPayload[] {
 
 /**
  * Generated Explorer Module 1 lesson. Undefined when that lesson was not imported.
- * Kept until stage 3 reads the master workbook. See docs/stage2-unwind-report.md.
+ * Local authoring source and the non-production Explorer payload. Production
+ * does not load this for modules in ACADEMY_DB_LESSON_MODULES.
  */
 export function loadExplorerM1Payload(lessonNumber: number): LessonPayload | undefined {
   return readLessons().find((lesson) => lesson.lessonNumber === lessonNumber);

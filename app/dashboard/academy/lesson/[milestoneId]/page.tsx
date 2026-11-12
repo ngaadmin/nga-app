@@ -3,9 +3,8 @@ import { connection } from "next/server";
 import { AcademyLessonPlayer } from "@/components/academy/lesson/academy-lesson-player";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
-import { academyMasterPayloadEnabled } from "@/lib/academy/lessons/payload/master/master-flag";
+import { academyLessonMustUseDatabase } from "@/lib/academy/lessons/payload/master/master-flag";
 import { academyLessonLog, loadMasterLessonTrio } from "@/lib/academy/lessons/payload/master/fetch-published";
-import { ACADEMY_DB_LESSON_MODULES } from "@/lib/academy/lessons/payload/master/schema-version";
 import { LessonUnavailable } from "@/components/academy/lesson/lesson-unavailable";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import {
@@ -52,11 +51,10 @@ export default async function AcademyLessonPage({
   }
 
   const bundled = bundledPayloadMilestone(parsedId);
-  if (
-    academyMasterPayloadEnabled() &&
-    bundled &&
-    ACADEMY_DB_LESSON_MODULES.includes(bundled.moduleNumber)
-  ) {
+  // Database-led modules (ACADEMY_DB_LESSON_MODULES) always take this path in
+  // production, even when the master-payload flag is unset or "0". A failed
+  // read shows LessonUnavailable. Do not fall through to the bundled sheets.
+  if (bundled && academyLessonMustUseDatabase(bundled.moduleNumber)) {
     await connection();
     const query = (await searchParams) ?? {};
     const draft = typeof query.draft === "string" ? query.draft : undefined;
@@ -96,6 +94,8 @@ export default async function AcademyLessonPage({
     );
   }
 
+  // Local and other non-production deploys. Production does not reach this
+  // for a module in ACADEMY_DB_LESSON_MODULES.
   const payload = bundled
     ? loadBundledLessonPayload(bundled.moduleNumber, bundled.lessonNumber)
     : directOpen

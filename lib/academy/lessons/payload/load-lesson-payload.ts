@@ -238,8 +238,9 @@ function readBundledTables(): BundledTables {
 
 /**
  * Checked-in Screens1.csv + Lesson-Details.csv.
- * Pathfinder and Maverick still play these files. Stage 3 replaces them
- * with the master workbook. See docs/stage2-unwind-report.md.
+ * Local authoring source, and the lesson path outside production when the
+ * master-payload flag is off. Production reads modules in
+ * ACADEMY_DB_LESSON_MODULES from the database and must not call this.
  */
 export function loadBundledLessonPayload(
   moduleNumber: number,

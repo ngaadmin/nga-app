@@ -22,7 +22,7 @@ export {
   listPlayableLessonMilestoneIds,
 } from "@/lib/academy/lessons/lesson-availability";
 
-/** Hard-coded lessons the player still opens. Module 1 plays from the payload sheets, not from baked content files. */
+/** No hard-coded lesson files. Production Module 1 is read from the database, not from baked content files. */
 export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {};
 
 export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(
@@ -89,7 +89,7 @@ export function resolveLessonForMilestone(
 
 // ─── Backward-compatible reward/skill exports (registry mirrors) ─────────────
 
-/** Live skill slugs from Lesson-Details.csv. Module 1 is not loaded from content files. */
+/** Skill slugs mirrored from the authoring sheet. Production lesson text is read from the database, not from these constants. */
 export const M1_L1_SKILL_ID = "stop-and-think";
 export const M1_L1_ACHIEVEMENT_SKILL_ID = M1_L1_SKILL_ID;
 export const M1_L1_XP_REWARD = LESSON_COMPLETION_XP;

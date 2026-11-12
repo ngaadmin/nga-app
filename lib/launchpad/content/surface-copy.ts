@@ -29,8 +29,8 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
     id: "taking-order-1",
     title: "Taking a customer order",
     scribble: "beagle",
-    lead: "What you need to look after the dog and reach someone:",
-    subhead: "What information you'll collect from the owner",
+    lead: "What you need to look after the dog, and how to reach the owner:",
+    subhead: "Information you'll collect from the owner",
     fields: [
       { id: "name", label: "Name" },
       { id: "address", label: "Address" },
@@ -76,8 +76,8 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
     id: "booking-form",
     title: "My order booking form",
     scribble: "calendar",
-    intro: "These are the fields to capture for each order.",
-    tip: "For easy tracking, keep your orders in a table. Put each order on its own row, and each field as a column.",
+    intro: "These are the details to collect for each order.",
+    tip: "Here's a table you can use. Put each order on its own row.",
     jobTitle: "Job 1",
     fields: [
       { id: "dateBooked", label: "Date booked" },
@@ -407,13 +407,12 @@ export const LAUNCHPAD_SURFACE_COPY = {
   templates: {
     label: "Templates",
     title: "Templates",
-    comingSoon: "Templates coming soon.",
     answerKey: "workbook-templates",
     pages: WORKBOOK_TEMPLATE_PAGES,
     /** Storybird placeholder. Blank PDFs are the public Storage objects. */
     poster: {
       heading: "Here's your draft poster",
-      blankLink: "Here's a blank one you can print, fill in, photocopy and hang up.",
+      blankLink: "Here's a blank one you can print, fill in and hang up.",
       openA4: "Open A4",
       downloadA4: "Download A4",
       openLetter: "Open Letter",
@@ -429,9 +428,9 @@ export const LAUNCHPAD_SURFACE_COPY = {
   },
   buildComplete: {
     greeting: "Congratulations!",
-    headline: "You built your business!",
+    headline: "You've built your business!",
     businessLine: "Your dog walking business is ready.",
-    summary: "All 7 levels complete.",
+    summary: "You've completed all seven levels.",
     workbook: "See my workbook",
     back: "Back to Launchpad",
     terrace: "Rooftop terrace",

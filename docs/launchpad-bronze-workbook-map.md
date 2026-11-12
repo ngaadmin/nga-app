@@ -133,8 +133,8 @@ Repeated chrome on every page after the cover: small logo and business name from
 | budget-split | Dollar column | computed on the page | none | entered total × the bronze percents, whole-dollar largest remainder | played |
 | what-went-well | Section labels | payload statements | l7-reflect | section labels | label only |
 | what-went-well | Statement lines | l7-s1-b1 | l7-reflect | selected | played |
-| weekly-focus | Week labels | payload | l7-improve | week labels | label only |
-| weekly-focus | Focus line | l7-s1-b2 | l7-improve | improvePlan, from picks | played |
+| weekly-focus | My focus areas, and the three-month line | payload | none | title, lead | label only |
+| weekly-focus | Improve picks, with no week headings | l7-s1-b2 | l7-improve | improvePlan | played |
 | growth-plan | My growth plan title | payload | none | none | label only |
 | growth-plan | Idea label, bullets, and that idea's check-in date | l7-s1-b3 | l7-grow | ideas, options, successCount, checkIn, checkInDate, when | played |
 

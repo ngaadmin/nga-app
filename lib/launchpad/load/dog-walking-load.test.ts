@@ -124,12 +124,12 @@ describe("dog walking load reader (Final framework Module 1 + tracker L2)", () =
     expect(s.bronzes.map((b) => b.title)).toEqual(["Decide what to sell", "Know who your customers are"]);
   });
 
-  it("decisions include D26–D30 (Storybird draft outcomes flagged pending Cath)", () => {
+  it("decisions include D26–D30, and D28 records Cath's locked floor lines", () => {
     const { load } = build();
     expect(load.decisions.map((d) => d.id)).toEqual(
       expect.arrayContaining(["D26", "D27", "D28", "D29", "D30"]),
     );
-    expect(load.decisions.find((d) => d.id === "D28")?.status).toBe("default-pending-cath");
+    expect(load.decisions.find((d) => d.id === "D28")?.status).toBe("decided-cath");
   });
 });
 

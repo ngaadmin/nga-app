@@ -32,6 +32,15 @@ describe("business build complete", () => {
   it("draws one filled dot per level and keeps the placeholder sentences", () => {
     vi.stubGlobal("matchMedia", () => ({ matches: true }));
     const { onWorkbook, onLaunchpad } = renderScreen(7);
+    expect(copy).toMatchObject({
+      greeting: "Congratulations!",
+      headline: "You've built your business!",
+      businessLine: "Your dog walking business is ready.",
+      summary: "You've completed all seven levels.",
+      workbook: "See my workbook",
+      back: "Back to Launchpad",
+      terrace: "Rooftop terrace",
+    });
     expect(screen.getByText(copy.greeting)).toBeTruthy();
     expect(screen.getByRole("heading", { name: copy.headline })).toBeTruthy();
     expect(screen.getByText(copy.businessLine)).toBeTruthy();
@@ -46,6 +55,18 @@ describe("business build complete", () => {
     renderScreen(3);
     expect(document.querySelectorAll("[data-level-dots] span")).toHaveLength(3);
     expect(screen.getByText(copy.summary)).toBeTruthy();
+    cleanup();
+    render(
+      <BuildCompleteScreen
+        copy={{ ...copy, headline: "You finished the build!" } as unknown as typeof copy}
+        terraceLabel={copy.terrace}
+        levelCount={1}
+        onWorkbook={() => {}}
+        onLaunchpad={() => {}}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "You finished the build!" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: copy.headline })).toBeNull();
   });
 
   it("skips confetti when the learner prefers reduced motion", () => {

@@ -2020,8 +2020,8 @@
     {
       "id": "D28",
       "topic": "Level outcome statements",
-      "applied": "Storybird DRAFT outcomes (5 Nov) live in service-level-outcomes.ts as swappable data (SERVICE_LEVEL_OUTCOMES_DRAFT) feeding floor.gold.title. Not yet approved by Cath. Module 4 name is Sales. Delivery has a real draft (not a placeholder string).",
-      "status": "default-pending-cath",
+      "applied": "Cath locked the seven floor lines on 12 Nov 2026. They live in service-level-outcomes.ts and the seed copies them onto floor.gold.title. The lift reads that payload field.",
+      "status": "decided-cath",
       "rows": []
     },
     {

@@ -238,14 +238,13 @@ function CoverPageBody({
  * K14: every page after the cover carries a small identity header (logo and
  * name) so the workbook reads as the learner's own. Left off until either is chosen.
  */
-/** Workbook page opened from the paperclip tab. Copy comes from the payload. */
+/** Workbook page opened from the paperclip tab when a payload has no template pages. */
 export function TemplatesComingSoon() {
   const copy = useSurfaceCopy().templates;
   return (
     <article data-handbook-page="templates" aria-label={copy.title}>
       <MiniIdentity />
       <AccentLabel as="h2">{copy.title}</AccentLabel>
-      <p className={`mt-3 ${WORKBOOK_BODY}`}>{copy.comingSoon}</p>
     </article>
   );
 }

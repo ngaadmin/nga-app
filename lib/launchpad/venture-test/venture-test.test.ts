@@ -69,9 +69,15 @@ describe("venture test structure", () => {
     expect(FLOORS[6]!.silvers.map((s) => s.title)).toEqual(["Level Up"]);
     expect(FLOORS[6]!.silvers[0]!.bronzes.map((bronze) => bronze.title)).toEqual(["Reflect", "Improve", "Grow"]);
     expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
-    expect(L1.gold.title).toBe(
+    expect(FLOORS.map((floor) => floor.gold.title)).toEqual([
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
-    );
+      "Decide what you'll offer, who wants it, what it costs, and what to charge.",
+      "Learn the customer journey, get the money and gear you need, then practice and fine-tune it.",
+      "Know where to find customers, what to say, and how to tell people about it.",
+      "Do the job well, get paid, and know what you earned.",
+      "Know what you've earned and where every dollar goes.",
+      "Look back at what went well, pick what to improve, and choose how to grow.",
+    ]);
     expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Set your goals", "The Brand"]);
     expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual([
       "Pick what kind of business you'll run",

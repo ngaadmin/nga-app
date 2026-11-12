@@ -1,7 +1,7 @@
 /**
  * Service-business level outcome statements shown when the lift opens on a
- * floor (`floor.gold.title`). Swappable data: Storybird drafts; Cath has not
- * approved them yet (decision D26). Do not hard-code these strings in UI.
+ * floor (`floor.gold.title`). Cath locked these lines on 12 Nov 2026.
+ * The seed copies them onto each floor. The lift reads `floor.gold.title`.
  *
  * Floors 1–7 are wired in the building. Budgeting sits after Delivery.
  * Growing follows Budgeting. The rooftop is the finish after the last floor.
@@ -17,15 +17,15 @@ export const SERVICE_FLOOR_NAMES = {
   7: "Growing",
 } as const;
 
-/** Draft outcomes (Storybird, 5 Nov 2026). Status: draft-pending-cath. */
+/** Locked floor lines (Cath, 12 Nov 2026). The seed writes these onto `floor.gold.title`. */
 export const SERVICE_LEVEL_OUTCOMES_DRAFT = {
   1: "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
-  2: "Know what you'll offer, who wants it, what it costs, and what to charge.",
-  3: "Know more about your business, get the money and gear you need, then practice and fine-tune it.",
+  2: "Decide what you'll offer, who wants it, what it costs, and what to charge.",
+  3: "Learn the customer journey, get the money and gear you need, then practice and fine-tune it.",
   4: "Know where to find customers, what to say, and how to tell people about it.",
-  5: "Take bookings, do the job well, get paid, and know what you earned.",
-  6: "Know what you owe, what you keep, and where every dollar goes.",
-  7: "Know what to improve, how to keep customers coming back, where to grow, and how to fund it.",
+  5: "Do the job well, get paid, and know what you earned.",
+  6: "Know what you've earned and where every dollar goes.",
+  7: "Look back at what went well, pick what to improve, and choose how to grow.",
 } as const;
 
 export type ServiceFloorLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;

@@ -375,6 +375,7 @@ function checkLevelUp(screen: Obj, where: string): void {
       if (!isObj(page) || typeof page.id !== "string" || !NODE_ID_RE.test(page.id) || seen.has(page.id)) fail(`${pw} has no valid id.`);
       seen.add(page.id);
       text(page.title, `${pw} title`);
+      if (page.lead !== undefined) text(page.lead, `${pw} lead`);
     });
   }
   const ideas = list(grow.ideas, `${where} ideas`, GROW_IDEA_IDS.length, GROW_IDEA_IDS.length);

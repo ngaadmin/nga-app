@@ -471,7 +471,9 @@ describe("Come back to this later", () => {
     expect(rooftop.className).toContain("text-[16px]");
     fireEvent.click(rooftop);
     expect(document.querySelector("[data-lift='rooftop']")).toBeTruthy();
-    expect(await screen.findByText("You built your business!", {}, { timeout: 4000 })).toBeTruthy();
+    expect(await screen.findByText("You've built your business!", {}, { timeout: 4000 })).toBeTruthy();
+    expect(screen.getByText("You've completed all seven levels.")).toBeTruthy();
+    expect(screen.getByText("Your dog walking business is ready.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to Launchpad" }));
     expect(document.querySelector("[data-my-business='dog-walking']")).toBeTruthy();
     expect(document.querySelector("[data-in-progress='dog-walking']")).toBeNull();

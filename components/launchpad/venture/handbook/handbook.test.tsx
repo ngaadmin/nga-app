@@ -26,6 +26,7 @@ import {
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { Handbook } from "@/components/launchpad/venture/handbook/handbook";
+import { WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
@@ -518,7 +519,7 @@ describe("L7 weekly focus and the Templates tab", () => {
   it("replaces the Growing placeholder with the payload page and shows only the saved weeks", () => {
     const floors = structuredClone(FLOORS);
     const levelUp = floors[6]!.silvers[0]!.bronzes[0]!.tasks[0]!.screens[0]! as LaunchpadLevelUpScreen;
-    levelUp.content.workbookPages = [{ id: "weekly-focus", title: "Focus this week" }];
+    levelUp.content.workbookPages = [{ id: "weekly-focus", title: "Focus this week", lead: "Tackle them all over the next three months." }];
     const progress = setProgressAnswer(ALL, "l7-improve", {
       kind: "level-up",
       version: 1,
@@ -546,22 +547,23 @@ describe("L7 weekly focus and the Templates tab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Level 7, Growing" }));
     const page = document.querySelector("[data-weekly-focus]") as HTMLElement;
     expect(within(page).getByRole("heading", { name: "Focus this week" })).toBeTruthy();
-    expect(within(page).queryByRole("heading", { name: "My weekly focus areas" })).toBeNull();
-    expect(within(page).getByRole("heading", { name: "Week 1" })).toBeTruthy();
+    expect(within(page).queryByRole("heading", { name: "My focus areas" })).toBeNull();
+    expect(within(page).getByText("Tackle them all over the next three months.")).toBeTruthy();
     expect(within(page).getByText("Confirming each job with the customer beforehand")).toBeTruthy();
-    expect(within(page).getByRole("heading", { name: "Week 3" })).toBeTruthy();
     expect(within(page).getByText("Asking every customer for feedback")).toBeTruthy();
+    expect(within(page).queryByText("Week 1")).toBeNull();
     expect(within(page).queryByText("Week 2")).toBeNull();
+    expect(within(page).queryByText("Week 3")).toBeNull();
     expect(within(page).queryByText("Week 4")).toBeNull();
     expect(page.querySelectorAll("[data-aqua-bullet]")).toHaveLength(2);
     expect(page.querySelector("[data-tick]")).toBeNull();
     expect(within(page).queryByRole("checkbox")).toBeNull();
   });
 
-  it("shows the Templates tab on every page and opens the payload coming-soon page", () => {
+  it("shows the Templates tab on every page and opens the real template pages", () => {
     const copy = {
       ...LAUNCHPAD_SURFACE_COPY,
-      templates: { label: "Patterns", title: "Patterns", comingSoon: "Patterns coming soon." },
+      templates: { ...LAUNCHPAD_SURFACE_COPY.templates, label: "Patterns", title: "Patterns" },
     };
     render(
       <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
@@ -574,10 +576,10 @@ describe("L7 weekly focus and the Templates tab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name: "Patterns" })).toBeTruthy();
     fireEvent.click(tab);
-    expect(screen.getByRole("heading", { name: "Patterns" })).toBeTruthy();
-    expect(screen.getByText("Patterns coming soon.")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Previous page" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("heading", { name: "Taking a customer order" })).toBeTruthy();
+    expect(screen.queryByText("Templates coming soon.")).toBeNull();
+    expect(screen.queryByText(/coming soon/i)).toBeNull();
+    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(false);
     expect(tab.getAttribute("aria-current")).toBe("true");
   });
 
@@ -635,10 +637,27 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(screen.queryByRole("textbox")).toBeNull();
   });
 
+  it("plays the order-form intros from the payload, and a payload edit replaces them", () => {
+    const booking = LAUNCHPAD_SURFACE_COPY.templates.pages.find((page) => page.id === "booking-form");
+    const taking = LAUNCHPAD_SURFACE_COPY.templates.pages.find((page) => page.id === "taking-order-1");
+    expect(taking?.lead).toBe("What you need to look after the dog, and how to reach the owner:");
+    expect(taking?.subhead).toBe("Information you'll collect from the owner");
+    expect(booking?.intro).toBe("These are the details to collect for each order.");
+    expect(booking?.tip).toBe("Here's a table you can use. Put each order on its own row.");
+    const { unmount } = render(<WorkbookTemplatePage page={{ ...booking!, intro: "Edited order intro." }} />);
+    expect(screen.getByText("Edited order intro.")).toBeTruthy();
+    expect(screen.queryByText("These are the details to collect for each order.")).toBeNull();
+    unmount();
+    render(<WorkbookTemplatePage page={taking!} />);
+    expect(screen.getByText("What you need to look after the dog, and how to reach the owner:")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Information you'll collect from the owner" })).toBeTruthy();
+  });
+
   it("shows a payload edit of the draft poster and takes the blank PDF links from the payload", () => {
     const poster = {
       ...LAUNCHPAD_SURFACE_COPY.templates.poster,
       heading: "Your poster draft",
+      blankLink: "Here's a blank one you can print and pin up.",
       openA4: "Open the A4 file",
       downloadA4: "Save the A4 file",
       a4Url: "https://files.example/posters/blank-poster-A4.pdf",
@@ -650,6 +669,12 @@ describe("L7 weekly focus and the Templates tab", () => {
       ...LAUNCHPAD_SURFACE_COPY,
       templates: { ...LAUNCHPAD_SURFACE_COPY.templates, poster },
     };
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.blankLink).toBe("Here's a blank one you can print, fill in and hang up.");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.heading).toBe("Here's your draft poster");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.openA4).toBe("Open A4");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.openLetter).toBe("Open Letter");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.viewerClose).toBe("Close");
+    expect(LAUNCHPAD_SURFACE_COPY.templates.poster.viewerPrint).toBe("Print");
     render(
       <SurfaceCopyProvider value={copy as unknown as typeof LAUNCHPAD_SURFACE_COPY}>
         <Harness entry="building" initial={WITH_IDENTITY} />
@@ -866,7 +891,10 @@ describe("L2 playback extras and L7 workbook pages", () => {
     expect(screen.getByText("Using more than one way to get my name out")).toBeTruthy();
     expect(document.querySelector("[data-heart-doodle]")?.className).toContain("left-0");
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    expect(screen.getByRole("heading", { name: "My weekly focus areas" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "My focus areas" })).toBeTruthy();
+    expect(screen.getByText("Work on them all over the next three months.")).toBeTruthy();
+    expect(screen.getByText("Using more than one way to get my name out")).toBeTruthy();
+    expect(screen.queryByText("Week 1")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(screen.getByRole("heading", { name: "How I will grow" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "My growth plan" })).toBeNull();

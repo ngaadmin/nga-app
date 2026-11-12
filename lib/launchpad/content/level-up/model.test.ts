@@ -57,7 +57,7 @@ describe("Level Up check-in date", () => {
     expect(improve.weekLabels).toEqual(["Week 1", "Week 2", "Week 3", "Week 4"]);
     expect(levelUpContent().workbookPages).toEqual([
       { id: "what-went-well", title: "What went well" },
-      { id: "weekly-focus", title: "My weekly focus areas" },
+      { id: "weekly-focus", title: "My focus areas", lead: "Work on them all over the next three months." },
       { id: "growth-plan", title: "My growth plan" },
     ]);
     const rows = weeklyFocusRows(levelUpContent(), [

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { levelUpOf } from "@/lib/launchpad/content/answers";
-import { fillToken, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { fillToken, focusAreaLines } from "@/lib/launchpad/content/level-up/model";
 import type { LaunchpadLevelUpContent } from "@/lib/launchpad/content/level-up/model";
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
@@ -96,25 +96,24 @@ export function GrowthPlanSheet({ content, title }: { content: LaunchpadLevelUpC
   );
 }
 
-/** One Growing workbook page: week label, then the picked statement as an aqua bullet. */
+/** Improve picks as one list. The bronze week order stays on the Improve screens. */
 export function WeeklyFocusSheet({ content, title }: { content: LaunchpadLevelUpContent; title: string }) {
   const empty = useSurfaceCopy().chrome.notAnswered;
   const answers = useLaunchpadAnswers()?.answers;
-  const rows = weeklyFocusRows(content, levelUpOf(answers, "l7-improve")?.improvePlan ?? []);
+  const lead = content.workbookPages?.find((page) => page.id === "weekly-focus")?.lead;
+  const lines = focusAreaLines(content, levelUpOf(answers, "l7-improve")?.improvePlan ?? []);
   return (
     <div data-weekly-focus="">
       <AccentLabel as="h2">{title}</AccentLabel>
-      {rows.length === 0 ? (
+      {lead ? <p className={`mt-2 ${WORKBOOK_HINT}`}>{lead}</p> : null}
+      {lines.length === 0 ? (
         <p className={`mt-3 ${WORKBOOK_HINT}`}>{empty}</p>
       ) : (
-        rows.map((row, index) => (
-          <div key={`${row.weekLabel}-${row.line}`}>
-            <h3 className={`${WORKBOOK_SUB} ${index === 0 ? "mt-2" : "mt-[21px]"}`}>{row.weekLabel}</h3>
-            <ul className="m-0 mt-1.5 list-none p-0">
-              <AquaBullet>{row.line}</AquaBullet>
-            </ul>
-          </div>
-        ))
+        <ul className="m-0 mt-2 list-none p-0">
+          {lines.map((row) => (
+            <AquaBullet key={row.id}>{row.line}</AquaBullet>
+          ))}
+        </ul>
       )}
       <div className="relative">
         <div className="pointer-events-none absolute bottom-3 left-0 flex flex-col gap-1" aria-hidden="true">

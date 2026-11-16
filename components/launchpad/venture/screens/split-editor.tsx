@@ -80,7 +80,7 @@ export function SplitEditor({ copy, onChange }: { copy: SplitCopy; onChange: (pe
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]" data-split-total="">Total {total}%</p>
+      <p className="mt-2 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]" data-split-total="">{s.chrome.totalPercent.replace("{n}", String(total))}</p>
     </div>
   );
 }

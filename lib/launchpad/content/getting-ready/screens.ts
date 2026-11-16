@@ -97,7 +97,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
       question: "How will you practice before your first paid job?",
       hint: PRACTICE_TIP,
       practiceWhoLead: "I will do a practice run for {pick}.",
-      practiceServiceLead: "I will do the following service for them {pick}.",
+      practiceServiceLead: "I will practice {pick}.",
       practiceWhenLead: "I will do it {pick}.",
       practicePlayback: "Your practice run",
       practiceWho: PRACTICE_WHO.map((row) => ({ id: row.id, label: row.label })),

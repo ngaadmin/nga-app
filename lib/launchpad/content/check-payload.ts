@@ -680,6 +680,7 @@ function checkJobsCover(screen: Obj, where: string, answers: Answers): void {
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
   for (const field of JOBS_COPY) text(screen.copy[field], `${where} ${field}`);
   checkClip(screen.audio, where);
+  checkClip(screen.weekAudio, `${where} week`);
   const seen = new Set<string>();
   list(screen.weekOptions, `${where} weekOptions`, 7, 7).forEach((raw, i) => {
     const ow = `${where} week option ${i + 1}`;

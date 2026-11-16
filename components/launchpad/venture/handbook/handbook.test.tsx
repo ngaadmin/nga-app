@@ -811,7 +811,11 @@ describe("L5 delivery workbook", () => {
     expect(tracker?.textContent).toContain("Customer (first name only)");
     expect(tracker?.querySelector(".overflow-x-auto")).toBeNull();
     expect(tracker?.querySelector("table")?.className).toContain("table-fixed");
-    expect(tracker?.querySelectorAll("[data-mini-identity]").length).toBeLessThanOrEqual(1);
+    expect(tracker?.querySelectorAll("[data-mini-identity]").length).toBe(0);
+    expect(tracker?.closest("[data-handbook-page]")?.querySelectorAll("[data-mini-identity]").length).toBeLessThanOrEqual(1);
+    expect(tracker?.querySelector(".overflow-x-auto")).toBeNull();
+    expect(tracker?.textContent).toContain("Mar 12");
+    expect(tracker?.textContent).not.toContain("12 Mar");
   });
 
   it("plays saved tracker rows and a payload edit of the example label", () => {
@@ -1197,6 +1201,15 @@ describe("My growth plan check-in dates", () => {
     expect(screen.getByText("two months")).toBeTruthy();
     expect(screen.queryByText(/That's \./)).toBeNull();
     expect(screen.queryByText("Not answered yet")).toBeNull();
+  });
+
+  it("shows an ISO check-in day as a friendly US date", () => {
+    renderPlan(
+      ["referral"],
+      [{ idea: "referral", options: ["free-walk"], when: "this-week", successCount: 1, checkIn: "one-month", checkInDate: "2027-02-11" }],
+    );
+    expect(screen.getByText("That's Feb 11, 2027.")).toBeTruthy();
+    expect(screen.queryByText("That's 2027-02-11.")).toBeNull();
   });
 });
 

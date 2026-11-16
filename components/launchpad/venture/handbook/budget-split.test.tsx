@@ -83,11 +83,25 @@ describe("My budget split field", () => {
     expect(field().value).toBe("100");
     expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("Money made");
     expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
-    expect(screen.getByText("$5")).toBeTruthy();
+    expect(screen.getByText("$4")).toBeTruthy();
+    expect(screen.getByText("$12")).toBeTruthy();
+    expect(screen.getAllByText("$32")).toHaveLength(2);
     fireEvent.change(field(), { target: { value: "250" } });
     expect(field().value).toBe("250");
     expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
+    expect(screen.getByText("$4")).toBeTruthy();
+    expect(screen.queryByText("$12.50") ?? screen.queryByText("$13")).toBeNull();
     expect(window.localStorage.getItem("lp-venture-test:budget-earned")).toBe("250");
     expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("80");
+  });
+
+  it("works the jar dollars from Money made when that total is saved", () => {
+    writeBudgetMoneyMade("200");
+    render(<BudgetSplit percents={[10, 15, 35, 40]} />);
+    expect(field().value).toBe("100");
+    expect(document.querySelector("[data-budget-amount='giving']")?.textContent).toBe("$20");
+    expect(document.querySelector("[data-budget-amount='emergencies']")?.textContent).toBe("$30");
+    expect(document.querySelector("[data-budget-amount='pay']")?.textContent).toBe("$70");
+    expect(document.querySelector("[data-budget-amount='grow']")?.textContent).toBe("$80");
   });
 });

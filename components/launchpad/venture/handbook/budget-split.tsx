@@ -49,8 +49,8 @@ export function BudgetSplit({
     return saved == null ? s.workbook.earnedPlaceholder : earnedDigits(saved);
   });
   const currency = readCurrencyPreference();
-  const amounts = splitDollars(earnedAmount(raw), shares);
   const moneyMade = readBudgetMoneyMade();
+  const amounts = splitDollars(moneyMade != null ? earnedAmount(moneyMade) : earnedAmount(raw), shares);
   return (
     <div data-budget-sheet="">
       <AccentLabel as="h2">{heading}</AccentLabel>

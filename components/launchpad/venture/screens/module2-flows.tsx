@@ -392,10 +392,7 @@ export function CompetitorFlow({
   const services: { serviceId: string; label: string; packages: LaunchpadChip[] }[] = [];
   for (const row of offer?.offerings ?? []) {
     const catalog = catalogFor(row.serviceId);
-    const packages = row.packages.flatMap((id) => {
-      const found = catalog?.packages.find((item) => item.id === id);
-      return found ? [found] : [];
-    });
+    const packages = [...(catalog?.packages ?? [])];
     if (!packages.length) continue;
     services.push({ serviceId: row.serviceId, label: named.find((item) => item.id === row.serviceId)?.label ?? "", packages });
   }
@@ -406,7 +403,9 @@ export function CompetitorFlow({
   const [draft, setDraft] = useState<CompetitorAnswer>(() => {
     const seeded: CompetitorServicePrice[] = services.map((service) => ({
       serviceId: service.serviceId,
-      offers: service.packages.map((item) => item.id),
+      offers: (offer?.offerings.find((row) => row.serviceId === service.serviceId)?.packages ?? []).filter((id) =>
+        service.packages.some((item) => item.id === id),
+      ),
       averages: {},
     }));
     const base: CompetitorAnswer = saved ?? {

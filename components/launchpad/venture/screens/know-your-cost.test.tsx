@@ -32,11 +32,14 @@ describe("Know your cost flow", () => {
     const finished = { current: null as CostsAnswer | null };
     render(<Harness onFinish={(answer) => (finished.current = answer)} />);
 
+    expect(screen.queryByRole("button", { name: "Add costs" })).toBeNull();
+    expect(screen.queryByText("Continue stays off until both sections are done.")).toBeNull();
+    expect(document.querySelector("[data-cost-intro]")?.textContent).toContain("Start-up costs");
+    expect(document.querySelector("[data-cost-intro]")?.textContent).toContain("Ongoing costs");
     const cont = screen.getByRole("button", { name: "Continue" });
-    expect((cont as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText("Continue stays off until both sections are done.")).toBeTruthy();
+    expect((cont as HTMLButtonElement).disabled).toBe(false);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[0]!);
+    fireEvent.click(cont);
     expect(screen.getByText("Buy once to get started. You will keep using these on jobs.")).toBeTruthy();
     expect(screen.getByText("Water bottle and fold-up bowl")).toBeTruthy();
     expect(screen.getByText("Poop bags (big pack)")).toBeTruthy();
@@ -51,6 +54,12 @@ describe("Know your cost flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove Notebook for owners' notes" }));
     expect(screen.queryByText("Notebook for owners' notes")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
+
+    expect(screen.getByRole("heading", { name: "Dog walking" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Dog training" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Calculate the cost" })).toBeNull();
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(screen.getByRole("textbox", { name: "Amount for Poop bags" }).getAttribute("value") ?? (screen.getByRole("textbox", { name: "Amount for Poop bags" }) as HTMLInputElement).value).toBe("0.05");
     fireEvent.change(screen.getByRole("textbox", { name: "Amount for Treats" }), { target: { value: "0" } });
@@ -81,22 +90,27 @@ describe("Know your cost flow", () => {
     expect(finished.current?.ongoing.find((service) => service.serviceId === "dog-walking")?.lines.find((line) => line.id === "treats")?.amount).toBe(0);
   });
 
-  it("wraps each service so the action stays inside the card", () => {
-    render(<Harness />);
-    fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[1]!);
+  it("lists the chosen services, then opens each one in order", () => {
+    render(
+      <KnowYourCostFlow
+        screen={costScreen}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking", "dog-training"]) }}
+        initialStep={{ name: "ongoing" }}
+      />,
+    );
     expect(screen.getAllByRole("heading", { name: "Ongoing costs" })).toHaveLength(1);
     expect((document.querySelector("[data-scribble-large='coins']") as HTMLElement).style.width).toBe("136px");
     const tile = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
     expect(tile.getAttribute("data-service-tile-layout")).toBe("wrap");
     expect(tile.className).toContain("flex-col");
-    expect(tile.querySelector("h2")?.parentElement).not.toBe(tile);
-    const calculate = within(tile).getByRole("button", { name: "Calculate the cost" });
-    expect(calculate.className).toContain("shrink-0");
-    expect(calculate.className).not.toContain("w-full");
-    expect(within(tile).getByText("Not calculated yet")).toBeTruthy();
-    fireEvent.click(calculate);
+    expect(within(tile).queryByRole("button", { name: "Calculate the cost" })).toBeNull();
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByText(/one Dog walking job|one Grooming job/)).toBeNull();
     expect(screen.getByText(/each time you do this job/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.getByRole("heading", { name: "Dog training" })).toBeTruthy();
   });
 
   it("titles the costs sheet My handbook on spiral paper", () => {

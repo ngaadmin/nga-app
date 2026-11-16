@@ -222,7 +222,7 @@ export function practiceLines(who: string, serviceLabel: string, when: string): 
   const service = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
   return [
     `I will do a practice run for ${whoLabel}.`,
-    `I will do the following service for them ${service}.`,
+    `I will practice ${service}.`,
     `I will do it ${whenLabel}.`,
   ];
 }

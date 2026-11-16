@@ -69,7 +69,14 @@ describe("getting ready sentences", () => {
   });
 
   it("lowercases the practice service and groups the other feedback", () => {
-    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do the following service for them dog walking.");
+    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will practice dog walking.");
+    const practice = gettingReadyWorkbookSheets(undefined, "dog walking and grooming", true, "I will practice ")
+      .find((page) => page.id === "ready-c")!;
+    const practiceText = JSON.stringify(practice);
+    expect(practiceText).toContain("I will practice ");
+    expect(practiceText).toContain("dog walking and grooming");
+    expect(practiceText).not.toContain("for them");
+    expect(practiceText).not.toMatch(/\bthem\b|\bthey\b|\btheir\b/);
     const wrap = feedbackWrap([
       { id: "service_explained", result: "good" },
       { id: "cost", result: "good" },

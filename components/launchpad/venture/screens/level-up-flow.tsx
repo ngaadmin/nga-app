@@ -10,6 +10,7 @@ import {
   expandJobsFor,
   fillToken,
   formatCheckInDate,
+  friendlyStoredDate,
   joinList,
   quarterlyReviewCheckIn,
   pickedStatements,
@@ -471,7 +472,7 @@ export function LevelUpFlow({
             </div>
           </div>
         </div>
-        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", experimentDate)}</p> : null}
+        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", friendlyStoredDate(experimentDate))}</p> : null}
       </div>
     );
   } else if (statementMode && currentIdea && currentPlan && currentIdea.statement) {
@@ -572,7 +573,7 @@ export function LevelUpFlow({
             ))}
           </div>
         ) : null}
-        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", experimentDate)}</p> : null}
+        {experimentDate && content.grow.dateLine ? <p className={`mt-3 ${LESSON_HINT}`} data-experiment-date="">{fillToken(content.grow.dateLine, "date", friendlyStoredDate(experimentDate))}</p> : null}
         <LargeScribble name="growth" />
       </div>
     );

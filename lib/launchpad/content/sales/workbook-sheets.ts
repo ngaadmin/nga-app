@@ -7,6 +7,7 @@ import { SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import type { ScriptedBlock, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
 import type { ScriptedPart } from "@/lib/launchpad/content/scripted-sheet";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import {
   CHANNELS,
   HOOKS,
@@ -156,18 +157,21 @@ export function marketingLines(
 }
 
 const PIECE_META = [
-  { id: "flyer" as const, channelId: "flyers", subhead: "What my flyer will say", underline: "flyer", needs: "flyer-book" },
-  { id: "verbal" as const, channelId: "verbal", subhead: "What I will say in person", underline: "in person", needs: "verbal-close" },
-  { id: "message" as const, channelId: "message", subhead: "What I will send as a message", underline: "message", needs: "message-close" },
-  { id: "online" as const, channelId: "online", subhead: "What my online post will say", underline: "online post", needs: "online-close" },
-  { id: "card" as const, channelId: "cards", subhead: "What my business card will say", underline: "business card", needs: "" },
+  { id: "flyer" as const, channelId: "flyers", underline: "flyer", needs: "flyer-book" },
+  { id: "verbal" as const, channelId: "verbal", underline: "in person", needs: "verbal-close" },
+  { id: "message" as const, channelId: "message", underline: "message", needs: "message-close" },
+  { id: "online" as const, channelId: "online", underline: "online post", needs: "online-close" },
+  { id: "card" as const, channelId: "cards", underline: "business card", needs: "" },
 ];
 
 export type MarketingPieceId = (typeof PIECE_META)[number]["id"];
 
+type PieceHeadings = typeof LAUNCHPAD_SURFACE_COPY.sales.pieceHeadings;
+type SalesSurface = typeof LAUNCHPAD_SURFACE_COPY.sales;
+
 /** Heading on the result screen for one channel. The same line is the workbook subhead. */
-export function marketingPieceHeading(id: MarketingPieceId): string {
-  return PIECE_META.find((row) => row.id === id)?.subhead ?? "";
+export function marketingPieceHeading(id: MarketingPieceId, headings: PieceHeadings = LAUNCHPAD_SURFACE_COPY.sales.pieceHeadings): string {
+  return headings[id] ?? "";
 }
 
 function activePieces(answers: LaunchpadAnswers | undefined): MarketingPieceId[] {
@@ -220,7 +224,11 @@ function blocksFor(piece: Piece): ScriptedBlock[] {
 }
 
 /** Level 4 workbook pages. Only selected and completed channels get a page. */
-export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, businessName: string): ScriptedSheet[] {
+export function salesWorkbookSheets(
+  answers: LaunchpadAnswers | undefined,
+  businessName: string,
+  salesCopy: SalesSurface = LAUNCHPAD_SURFACE_COPY.sales,
+): ScriptedSheet[] {
   const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
   const sheets: ScriptedSheet[] = [];
   if (sales && sales.selected.length > 0) {
@@ -244,7 +252,7 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   const pieces = activePieces(answers).flatMap((id) => {
     const meta = PIECE_META.find((row) => row.id === id);
     if (!meta) return [];
-    const subhead = meta.subhead;
+    const subhead = salesCopy.pieceHeadings[id];
     const underline = meta.underline;
     const built = marketingLines(answers, id, businessName);
     return [{ id, subhead, underline, lines: built.lines.map((line) => emphasize(line, built.tokens)) }];
@@ -256,7 +264,7 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   });
   const tell = tellPeopleOf(answers, TELL_PEOPLE_KEY);
   if (tell && sales) {
-    const rows = tellLines(sales.selected, sales.where.friends ?? [], tell.counts, tell.shareWhen);
+    const rows = tellLines(sales.selected, sales.where.friends ?? [], tell.counts, tell.shareWhen, salesCopy);
     if (rows.length) {
       sheets.push({
         id: "sales-tell",
@@ -291,22 +299,23 @@ export function tellLines(
   friendsWhere: readonly string[],
   counts: Readonly<Record<string, number>>,
   shareWhen?: string,
+  salesCopy: SalesSurface = LAUNCHPAD_SURFACE_COPY.sales,
 ): (string | { value: string | null })[][] {
   const on = new Set(selected);
   const rows: { id: string; parts: (string | { value: string | null })[] }[] = [];
   const num = (id: string) => ({ value: counts[id] ? String(counts[id]) : null });
-  if (on.has("flyers")) rows.push({ id: "flyers", parts: ["I will print and distribute ", num("flyers"), " flyers."] });
-  if (on.has("friends") && friendsWhere.includes("see")) rows.push({ id: "see", parts: ["I will tell ", num("see"), " people in person."] });
-  if (on.has("friends") && friendsWhere.includes("message")) rows.push({ id: "message", parts: ["I will send the message to ", num("message"), " people."] });
+  if (on.has("flyers")) rows.push({ id: "flyers", parts: [`${salesCopy.printAndDistribute} `, num("flyers"), ` ${salesCopy.flyers}`] });
+  if (on.has("friends") && friendsWhere.includes("see")) rows.push({ id: "see", parts: [`${salesCopy.tellPeople} `, num("see"), ` ${salesCopy.inPerson}`] });
+  if (on.has("friends") && friendsWhere.includes("message")) rows.push({ id: "message", parts: [`${salesCopy.sendMessage} `, num("message"), ` ${salesCopy.people}`] });
   if (on.has("online")) {
-    const when = SHARE_TIMES.find((option) => option.id === shareWhen)?.label ?? null;
-    rows.push({ id: "share", parts: ["I will share the post online ", { value: when }, "."] });
-    rows.push({ id: "ask", parts: ["I will ask ", num("ask"), " friends to share it."] });
+    const when = salesCopy.shareTimes.find((option) => option.id === shareWhen)?.label ?? SHARE_TIMES.find((option) => option.id === shareWhen)?.label ?? null;
+    rows.push({ id: "share", parts: [salesCopy.sharePost, { value: when }, "."] });
+    rows.push({ id: "ask", parts: [`${salesCopy.askFriends} `, num("ask"), ` ${salesCopy.friendsShare}`] });
   }
   if (on.has("cards")) {
     rows.push({
       id: "cards",
-      parts: ["I will print ", num("cards"), " business cards and ask ", num("stores"), " stores if I can leave them there for their customers."],
+      parts: [`${salesCopy.iWillPrint} `, num("cards"), ` ${salesCopy.businessCards} `, num("stores"), ` ${salesCopy.storesLeave}`],
     });
   }
   return rows.map((row) => row.parts);

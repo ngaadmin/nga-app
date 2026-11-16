@@ -36,6 +36,7 @@ export function gettingReadyWorkbookSheets(
   answers: LaunchpadAnswers | undefined,
   serviceLabel: string,
   templates: boolean,
+  practiceStem: string = LAUNCHPAD_SURFACE_COPY.workbook.practiceService,
 ): readonly ScriptedSheet[] {
   const find = findCustomersOf(answers, FIND_CUSTOMERS_KEY);
   const agree = agreeJobOf(answers, AGREE_JOB_KEY);
@@ -95,7 +96,7 @@ export function gettingReadyWorkbookSheets(
   const practiceBlocks: ScriptedBlock[] = [
     { kind: "section", text: "Your practice run" },
     { kind: "paragraph", parts: ["I will do a practice run for ", who || templates ? { value: who } : NOT_YET, "."] },
-    { kind: "paragraph", parts: ["I will do the following service for them ", service || templates ? { value: service } : NOT_YET, "."] },
+    { kind: "paragraph", parts: [practiceStem, service || templates ? { value: service } : NOT_YET, "."] },
     { kind: "paragraph", parts: ["I will do it ", when || templates ? { value: when } : NOT_YET, "."] },
     { kind: "section", text: "Feedback from my trial run" },
   ];

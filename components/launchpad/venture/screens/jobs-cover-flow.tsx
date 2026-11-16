@@ -84,8 +84,9 @@ export function JobsCoverFlow({
   const [weekId, setWeekId] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [page, setPage] = useState<1 | 2>(1);
-  const narrating = page === 1 && Boolean(screen.audio?.src);
-  const beatKey = narrating ? screen.audio?.src ?? "" : "";
+  const clip = page === 1 ? screen.audio : screen.weekAudio;
+  const narrating = Boolean(clip?.src);
+  const beatKey = narrating ? clip?.src ?? "" : "";
   const [lockKey, setLockKey] = useState(beatKey);
   const [beatElapsedMs, setBeatElapsedMs] = useState(0);
   if (beatKey !== lockKey) {
@@ -137,7 +138,7 @@ export function JobsCoverFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
-      {page === 1 ? <MasterMuteButton /> : null}
+      {page === 1 || screen.weekAudio?.src ? <MasterMuteButton /> : null}
       <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} progress={{ index: page === 1 ? 1 : 2, total: 2 }} />
       {page === 1 ? (
         <div className={`relative mx-5 mt-5 ${SCROLL}`}>
@@ -259,9 +260,9 @@ export function JobsCoverFlow({
       </div>
       )}
       <div className="flex flex-none flex-col items-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
-        {narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
+        {narrating && clip ? <StoryAudioPlayer inline clip={clip} /> : null}
         <LessonContinue
-          disabled={(page === 1 && !introReady) || (page === 2 && !ready)}
+          disabled={!introReady || (page === 2 && !ready)}
           onClick={() => {
             if (page === 1) {
               if (!introReady) return;

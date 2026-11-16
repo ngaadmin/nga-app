@@ -352,14 +352,14 @@ function OrderTrackerLedger({ page, identity = true }: { page: WorkbookTemplateP
     </tr>
   );
   return (
-    <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} data-order-tracker="" aria-label={page.title}>
+    <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} data-order-tracker="" aria-label={page.title} className="min-w-0 max-w-full">
       {identity ? <MiniIdentity /> : null}
       <AccentLabel as="h2">{page.title}</AccentLabel>
       {page.intro ? <p className={TEMPLATE_HINT}>{page.intro}</p> : null}
       {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
       <p className={`mt-3 ${WORKBOOK_SUB}`} data-example-label="">{page.exampleLabel}</p>
-      <div className="mt-1 overflow-x-hidden">
-        <table className="w-full table-fixed border-collapse">
+      <div className="mt-1 max-w-full overflow-x-hidden">
+        <table className="w-full max-w-full table-fixed border-collapse">
           <thead>{head}</thead>
           <tbody>
             {(page.exampleRows ?? []).map((row, index) => (
@@ -375,8 +375,8 @@ function OrderTrackerLedger({ page, identity = true }: { page: WorkbookTemplateP
           </tbody>
         </table>
       </div>
-      <div className="mt-3 overflow-x-hidden" data-learner-rows="">
-        <table className="w-full table-fixed border-collapse">
+      <div className="mt-3 max-w-full overflow-x-hidden" data-learner-rows="">
+        <table className="w-full max-w-full table-fixed border-collapse">
           <thead>{head}</thead>
           <tbody>
             {rows.map((row, index) => (
@@ -701,7 +701,7 @@ function SalesWorkbookPage({ sheet }: { sheet: string }) {
   const ctx = useLaunchpadAnswers();
   const copy = useSurfaceCopy();
   const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || copy.workbook.fallbackName;
-  const page = salesWorkbookSheets(ctx?.answers, name).find((item) => item.id === sheet);
+  const page = salesWorkbookSheets(ctx?.answers, name, copy.sales).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
 
@@ -713,7 +713,7 @@ function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) 
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const picked = (practice?.services ?? []).map((id) => services.find((row) => row.id === id)?.label ?? id);
   const serviceLabel = joinPhrase(picked.map((label) => label.charAt(0).toLowerCase() + label.slice(1)), copy.list.comma, copy.list.and);
-  const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates).find((item) => item.id === sheet);
+  const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates, copy.workbook.practiceService).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
 

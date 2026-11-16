@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { selectionAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
@@ -145,12 +145,18 @@ describe("Research what competitors offer", () => {
       />,
     );
     expect(screen.getByLabelText("Walkers checked")).toBeTruthy();
-    fireEvent.change(screen.getByRole("combobox", { name: "My competitors all offer" }), { target: { value: "60-minute-walk" } });
+    const walks = screen.getByRole("combobox", { name: "My competitors all offer" });
+    expect(within(walks).getByRole("option", { name: "15-minute walk" })).toBeTruthy();
+    expect(within(walks).getByRole("option", { name: "30-minute walk" })).toBeTruthy();
+    expect(within(walks).getByRole("option", { name: "45-minute walk" })).toBeTruthy();
+    expect(within(walks).getByRole("option", { name: "60-minute walk" })).toBeTruthy();
+    fireEvent.change(walks, { target: { value: "60-minute-walk" } });
     expect(screen.queryByRole("textbox", { name: "Average price 60-minute walk" })).toBeNull();
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByLabelText("Walkers checked")).toBeNull();
     expect(screen.getByText("My competitors all offer")).toBeTruthy();
+    expect(within(screen.getByRole("combobox", { name: "My competitors all offer" })).getByRole("option", { name: "Nail trim" })).toBeTruthy();
     fireEvent.change(screen.getByRole("textbox", { name: "Average price Bath" }), { target: { value: "25" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByText("My competitors all offer")).toBeNull();

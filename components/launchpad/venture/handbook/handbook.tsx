@@ -3,7 +3,9 @@
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
-import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { identityAnswerOf, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
+import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import {
   handbookGhost,
   handbookOpenIndex,
@@ -116,6 +118,7 @@ export function Handbook({
   backLabel?: string;
 }) {
   const s = useSurfaceCopy();
+  const nameFont = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.font;
   const pages = scopeLevel != null
     ? handbookScopePages(progress, floors, scopeLevel)
     : initialLevel == null
@@ -230,7 +233,13 @@ export function Handbook({
           <h1 id="handbook-title" className="font-heading text-lg font-semibold leading-tight text-[#111827]">
             {s.workbook.title}
           </h1>
-          <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
+          <p
+            data-handbook-name=""
+            data-name-font={nameFont}
+            className={`truncate text-[13px] leading-4 ${nameFont ? NAME_FONT_CLASS[nameFont] : "text-[#6B7280]"}`}
+          >
+            {businessName}
+          </p>
         </div>
         {entry === "home" && (
           <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-[11px] font-medium text-[#374151]" data-read-only="">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseLevelUpAnswer } from "@/lib/launchpad/content/answers";
-import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, quarterlyReviewCheckIn, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, friendlyStoredDate, joinList, quarterlyReviewCheckIn, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 
@@ -13,6 +13,12 @@ function levelUpContent() {
 }
 
 describe("Level Up check-in date", () => {
+  it("shows a stored ISO day in friendly US style and leaves a written date alone", () => {
+    expect(friendlyStoredDate("2027-02-11")).toBe("Feb 11, 2027");
+    expect(friendlyStoredDate("February 11, 2027")).toBe("February 11, 2027");
+    expect(friendlyStoredDate("2027-02-31")).toBe("2027-02-31");
+  });
+
   it("uses the shortest Grow pick, and three months when nothing is picked", () => {
     const today = new Date(2026, 10, 11);
     const grow = levelUpContent().grow;

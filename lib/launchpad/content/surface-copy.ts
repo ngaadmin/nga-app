@@ -133,11 +133,11 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
     ],
     exampleRows: [
       {
-        values: { dateBooked: "12 Mar", customer: "Sam", service: "30-minute walk", dayTime: "Saturday morning", cadence: "One-off", price: "$15", notes: "Meet at the park" },
+        values: { dateBooked: "Mar 12", customer: "Sam", service: "30-minute walk", dayTime: "Saturday morning", cadence: "One-off", price: "$15", notes: "Meet at the park" },
         ticks: { reminder: "yes", done: "yes", paid: "no", asked: "no" },
       },
       {
-        values: { dateBooked: "14 Mar", customer: "Alex", service: "30-minute walk", dayTime: "Tuesday after school", cadence: "Regular", price: "$15", notes: "Front gate" },
+        values: { dateBooked: "Mar 14", customer: "Alex", service: "30-minute walk", dayTime: "Tuesday after school", cadence: "Regular", price: "$15", notes: "Front gate" },
         ticks: { reminder: "yes", done: "no", paid: "no", asked: "no" },
       },
     ],
@@ -177,6 +177,10 @@ export const LAUNCHPAD_SURFACE_COPY = {
     addThisGoal: "Add this goal",
     doorsNotOpen: "These doors aren't open yet.",
     congratulations: "Congratulations!",
+    done: "Done",
+    edit: "Edit",
+    exit: "✕ Exit",
+    totalPercent: "Total {n}%",
   },
   /** Comma and joining word for workbook lists. Typed extras use the same pair. */
   list: {
@@ -190,6 +194,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     introGuidance: "You can open your workbook as you go, and again once your business is up and running, to look back at your plan.",
     close: "Close workbook",
     title: "My workbook",
+    practiceService: "I will practice ",
     readOnly: "Read only",
     floors: "Workbook floors",
     previous: "Previous page",
@@ -389,6 +394,13 @@ export const LAUNCHPAD_SURFACE_COPY = {
     inPerson: "people in person.",
     sendMessage: "I will send the message to",
     sharePost: "I will share the post online ",
+    pieceHeadings: {
+      flyer: "What my flyer will say",
+      verbal: "What I will say in person",
+      message: "What I will send as a message",
+      online: "What my online post will say",
+      card: "What my business card will say",
+    },
     shareTimes: [
       { id: "today", label: "today" },
       { id: "tomorrow", label: "tomorrow" },

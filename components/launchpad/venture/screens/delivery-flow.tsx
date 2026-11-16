@@ -73,7 +73,7 @@ function InlinePick({
 
 function Replay({ before, value, after, tight = false }: { before: string; value: string; after: string; tight?: boolean }) {
   return (
-    <p className={`${tight ? "mb-2" : "mb-[18px]"} border-l-[3px] border-[#0CC1E0] pl-3 ${LESSON_BODY}`}>
+    <p className={`${tight ? "mb-1" : "mb-[18px]"} border-l-[3px] border-[#0CC1E0] pl-3 ${LESSON_BODY}`}>
       {before}
       {value ? <span className="font-semibold">{value}</span> : null}
       {after}
@@ -313,7 +313,7 @@ function RecordScreens({
   return (
     <Shell screen={screen} page={0} pages={1} doodle={screen.doodles[2]} ready={ready} onBack={back} onNext={finish}>
       <>
-          <BronzeFirstLead flush question={screen.question} context={screen.context} guidance={screen.guidance} />
+          <BronzeFirstLead flush tight question={screen.question} context={screen.context} guidance={screen.guidance} />
           {only ? (
             <Replay tight before={copy.serviceBefore} value={only.label} after={copy.serviceAfter} />
           ) : (
@@ -338,13 +338,11 @@ function RecordScreens({
           <Replay tight before={copy.costBefore} value={cost === null ? "" : moneyText(cost)} after={copy.costAfter} />
           <Replay tight before={copy.keptBefore} value={kept === null ? "" : moneyText(kept)} after={copy.keptAfter} />
           {kept !== null && kept <= 0 ? <p className={LESSON_HINT}>{copy.lowKeep}</p> : null}
-          <div data-record-gutter="" className="pr-[160px]">
-            <Replay tight before={copy.trackerLine} value="" after="" />
-            <button type="button" onClick={addJob} className="mb-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">
-              {copy.addJob}
-            </button>
-            <p className={LESSON_HINT}>{copy.note}</p>
-          </div>
+          <Replay tight before={copy.trackerLine} value="" after="" />
+          <button type="button" onClick={addJob} className="mb-1 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">
+            {copy.addJob}
+          </button>
+          <p data-record-note="" className={`${LESSON_HINT} pr-[120px]`}>{copy.note}</p>
       </>
     </Shell>
   );
@@ -371,7 +369,7 @@ function Shell({
 }) {
   const art = doodle ?? screen.doodles[page] ?? "";
   const record = screen.step === "record";
-  const size = record ? 136 : screen.step === "ready" && page === 1 ? 136 : screen.step === "ready" && page === 0 ? 80 : screen.step === "wrap" && page === 0 ? 80 : 56;
+  const size = record ? 84 : screen.step === "ready" && page === 1 ? 136 : screen.step === "ready" && page === 0 ? 80 : screen.step === "wrap" && page === 0 ? 80 : 56;
   return (
     <LessonSurface
       title={screen.title}
@@ -379,7 +377,7 @@ function Shell({
       progress={pages > 1 ? { index: page + 1, total: pages } : undefined}
       air={record ? "plain" : screen.step === "ready" && page === 1 ? "roomy" : "standard"}
       footer={<LessonContinue disabled={!ready} onClick={onNext} />}
-      decoration={<Doodle name={art} size={size} bottom={record ? 72 : 100} />}
+      decoration={<Doodle name={art} size={size} bottom={record ? 78 : 100} />}
     >
       <div data-task-screen="delivery" data-delivery-step={screen.step} data-order-page={page + 1}>
         {children}

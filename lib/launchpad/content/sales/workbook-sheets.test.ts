@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 
 const answers: LaunchpadAnswers = {
   sales_channels: {
@@ -66,5 +67,20 @@ describe("Level 4 workbook playback", () => {
     const tell = sheets.find((sheet) => sheet.id === "sales-tell");
     expect(JSON.stringify(tell)).toContain("20");
     expect(tell?.blocks.some((block) => block.kind === "sub" && block.underline)).toBeFalsy();
+    expect(JSON.stringify(tell)).toContain("I will share the post online ");
+  });
+
+  it("reads the channel headings and the share line from the payload", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY.sales,
+      pieceHeadings: { ...LAUNCHPAD_SURFACE_COPY.sales.pieceHeadings, flyer: "A payload flyer heading" },
+      sharePost: "A payload share line ",
+    };
+    const sheets = salesWorkbookSheets(answers, "Happy Paws", copy as typeof LAUNCHPAD_SURFACE_COPY.sales);
+    const text = JSON.stringify(sheets);
+    expect(text).toContain("A payload flyer heading");
+    expect(text).not.toContain("What my flyer will say");
+    expect(text).toContain("A payload share line ");
+    expect(text).not.toContain("I will share the post online ");
   });
 });

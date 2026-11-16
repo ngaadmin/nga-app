@@ -286,7 +286,7 @@ function MaterialsStep({
           </>
         ) : (
           <>
-            {step.piece ? <ScreenPrompt tone="question" flush>{marketingPieceHeading(step.piece.id)}</ScreenPrompt> : null}
+            {step.piece ? <ScreenPrompt tone="question" flush>{marketingPieceHeading(step.piece.id, s.sales.pieceHeadings)}</ScreenPrompt> : null}
             {preview.map((line, index) => (
               <p key={`${index}-${line}`} className={`mt-3 ${LESSON_BODY}`}>{line}</p>
             ))}

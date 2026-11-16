@@ -5,6 +5,7 @@ import { IDENTITY_ANSWER_KEY, launchpadTestVentureSeed } from "@/lib/launchpad/c
 import { fieldsAnswer, rankingAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { handbookPages } from "@/lib/launchpad/venture-test/handbook";
 import { applyVentureTestShortcut, EMPTY_VENTURE_TEST_PROGRESS } from "@/lib/launchpad/venture-test/venture-test-progress";
+import { Handbook } from "@/components/launchpad/venture/handbook/handbook";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
@@ -140,6 +141,29 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-what-we-sell]")).toBeNull();
     expect(s.className).toContain("text-[#19347D]");
     expect(s.className).not.toMatch(/truncate|line-clamp/);
+  });
+
+  it("uses the chosen logo font for the name under My workbook", () => {
+    window.localStorage.setItem("lp-venture-test:workbook-intro-seen", "1");
+    const answers: LaunchpadAnswers = {
+      ...L1,
+      [IDENTITY_ANSWER_KEY]: { ...ID, font: "pacifico", name: "Script Paws" } as LaunchpadAnswers[string],
+    };
+    render(
+      <Handbook
+        entry="building"
+        businessName="Script Paws"
+        floors={FLOORS}
+        progress={{ ...progress, answers }}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const bar = document.querySelector("[data-handbook-name]") as HTMLElement;
+    expect(bar.textContent).toBe("Script Paws");
+    expect(bar.getAttribute("data-name-font")).toBe("pacifico");
+    expect(bar.className).toContain(NAME_FONT_CLASS.pacifico);
   });
 
   it("cause skipped: the cause clause drops out", () => {

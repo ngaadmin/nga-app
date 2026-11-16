@@ -6,7 +6,6 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { CostLine, CostsAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadKnowYourCostScreen } from "@/lib/launchpad/content/types";
 import {
-  costsReady,
   formatOngoingMoney,
   formatStartupMoney,
   ongoingInputText,
@@ -15,7 +14,6 @@ import {
   savedCosts,
   serviceTotal,
   startupTotal,
-  stepAfterHub,
   type CostEditorStep,
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
@@ -25,15 +23,12 @@ import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-wo
 import { BinderCard } from "@/components/launchpad/venture/handbook/paper-art";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { BTN_CYAN_COMPACT, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 
 const CONTINUE_ON =
   "mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[16px] font-semibold leading-none text-white";
-const CONTINUE_OFF = `${CONTINUE_ON} pointer-events-none opacity-[0.35]`;
-const ADD =
-  "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-[#0CC1E0] px-3.5 font-heading text-[18px] font-bold text-white";
 const GHOST =
   "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-white px-3 font-heading text-[18px] font-bold text-[#0CC1E0] shadow-[inset_0_0_0_1.5px_#0CC1E0]";
 
@@ -217,7 +212,6 @@ export function KnowYourCostFlow({
     });
   };
 
-  const ready = costsReady(ref.current);
   const floorName = levelName ?? "Planning";
   const plaque = silverTitle ?? "Pricing";
   const identity = identityAnswerOf(answers, IDENTITY_ANSWER_KEY);
@@ -263,7 +257,7 @@ export function KnowYourCostFlow({
     const dropBlank = (lines: readonly CostLine[]) => lines.filter((line) => line.label.trim() || !line.custom);
     body = (
       <>
-        <BackTitle title={s.costs.startupTitle} onBack={() => setStep({ name: "hub" })} />
+        <BackTitle title={s.costs.startupTitle} onBack={() => onExit(ref.current)} />
         <div className={`mx-5 mt-5 ${SCROLL} pb-2`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
@@ -317,11 +311,10 @@ export function KnowYourCostFlow({
                   done: true,
                 },
               });
-              const first = ref.current.ongoing[0];
-              setStep(first ? { name: "service", serviceId: first.serviceId } : screen.showTotals ? { name: "totals" } : { name: "workbook" });
+              setStep({ name: "ongoing" });
             }}
           >
-            Done
+            {s.chrome.done}
           </button>
         </Footer>
       </>
@@ -342,7 +335,7 @@ export function KnowYourCostFlow({
             const list = ref.current.ongoing;
             const at = list.findIndex((row) => row.serviceId === service.serviceId);
             const prev = at > 0 ? list[at - 1] : undefined;
-            setStep(prev ? { name: "service", serviceId: prev.serviceId } : { name: "startup" });
+            setStep(prev ? { name: "service", serviceId: prev.serviceId } : { name: "ongoing" });
           }} />
           <div className={`mx-5 mt-5 ${SCROLL} pb-2`}>
             <p className="text-[16px] leading-snug text-[#6B7280]">{intro}</p>
@@ -401,7 +394,7 @@ export function KnowYourCostFlow({
                 setStep(next ? { name: "service", serviceId: next.serviceId } : screen.showTotals ? { name: "totals" } : { name: "workbook" });
               }}
             >
-              Done
+              {s.chrome.done}
             </button>
           </Footer>
         </>
@@ -409,11 +402,10 @@ export function KnowYourCostFlow({
     }
   } else if (step.name === "ongoing") {
     const services = ref.current.ongoing;
-    const allDone = services.length === 0 || services.every((row) => row.done);
     body = (
       <>
-        <BackTitle title={s.costs.ongoingTitle} onBack={() => setStep({ name: "hub" })} />
-        <div className={`mx-5 mt-10 ${SCROLL}`}>
+        <BackTitle title={s.costs.ongoingTitle} onBack={() => setStep({ name: "startup" })} />
+        <div className={`mx-5 mt-5 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
           <div className="mt-4 flex flex-col gap-2">
@@ -421,52 +413,25 @@ export function KnowYourCostFlow({
             {services.map((service) => (
               <article
                 key={service.serviceId}
-                className={`flex flex-col gap-1 rounded-[14px] px-3 py-2.5 ${service.done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
+                className="flex flex-col gap-1 rounded-[14px] bg-white px-3 py-2.5 shadow-[inset_0_0_0_1.5px_#E5E7EB]"
                 data-service-card={service.serviceId}
                 data-service-tile-layout="wrap"
               >
-                <div className="flex min-w-0 items-start justify-between gap-2">
-                  <h2 className="min-w-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
-                  <p className="shrink-0 text-right font-sans text-[18px] leading-[26px] text-[#4A5568]">
-                    {service.done ? (
-                      <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
-                    ) : (
-                      s.costs.notCalculated
-                    )}
-                  </p>
-                </div>
-                <div className="flex items-center justify-end gap-2">
-                {service.done ? (
-                  <button type="button" className="shrink-0 font-semibold text-[#0CC1E0]" onClick={() => setStep({ name: "service", serviceId: service.serviceId })}>
-                    Edit
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="inline-flex h-8 shrink-0 items-center rounded-[10px] bg-[#0CC1E0] px-2.5 font-heading text-[18px] font-bold text-white"
-                    onClick={() => setStep({ name: "service", serviceId: service.serviceId })}
-                  >
-                    {s.costs.calculate}
-                  </button>
-                )}
-                {service.done && <TickBadge size={22} />}
-                </div>
+                <h2 className="min-w-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
               </article>
             ))}
           </div>
-          {!allDone && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">{s.costs.doneStaysOff}</p>}
         </div>
         <Footer>
           <button
             type="button"
-            disabled={!allDone}
-            className={allDone ? BTN_CYAN_COMPACT : CONTINUE_OFF}
+            className={BTN_CYAN_COMPACT}
             onClick={() => {
-              if (services.length === 0) update({ ...ref.current, ongoingAcknowledged: true });
-              setStep({ name: "hub" });
+              const first = services[0];
+              setStep(first ? { name: "service", serviceId: first.serviceId } : screen.showTotals ? { name: "totals" } : { name: "workbook" });
             }}
           >
-            Done
+            Continue
           </button>
         </Footer>
       </>
@@ -560,58 +525,31 @@ export function KnowYourCostFlow({
       </>
     );
   } else {
-    const startupDone = ref.current.startup.done;
-    const ongoingDone = ref.current.ongoing.length === 0 ? ref.current.ongoingAcknowledged === true : ref.current.ongoing.every((row) => row.done);
-    const doneCount = ref.current.ongoing.filter((row) => row.done).length;
     body = (
       <>
         {crumb}
         <div className="mx-5 mt-1 flex justify-end">
           <button type="button" onClick={() => onExit(ref.current)} className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">
-            ✕ Exit
+            {s.chrome.exit}
           </button>
         </div>
-        <div className={`mx-5 mt-5 ${SCROLL}`}>
+        <div className={`mx-5 mt-5 ${SCROLL}`} data-cost-intro="">
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.costs.knowYourCost}</h1>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
           <div className="mt-4 flex flex-col gap-3.5">
-            <HubCard
-              title={s.costs.startupTitle}
-              body={screen.copy.startupCard}
-              done={startupDone}
-              meta={startupDone ? `${formatStartupMoney(startupTotal(ref.current), currency)} total` : s.costs.notStarted}
-              action={startupDone ? "Edit" : s.costs.addCosts}
-              onOpen={() => setStep({ name: "startup" })}
-            />
-            <HubCard
-              title={s.costs.ongoingTitle}
-              body={screen.copy.ongoingCard}
-              done={ongoingDone}
-              meta={
-                ongoingDone
-                  ? s.costs.everyCalculated
-                  : doneCount > 0
-                    ? `${doneCount} of ${ref.current.ongoing.length} services`
-                    : s.costs.notStarted
-              }
-              action={startupDone && doneCount > 0 ? "Edit" : ongoingDone ? "Edit" : s.costs.addCosts}
-              onOpen={() => setStep({ name: "ongoing" })}
-            />
+            <article>
+              <h2 className="font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{s.costs.startupTitle}</h2>
+              <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.startupCard}</p>
+            </article>
+            <article>
+              <h2 className="font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{s.costs.ongoingTitle}</h2>
+              <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.ongoingCard}</p>
+            </article>
           </div>
-          {!ready && <p className="mt-4 text-[16px] leading-snug text-[#9AA3B5]">{screen.copy.hubWait}</p>}
         </div>
         <Footer>
-          <button
-            type="button"
-            disabled={!ready}
-            className={ready ? CONTINUE_ON : CONTINUE_OFF}
-            onClick={() => {
-              if (!costsReady(ref.current)) return;
-              const next = stepAfterHub(screen.showTotals);
-              setStep(next === "totals" ? { name: "totals" } : { name: "workbook" });
-            }}
-          >
+          <button type="button" className={CONTINUE_ON} onClick={() => setStep({ name: "startup" })}>
             Continue
           </button>
         </Footer>
@@ -624,50 +562,5 @@ export function KnowYourCostFlow({
       {step.name === "ongoing" ? <AnchorDoodle name="coins" size={136} /> : null}
       {body}
     </section>
-  );
-}
-
-function HubCard({
-  title,
-  body,
-  done,
-  meta,
-  action,
-  onOpen,
-}: {
-  title: string;
-  body: string;
-  done: boolean;
-  meta: string;
-  action: string;
-  onOpen: () => void;
-}) {
-  const rich = meta.includes(" total");
-  return (
-    <article className={`flex flex-col gap-2.5 rounded-2xl p-4 ${done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`} data-cost-card={title}>
-      <div className="flex items-center gap-2">
-        <h2 className="flex-1 font-heading text-[17px] font-bold text-[#19347D]">{title}</h2>
-        {done && <TickBadge size={26} />}
-      </div>
-      <p className="text-[16px] leading-snug text-[#6B7280]">{body}</p>
-      <p className="text-[16px] font-medium text-[#6B7280]">
-        {rich ? (
-          <>
-            <b className="font-bold text-[#19347D]">{meta.replace(" total", "")}</b> total
-          </>
-        ) : (
-          meta
-        )}
-      </p>
-      {action === "Edit" ? (
-        <button type="button" onClick={onOpen} className="self-start font-semibold text-[#0CC1E0]">
-          Edit
-        </button>
-      ) : (
-        <button type="button" onClick={onOpen} className={`${ADD} self-start`}>
-          {action}
-        </button>
-      )}
-    </article>
   );
 }

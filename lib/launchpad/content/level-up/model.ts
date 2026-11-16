@@ -255,6 +255,20 @@ export function formatCheckInDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+
+/** ISO day from storage, shown as "Feb 11, 2027". Any other saved wording stays as written. */
+export function friendlyStoredDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return value;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (month < 1 || month > 12 || date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return value;
+  return `${SHORT_MONTHS[month - 1]} ${day}, ${year}`;
+}
+
 /** The calendar note, then the calculated check-in line. The app sets no reminder. */
 export function checkInClipboard(note: string, checkInLine: string): string {
   return `${note}\n${checkInLine}`;

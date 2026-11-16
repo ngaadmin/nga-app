@@ -189,8 +189,12 @@ describe("Level 5 Delivery", () => {
     expect(screen.getByText("What did this job leave you?")).toBeTruthy();
     expect(screen.queryByText(spec.question)).toBeNull();
     expect(screen.getByText("Dog walking").className).toContain("font-semibold");
-    expect((document.querySelector("[data-scribble-large='growth']") as HTMLElement).style.width).toBe("136px");
-    expect(document.querySelector("[data-record-gutter]")?.className).toContain("pr-[160px]");
+    expect((document.querySelector("[data-scribble-large='growth']") as HTMLElement).style.width).toBe("84px");
+    expect((document.querySelector("[data-scribble-large='growth']") as HTMLElement).style.bottom).toBe("78px");
+    const note = document.querySelector("[data-record-note]");
+    expect(note?.className).toContain("pr-[120px]");
+    expect(note?.textContent).toContain("No real money");
+    expect(screen.getByText(/in my workbook/).closest("[data-record-note]")).toBeNull();
     expect(screen.getByText("$15").className).toContain("font-semibold");
     expect(screen.getByText("A$")).toBeTruthy();
     expect(screen.queryByText(spec.record!.paidPrefix)).toBeNull();

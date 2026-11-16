@@ -101,8 +101,8 @@ export function ScreenPrompt({
 }
 
 /** How-to line under the prompt. 12px under the line above it. */
-export function ScreenGuidance({ children, flush = false, className = "" }: { children: ReactNode; flush?: boolean; className?: string }) {
-  return <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_HINT} ${className}`}>{children}</p>;
+export function ScreenGuidance({ children, flush = false, className = "", tight = false }: { children: ReactNode; flush?: boolean; className?: string; tight?: boolean }) {
+  return <p className={`${flush ? "" : "mx-5"} ${tight ? "mt-1" : "mt-3"} ${LESSON_HINT} ${className}`}>{children}</p>;
 }
 
 /** Corner illustration. Bottom 100px, right 28px, clear of the Continue pill. */
@@ -138,6 +138,7 @@ export function BronzeFirstLead({
   flush = false,
   questionClassName = "",
   order = "question-first",
+  tight = false,
 }: {
   question?: string;
   context?: string;
@@ -146,14 +147,16 @@ export function BronzeFirstLead({
   flush?: boolean;
   questionClassName?: string;
   order?: "question-first" | "context-first";
+  /** Shorter gaps so a full screen still fits above the fold. */
+  tight?: boolean;
 }) {
   const questionNode = question ? (
     <ScreenPrompt id={questionId} tone="question" flush={flush} className={`${order === "context-first" ? "mb-5" : ""} ${questionClassName}`.trim()}>
       {question}
     </ScreenPrompt>
   ) : null;
-  const contextNode = context ? <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_BODY}`}>{context}</p> : null;
-  const guidanceNode = guidance ? <ScreenGuidance flush={flush} className={order === "question-first" ? "mb-5" : ""}>{guidance}</ScreenGuidance> : null;
+  const contextNode = context ? <p className={`${flush ? "" : "mx-5"} ${tight ? "mt-2" : "mt-3"} ${LESSON_BODY}`}>{context}</p> : null;
+  const guidanceNode = guidance ? <ScreenGuidance flush={flush} tight={tight} className={order === "question-first" ? (tight ? "mb-2" : "mb-5") : ""}>{guidance}</ScreenGuidance> : null;
   if (order === "context-first") {
     return (
       <>

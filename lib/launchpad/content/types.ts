@@ -386,6 +386,8 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
   };
   /** Narration for the opening text step only. */
   audio?: { src: string; durationMs: number };
+  /** Narration for the week-picker intro. Left unset until that clip is added. */
+  weekAudio?: { src: string; durationMs: number };
 };
 
 export type LaunchpadChip = { id: string; label: string };

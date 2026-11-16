@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CostsAnswer, FundingAnswer } from "@/lib/launchpad/content/answers";
 import { fundingScreen } from "@/lib/launchpad/content/planning/funding";
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
@@ -17,13 +17,27 @@ const costs: CostsAnswer = {
 
 afterEach(cleanup);
 
+function releaseNarration() {
+  act(() => {
+    vi.advanceTimersByTime(2000);
+  });
+}
+
 describe("Funding bronze", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("confirms own cash and plans a borrow payback without a lender", () => {
     const finished = { current: "" };
     const { unmount } = render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} onFinish={(answer) => (finished.current = JSON.stringify(answer))} />);
     expect(screen.getByText("Your start-up cost is $80")).toBeTruthy();
     expect(screen.getByText(/Before you buy the gear/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Fully pay from my own cash or savings" })).toBeNull();
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByText("How will you cover it?")).toBeNull();
     expect(screen.queryByText("From Know your cost")).toBeNull();
@@ -38,6 +52,7 @@ describe("Funding bronze", () => {
     unmount();
 
     render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} />);
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: /Borrow all the start-up money/ }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -58,6 +73,7 @@ describe("Funding bronze", () => {
     const spec = fundingScreen();
     const finished = { current: null as FundingAnswer | null };
     const { unmount } = render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} onFinish={(answer) => (finished.current = answer)} />);
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: spec.copy.combination }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -79,6 +95,7 @@ describe("Funding bronze", () => {
     const edited = fundingScreen();
     edited.copy.overWarning = "A payload warning line.";
     const editedView = render(<FundingFlow screen={edited} answers={{ "l2-costs": costs }} />);
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: edited.copy.combination }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

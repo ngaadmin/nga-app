@@ -57,6 +57,7 @@ export function fundingScreen(): LaunchpadFundingScreen {
       missing: "Finish Know your cost first so we can show your start-up total.",
       missingAction: "Go to Know your cost",
     },
+    audio: { src: "/launchpad/planning/l2-funding-vo.mp3", durationMs: 30119 },
   };
 }
 

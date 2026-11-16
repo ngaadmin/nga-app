@@ -1,7 +1,7 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ComparedToOthers, LaunchpadAnswers, PriceAnswer, ServicePrice } from "@/lib/launchpad/content/answers";
 import { competitorOf, priceOf } from "@/lib/launchpad/content/answers";
 import { packageServiceId } from "@/lib/launchpad/content/planning/catalog";
@@ -12,6 +12,8 @@ import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { currencySymbol } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { STORY_BEAT_NEXT_LOCK_MS, stopStoryAudio, storyBeatNextEnabled } from "@/lib/academy/lessons/story-audio/playback";
 import { SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonCredit, LessonSurface, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
@@ -57,6 +59,23 @@ export function SetPriceFlow({
     return init;
   });
   const [intro, setIntro] = useState(true);
+  const narrating = intro && Boolean(screen.audio?.src);
+  const beatKey = narrating ? screen.audio?.src ?? "" : "";
+  const [lockKey, setLockKey] = useState(beatKey);
+  const [beatElapsedMs, setBeatElapsedMs] = useState(0);
+  if (beatKey !== lockKey) {
+    setLockKey(beatKey);
+    setBeatElapsedMs(0);
+  }
+  useEffect(() => {
+    if (!narrating) return;
+    const timer = window.setTimeout(() => setBeatElapsedMs(STORY_BEAT_NEXT_LOCK_MS), STORY_BEAT_NEXT_LOCK_MS);
+    return () => {
+      window.clearTimeout(timer);
+      stopStoryAudio();
+    };
+  }, [narrating]);
+  const introReady = storyBeatNextEnabled({ isStoryBeat: narrating, screenReady: true, elapsedMs: beatElapsedMs });
   const [compared, setCompared] = useState<Record<string, ComparedToOthers | "">>(() => {
     const init: Record<string, ComparedToOthers | ""> = {};
     for (const row of saved?.prices ?? []) if (row.comparedToOthers) init[row.serviceId] = row.comparedToOthers;
@@ -98,9 +117,10 @@ export function SetPriceFlow({
         title={s.price.title}
         onBack={() => onExit(answer)}
         progress={{ index: 1, total: 2 }}
-        showMute
+        showMute={narrating}
         creditSlot
-        footer={<LessonContinue onClick={() => setIntro(false)} />}
+        aboveFooter={narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
+        footer={<LessonContinue disabled={!introReady} onClick={() => { stopStoryAudio(); setIntro(false); }} />}
       >
         <div data-task-screen="set-price" data-price-page="intro">
           <img src={SCRIBBLE_SRC.wallet} alt="" data-price-art="wallet" className="mx-auto block h-20 w-auto" />

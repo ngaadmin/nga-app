@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CostsAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadChoiceCaptureScreen, LaunchpadFundingScreen, LaunchpadGettingReadyScreen, LaunchpadLevelUpScreen, LaunchpadRankOrderScreen, LaunchpadSalesScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
@@ -98,6 +98,7 @@ describe("bronze first screens: question, then context, then guidance", () => {
 
   it("Get the money you need to start", () => {
     const spec = firstScreen("Get the money you need to start") as LaunchpadFundingScreen;
+    vi.useFakeTimers();
     render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} />);
     expect(screen.getByRole("heading", { name: spec.copy.header })).toBeTruthy();
     expect(screen.getByText(spec.copy.context)).toBeTruthy();
@@ -105,6 +106,10 @@ describe("bronze first screens: question, then context, then guidance", () => {
     expect(screen.queryByText("From Know your cost")).toBeNull();
     expect(screen.getByText(`Your start-up cost is $80`)).toBeTruthy();
     expect(screen.queryByRole("button", { name: spec.copy.combination })).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    vi.useRealTimers();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("button", { name: spec.copy.combination })).toBeTruthy();
   });

@@ -657,12 +657,20 @@ function checkKnowYourCost(screen: Obj, where: string, answers: Answers): void {
 const SET_PRICE_COPY = ["context", "guidance", "othersMissing", "keepLabel", "costLabel", "lowKeep", "emptyServices"] as const;
 const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "startupLabel", "weeksLabel"] as const;
 
+function checkClip(audio: unknown, where: string): void {
+  if (audio === undefined) return;
+  if (!isObj(audio)) fail(`${where} audio is malformed.`);
+  text(audio.src, `${where} audio src`);
+  if (typeof audio.durationMs !== "number" || audio.durationMs <= 0) fail(`${where} audio duration is missing.`);
+}
+
 function checkSetPrice(screen: Obj, where: string, answers: Answers): void {
   saves(answers, screen, "price", where);
   reads(answers, screen.costsFrom, ["costs"], `${where} costsFrom`);
   reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
   for (const field of SET_PRICE_COPY) text(screen.copy[field], `${where} ${field}`);
+  checkClip(screen.audio, where);
 }
 
 function checkJobsCover(screen: Obj, where: string, answers: Answers): void {
@@ -671,6 +679,7 @@ function checkJobsCover(screen: Obj, where: string, answers: Answers): void {
   reads(answers, screen.priceFrom, ["price"], `${where} priceFrom`);
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
   for (const field of JOBS_COPY) text(screen.copy[field], `${where} ${field}`);
+  checkClip(screen.audio, where);
   const seen = new Set<string>();
   list(screen.weekOptions, `${where} weekOptions`, 7, 7).forEach((raw, i) => {
     const ow = `${where} week option ${i + 1}`;
@@ -992,6 +1001,7 @@ function checkFunding(screen: Obj, where: string, answers: Answers): void {
   ] as const) {
     text(screen.copy[field], `${where} ${field}`);
   }
+  checkClip(screen.audio, where);
 }
 
 function checkCaptureBase(screen: Obj, where: string, promptOptional = false): void {

@@ -345,6 +345,8 @@ export type LaunchpadSetPriceScreen = TaskScreenBase & {
     lowKeep: string;
     emptyServices: string;
   };
+  /** Narration for the intro step only. */
+  audio?: { src: string; durationMs: number };
 };
 
 /** One jobs-per-week choice on the single-service path (1 through 7). */
@@ -380,6 +382,8 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
     startupLabel: string;
     weeksLabel: string;
   };
+  /** Narration for the opening text step only. */
+  audio?: { src: string; durationMs: number };
 };
 
 export type LaunchpadChip = { id: string; label: string };
@@ -761,6 +765,8 @@ export type LaunchpadFundingScreen = TaskScreenBase & {
     missing: string;
     missingAction: string;
   };
+  /** Narration for the intro step only. */
+  audio?: { src: string; durationMs: number };
 };
 
 export type LaunchpadTaskScreen =

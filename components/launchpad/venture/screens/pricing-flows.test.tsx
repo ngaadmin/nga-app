@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { selectionAnswer, type CostsAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { NO_CHARITY_SAMPLE } from "@/lib/launchpad/content/pricing/calc";
@@ -24,7 +24,20 @@ const costs: CostsAnswer = {
 
 afterEach(cleanup);
 
+function releaseNarration() {
+  act(() => {
+    vi.advanceTimersByTime(2000);
+  });
+}
+
 describe("Set the price", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("shows keep as price minus cost, with no charity line, on one row", () => {
     render(
       <SetPriceFlow
@@ -37,6 +50,7 @@ describe("Set the price", () => {
     expect(screen.getByText("Voice created with Grok")).toBeTruthy();
     expect(screen.getByText(/Later on, the tool will also help you calculate/)).toBeTruthy();
     expect(screen.queryByRole("textbox", { name: "Price for Dog walking" })).toBeNull();
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Pricing")).toBeTruthy();
     expect(screen.getByText(/a 30-minute walk at \$15/)).toBeTruthy();
@@ -57,6 +71,13 @@ describe("Set the price", () => {
 });
 
 describe("Jobs to cover costs", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("turns 3 walks and 1 training into $68.25 a week and about 2 weeks", () => {
     const price: PriceAnswer = {
       kind: "price",
@@ -74,6 +95,7 @@ describe("Jobs to cover costs", () => {
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
     expect(screen.getByText(/Your start-up gear has to be paid for/)).toBeTruthy();
     expect(screen.getByText(/As we've just seen, each job costs a little/)).toBeTruthy();
+    releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("week");
     const walking = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;

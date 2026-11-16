@@ -46,6 +46,7 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
       lowKeep: "Your price doesn't cover your costs yet. Try a higher price.",
       emptyServices: "You have not chosen a service yet. You can still continue.",
     },
+    audio: { src: "/launchpad/pricing/l2-s2-vo.mp3", durationMs: 30119 },
   };
 }
 
@@ -72,6 +73,7 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
       startupLabel: "Start-up total",
       weeksLabel: "About",
     },
+    audio: { src: "/launchpad/pricing/l2-jobs-vo.mp3", durationMs: 25626 },
   };
 }
 

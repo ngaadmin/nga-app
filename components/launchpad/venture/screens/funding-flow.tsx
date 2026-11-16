@@ -1,7 +1,7 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FundingAnswer, FundingRepayUnit, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { costsOf, fundingOf } from "@/lib/launchpad/content/answers";
 import { formatStartupMoney, startupTotal } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -12,6 +12,8 @@ import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
+import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { STORY_BEAT_NEXT_LOCK_MS, stopStoryAudio, storyBeatNextEnabled } from "@/lib/academy/lessons/story-audio/playback";
 import { LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
 import { TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
@@ -76,6 +78,23 @@ export function FundingFlow({
   const [step, setStep] = useState<"intro" | "choose" | "confirm" | "payback" | "split">(
     saved?.fundingSource === "own_cash" ? "confirm" : saved?.fundingSource === "borrow" ? "payback" : saved?.fundingSource ? "choose" : "intro",
   );
+  const narrating = step === "intro" && Boolean(screen.audio?.src);
+  const beatKey = narrating ? screen.audio?.src ?? "" : "";
+  const [lockKey, setLockKey] = useState(beatKey);
+  const [beatElapsedMs, setBeatElapsedMs] = useState(0);
+  if (beatKey !== lockKey) {
+    setLockKey(beatKey);
+    setBeatElapsedMs(0);
+  }
+  useEffect(() => {
+    if (!narrating) return;
+    const timer = window.setTimeout(() => setBeatElapsedMs(STORY_BEAT_NEXT_LOCK_MS), STORY_BEAT_NEXT_LOCK_MS);
+    return () => {
+      window.clearTimeout(timer);
+      stopStoryAudio();
+    };
+  }, [narrating]);
+  const introReady = storyBeatNextEnabled({ isStoryBeat: narrating, screenReady: true, elapsedMs: beatElapsedMs });
   const [ownText, setOwnText] = useState(saved?.ownAmount !== undefined ? String(saved.ownAmount) : "0");
   const [borrowedText, setBorrowedText] = useState(saved?.borrowedAmount !== undefined ? String(saved.borrowedAmount) : "0");
   const ownAmount = dollarText(ownText);
@@ -315,7 +334,10 @@ export function FundingFlow({
       </div>
       <div className="px-5 pb-[18px]">
         {step === "intro" ? (
-          <LessonContinue onClick={() => setStep("choose")} />
+          <>
+            {narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
+            <LessonContinue disabled={!introReady} onClick={() => { stopStoryAudio(); setStep("choose"); }} />
+          </>
         ) : step === "choose" ? (
           <LessonContinue
             disabled={!known || !source}

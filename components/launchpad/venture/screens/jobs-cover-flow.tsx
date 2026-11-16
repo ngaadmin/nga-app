@@ -1,7 +1,7 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { JobsAnswer, LaunchpadAnswers, TypicalWeekRow } from "@/lib/launchpad/content/answers";
 import { costsOf, priceOf } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadJobsCoverScreen } from "@/lib/launchpad/content/types";
@@ -11,6 +11,8 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
+import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { STORY_BEAT_NEXT_LOCK_MS, stopStoryAudio, storyBeatNextEnabled } from "@/lib/academy/lessons/story-audio/playback";
 import { SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
@@ -82,6 +84,23 @@ export function JobsCoverFlow({
   const [weekId, setWeekId] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [page, setPage] = useState<1 | 2>(1);
+  const narrating = page === 1 && Boolean(screen.audio?.src);
+  const beatKey = narrating ? screen.audio?.src ?? "" : "";
+  const [lockKey, setLockKey] = useState(beatKey);
+  const [beatElapsedMs, setBeatElapsedMs] = useState(0);
+  if (beatKey !== lockKey) {
+    setLockKey(beatKey);
+    setBeatElapsedMs(0);
+  }
+  useEffect(() => {
+    if (!narrating) return;
+    const timer = window.setTimeout(() => setBeatElapsedMs(STORY_BEAT_NEXT_LOCK_MS), STORY_BEAT_NEXT_LOCK_MS);
+    return () => {
+      window.clearTimeout(timer);
+      stopStoryAudio();
+    };
+  }, [narrating]);
+  const introReady = storyBeatNextEnabled({ isStoryBeat: narrating, screenReady: true, elapsedMs: beatElapsedMs });
 
   const single = priced[0];
   const needed = single ? jobsNeeded(startup, single.keptPerJob) : null;
@@ -239,11 +258,14 @@ export function JobsCoverFlow({
         )}
       </div>
       )}
-      <div className="flex flex-none justify-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
+      <div className="flex flex-none flex-col items-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
+        {narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
         <LessonContinue
-          disabled={page === 2 && !ready}
+          disabled={(page === 1 && !introReady) || (page === 2 && !ready)}
           onClick={() => {
             if (page === 1) {
+              if (!introReady) return;
+              stopStoryAudio();
               setPage(2);
               return;
             }

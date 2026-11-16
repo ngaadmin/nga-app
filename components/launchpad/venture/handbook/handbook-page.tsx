@@ -423,9 +423,9 @@ function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
 
 /** One paperclip page. Strings, fields, and ticks come from the payload. */
 export function WorkbookTemplatePage({ page }: { page: WorkbookTemplatePage }) {
-  if (page.ledger) return <OrderTrackerLedger page={page} />;
   const templates = useSurfaceCopy().templates;
   const ctx = useLaunchpadAnswers();
+  if (page.ledger) return <OrderTrackerLedger page={page} />;
   const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
   const text = (id: string) => {
     const value = saved[id];

@@ -93,13 +93,15 @@ export function JobsCoverFlow({
     setLockKey(beatKey);
     setBeatElapsedMs(0);
   }
+  // Re-arm the short lock for each clip, so page 2 unlocks after its own clip starts.
   useEffect(() => {
     if (!narrating) return;
     const timer = window.setTimeout(() => setBeatElapsedMs(STORY_BEAT_NEXT_LOCK_MS), STORY_BEAT_NEXT_LOCK_MS);
-    return () => {
-      window.clearTimeout(timer);
-      stopStoryAudio();
-    };
+    return () => window.clearTimeout(timer);
+  }, [narrating, beatKey]);
+  useEffect(() => {
+    if (!narrating) return;
+    return () => stopStoryAudio();
   }, [narrating]);
   const introReady = storyBeatNextEnabled({ isStoryBeat: narrating, screenReady: true, elapsedMs: beatElapsedMs });
 
@@ -137,7 +139,7 @@ export function JobsCoverFlow({
   const save = (next: JobsAnswer) => persist(screen.answerKey, next);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
       {page === 1 || screen.weekAudio?.src ? <MasterMuteButton /> : null}
       <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} progress={{ index: page === 1 ? 1 : 2, total: 2 }} />
       {page === 1 ? (

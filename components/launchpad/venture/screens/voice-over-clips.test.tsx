@@ -72,6 +72,9 @@ describe("intro narration clips", () => {
     expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
     expect(screen.getByText(spec.copy.weekIntro!)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    releaseNarration();
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("plays the funding intro from the payload and adds no credit", () => {

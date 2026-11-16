@@ -150,18 +150,18 @@ export function JobsCoverFlow({
           <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.guidance}</p>
         </div>
       ) : (
-      <div className={`mx-5 mt-5 ${SCROLL}`}>
-        {screen.copy.weekIntro ? <p className={`mb-3 ${LESSON_HINT}`}>{screen.copy.weekIntro}</p> : null}
-        {!pricesReady && <p className="mt-4 font-sans text-[18px] leading-[26px] text-[#19347D]">{screen.copy.needPrice}</p>}
-        {pricesReady && startup <= 0 && <p className="mt-4 font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.covered}</p>}
+      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-hidden">
+        {screen.copy.weekIntro ? <p className="mb-1 font-sans text-[15px] font-normal leading-[20px] text-[#4A5568]">{screen.copy.weekIntro}</p> : null}
+        {!pricesReady && <p className="mt-2 font-sans text-[16px] leading-[22px] text-[#19347D]">{screen.copy.needPrice}</p>}
+        {pricesReady && startup <= 0 && <p className="mt-2 font-sans text-[16px] font-semibold leading-[22px] text-[#19347D]">{screen.copy.covered}</p>}
         {pricesReady && mode === "single" && single && needed !== null && (
-          <div className="mt-4">
-            <p className="font-sans text-[18px] leading-[26px] text-[#19347D]">
+          <div className="mt-2">
+            <p className="font-sans text-[16px] leading-[22px] text-[#19347D]">
               {s.jobs.youNeed} <b data-jobs-needed="">{needed}</b> {needed === 1 ? "job" : "jobs"} {s.jobs.toCover} {formatStartupMoney(startup, currency)} {s.jobs.ofStartup}{" "}
               {formatOngoingMoney(single.keptPerJob, currency)} {s.jobs.onEach}
             </p>
-            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{screen.copy.singlePrompt}</h2>
-            <div className="flex flex-col gap-2" role="radiogroup" aria-label={screen.copy.singlePrompt}>
+            <h2 className={`mb-1 mt-2 ${FREDOKA_CLASS} text-[18px] font-semibold leading-6 text-[#0CC1E0]`}>{screen.copy.singlePrompt}</h2>
+            <div className="flex flex-col gap-1" role="radiogroup" aria-label={screen.copy.singlePrompt}>
               {screen.weekOptions.map((option) => {
                 const on = weekId === option.id;
                 return (
@@ -186,7 +186,7 @@ export function JobsCoverFlow({
                         weeksNeeded: weeks,
                       });
                     }}
-                    className={`flex h-11 items-center justify-between rounded-xl px-3 text-left font-sans text-[18px] font-medium leading-[26px] text-[#19347D] ${on ? "bg-[#F0FBFE] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
+                    className={`flex h-9 items-center justify-between rounded-xl px-3 text-left font-sans text-[16px] font-medium leading-5 text-[#19347D] ${on ? "bg-[#F0FBFE] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
                   >
                     {option.label}
                   </button>
@@ -194,7 +194,7 @@ export function JobsCoverFlow({
               })}
             </div>
             {singleWeeks !== null && (
-              <p className="mt-3 font-sans text-[18px] leading-[26px] text-[#19347D]">
+              <p className="mt-1.5 font-sans text-[16px] leading-[22px] text-[#19347D]">
                 About <b data-weeks-needed="">{singleWeeks}</b> {singleWeeks === 1 ? "week" : "weeks"}.
               </p>
             )}
@@ -202,14 +202,14 @@ export function JobsCoverFlow({
         )}
         {pricesReady && mode === "multi" && (
           <div>
-            <h2 className={`mb-3 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{screen.copy.multiPrompt}</h2>
-            <div className="flex flex-col gap-2">
+            <h2 className={`mb-1 ${FREDOKA_CLASS} text-[18px] font-semibold leading-6 text-[#0CC1E0]`}>{screen.copy.multiPrompt}</h2>
+            <div className="flex flex-col gap-1">
               {priced.map((row) => {
                 const jobs = counts[row.serviceId] ?? 0;
                 const subtotal = (jobs * Math.round(row.keptPerJob * 100)) / 100;
                 return (
-                <div key={row.serviceId} className="flex flex-row items-center gap-2 rounded-[14px] bg-white px-3 py-2 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={row.serviceId} data-service-tile-layout="row">
-                  <span className="min-w-0 flex-1 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{labels.get(row.serviceId)}</span>
+                <div key={row.serviceId} className="flex flex-row items-center gap-2 rounded-[14px] bg-white px-3 py-1 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={row.serviceId} data-service-tile-layout="row">
+                  <span className="min-w-0 flex-1 font-sans text-[16px] font-bold leading-5 text-[#19347D]">{labels.get(row.serviceId)}</span>
                   <span className="shrink-0 text-right text-[16px] leading-tight text-[#6B7280]">
                     {formatOngoingMoney(row.keptPerJob, currency)} kept
                     {jobs > 0 && (
@@ -239,7 +239,7 @@ export function JobsCoverFlow({
                 );
               })}
             </div>
-            <div className="mt-4 flex items-baseline justify-between font-sans text-[18px] leading-[26px] text-[#19347D]">
+            <div className="mt-2 flex items-baseline justify-between font-sans text-[16px] leading-[22px] text-[#19347D]">
               <span>{screen.copy.weeklyLabel}</span>
               <b className="font-heading text-lg tabular-nums" data-weekly-keep="">
                 {formatOngoingMoney(weekly, currency)}

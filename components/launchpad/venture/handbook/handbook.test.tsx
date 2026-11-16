@@ -26,7 +26,7 @@ import {
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { Handbook } from "@/components/launchpad/venture/handbook/handbook";
-import { WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
+import { PosterTemplatePage, WorkbookTemplatePage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
@@ -707,7 +707,10 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(screen.getByRole("heading", { name: "Your poster draft" })).toBeTruthy();
     expect(screen.getByText(/^Page \d+$/)).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Here's your draft poster" })).toBeNull();
-    expect(document.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
+    const preview = document.querySelector("[data-draft-poster]") as HTMLImageElement | null;
+    expect(preview?.getAttribute("width")).toBe("290");
+    expect(preview?.getAttribute("src")).toBe(poster.draftSrc);
+    expect(preview?.getAttribute("src")).not.toBe("");
     expect(screen.queryByRole("link")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: poster.blankLink }));
     const frame = document.querySelector("[data-poster-frame]") as HTMLIFrameElement;
@@ -720,6 +723,14 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Url).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.letterUrl).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf");
     expect(LAUNCHPAD_SURFACE_COPY.templates.poster.a4Download).toBe("https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf");
+    cleanup();
+    const edited = "/launchpad/posters/payload-edit.png";
+    render(<PosterTemplatePage poster={{ ...poster, draftSrc: edited }} />);
+    expect(document.querySelector("[data-draft-poster]")?.getAttribute("src")).toBe(edited);
+    cleanup();
+    render(<PosterTemplatePage poster={{ ...poster, draftSrc: "" }} />);
+    expect(document.querySelector("[data-draft-poster]")).toBeNull();
+    expect(document.body.innerHTML).not.toContain('src=""');
   });
 });
 

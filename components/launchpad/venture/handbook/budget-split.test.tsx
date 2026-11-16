@@ -50,6 +50,15 @@ describe("My budget split", () => {
     expect(screen.getByText("$80")).toBeTruthy();
   });
 
+  it("rounds $200 at 0/15/40/40 to $0, $30, $80 and $80", () => {
+    writeBudgetMoneyMade("200");
+    render(<BudgetSplit percents={[0, 15, 40, 40]} />);
+    expect(document.querySelector("[data-budget-amount='giving']")?.textContent).toBe("$0");
+    expect(document.querySelector("[data-budget-amount='emergencies']")?.textContent).toBe("$30");
+    expect(document.querySelector("[data-budget-amount='pay']")?.textContent).toBe("$80");
+    expect(document.querySelector("[data-budget-amount='grow']")?.textContent).toBe("$80");
+  });
+
   it("shows a payload edit of Money made", () => {
     writeBudgetMoneyMade("80");
     const copy = {

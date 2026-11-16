@@ -42,6 +42,7 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
       eyebrow: "Pricing",
       othersMissing: "What others offer isn't in yet.",
       keepLabel: "You keep",
+      keepEmpty: "nothing yet",
       costLabel: "Cost",
       lowKeep: "Your price doesn't cover your costs yet. Try a higher price.",
       emptyServices: "You have not chosen a service yet. You can still continue.",

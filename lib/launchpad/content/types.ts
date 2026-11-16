@@ -341,6 +341,8 @@ export type LaunchpadSetPriceScreen = TaskScreenBase & {
     eyebrow?: string;
     othersMissing: string;
     keepLabel: string;
+    /** Shown after keepLabel until a price is saved. No dash. */
+    keepEmpty: string;
     costLabel: string;
     lowKeep: string;
     emptyServices: string;

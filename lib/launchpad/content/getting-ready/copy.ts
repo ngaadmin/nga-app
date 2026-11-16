@@ -4,7 +4,8 @@ import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 /**
  * Getting Ready copy and sentences (framework rows 28-33, md5 bbaf7a74).
  * Row 34 was empty. The wrap lines below are the proposed workbook pages.
- * Option cells win over J28's "(with Mom or Dad)". "by in person" stays.
+ * Option cells win over J28's "(with Mom or Dad)".
+ * `prep` is the preposition for that option. In person has none.
  */
 
 export const FIND_CUSTOMERS_KEY = "find_customers";
@@ -82,10 +83,10 @@ export const AGREE_UNDERSTOOD_EMPTY = {
 } as const;
 
 export const BEFORE_HOW = [
-  { id: "text", label: "Text", sentence: "text" },
-  { id: "email", label: "Email", sentence: "email" },
-  { id: "phone", label: "Phone call", sentence: "phone call" },
-  { id: "in_person", label: "In person", sentence: "in person" },
+  { id: "text", label: "Text", sentence: "text", prep: "by" },
+  { id: "email", label: "Email", sentence: "email", prep: "by" },
+  { id: "phone", label: "Phone call", sentence: "phone call", prep: "by" },
+  { id: "in_person", label: "In person", sentence: "in person", prep: "" },
 ] as const;
 
 export const AFTER_HOW = [
@@ -101,10 +102,10 @@ export const PAYMENT_HOW = [
 ] as const;
 
 export const FEEDBACK_HOW = [
-  { id: "in_person", label: "In person", sentence: "in person" },
-  { id: "text", label: "Text", sentence: "text" },
-  { id: "email", label: "Email", sentence: "email" },
-  { id: "note", label: "A short note", sentence: "a short note" },
+  { id: "in_person", label: "In person", sentence: "in person", prep: "" },
+  { id: "text", label: "Text", sentence: "text", prep: "by" },
+  { id: "email", label: "Email", sentence: "email", prep: "by" },
+  { id: "note", label: "A short note", sentence: "a short note", prep: "by" },
 ] as const;
 
 export const PRACTICE_WHO = [
@@ -181,12 +182,12 @@ export function agreeTitles(ticked: readonly string[]): string[] {
 }
 
 export function deliverLines(beforeHow: string, afterHow: string): { title: string; lines: string[] } {
-  const before = BEFORE_HOW.find((row) => row.id === beforeHow)?.sentence ?? beforeHow;
+  const before = howClause([beforeHow], BEFORE_HOW) || beforeHow;
   const after = AFTER_HOW.find((row) => row.id === afterHow)?.sentence ?? afterHow;
   return {
     title: DELIVER_PLAYBACK,
     lines: [
-      `I will contact the owner to confirm the agreed details of the job by ${before}.`,
+      `I will contact the owner to confirm the agreed details of the job ${before}.`,
       `I will show proof by sending ${after}.`,
     ],
   };
@@ -207,13 +208,32 @@ export function joinHow(ids: readonly string[], rows: readonly { id: string; sen
   return joinOr(ids.map((id) => rows.find((row) => row.id === id)?.sentence ?? id));
 }
 
+/**
+ * Mid-sentence form. Options that share a preposition keep one of them:
+ * text and email become "by text or email". In person stays "in person".
+ */
+export function howClause(ids: readonly string[], rows: readonly { id: string; sentence: string; prep?: string }[]): string {
+  const picked = ids.flatMap((id) => {
+    const row = rows.find((item) => item.id === id);
+    return row ? [row] : [];
+  });
+  const groups: { prep: string; phrases: string[] }[] = [];
+  for (const row of picked) {
+    const prep = row.prep ?? "";
+    const last = groups[groups.length - 1];
+    if (last && last.prep === prep) last.phrases.push(row.sentence);
+    else groups.push({ prep, phrases: [row.sentence] });
+  }
+  return groups.map((group) => (group.prep ? `${group.prep} ${joinOr(group.phrases)}` : joinOr(group.phrases))).join(" or ");
+}
+
 export function wrapJobLines(paymentHow: string | readonly string[], feedbackHow: string | readonly string[]): { title: string; lines: string[] } {
   const payment = joinHow(asIds(paymentHow), PAYMENT_HOW);
-  const feedback = joinHow(asIds(feedbackHow), FEEDBACK_HOW);
+  const feedback = howClause(asIds(feedbackHow), FEEDBACK_HOW);
   const lines: string[] = [];
-  if (payment && feedback) lines.push(`I will collect payment by ${payment}, and ask for feedback by ${feedback}.`);
+  if (payment && feedback) lines.push(`I will collect payment by ${payment}, and ask for feedback ${feedback}.`);
   else if (payment) lines.push(`I will collect payment by ${payment}.`);
-  else if (feedback) lines.push(`I will ask for feedback by ${feedback}.`);
+  else if (feedback) lines.push(`I will ask for feedback ${feedback}.`);
   return { title: WRAP_JOB_PLAYBACK, lines };
 }
 

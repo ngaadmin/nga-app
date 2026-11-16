@@ -6,6 +6,7 @@ import {
   agreeTitles,
   deliverLines,
   feedbackWrap,
+  howClause,
   findReady,
   findSentence,
   POLISH_QUESTIONS,
@@ -43,7 +44,11 @@ describe("getting ready sentences", () => {
   it("keeps the sheet wording on the plan lines", () => {
     expect(deliverLines("text", "photo").lines[0]).toContain("by text");
     expect(deliverLines("text", "photo").lines[1]).toContain("a photo");
-    expect(wrapJobLines("cash", "in_person").lines[0]).toBe("I will collect payment by cash on the day, and ask for feedback by in person.");
+    expect(wrapJobLines("cash", "in_person").lines[0]).toBe("I will collect payment by cash on the day, and ask for feedback in person.");
+    expect(deliverLines("in_person", "video").lines[0]).toBe("I will contact the owner to confirm the agreed details of the job in person.");
+    expect(deliverLines("text", "video").lines[0]).toBe("I will contact the owner to confirm the agreed details of the job by text.");
+    expect(deliverLines("in_person", "video").lines[1]).toBe("I will show proof by sending a short video.");
+    expect(deliverLines("text", "video").lines.join(" ")).not.toMatch(/by Text|A short video|by in person/);
     expect(wrapJobLines(["cash", "transfer"], ["text", "email"]).lines[0]).toBe(
       "I will collect payment by cash on the day or bank transfer, and ask for feedback by text or email.",
     );
@@ -63,6 +68,26 @@ describe("getting ready sentences", () => {
     expect(text.match(/How I'll wrap up a job/g)).toHaveLength(1);
     expect(text).toContain("I will collect payment by cash on the day or bank transfer.");
     expect(text).toContain("I will ask the owner for feedback or a short review by text or email.");
+    expect(text).not.toContain("by in person");
+    const inPerson = gettingReadyWorkbookSheets(
+      { wrap_up: { kind: "wrap-job", version: 1, paymentHow: ["cash"], feedbackHow: ["in_person"] } },
+      "Dog walking",
+      false,
+    ).find((page) => page.id === "ready-b")!;
+    const inPersonText = JSON.stringify(inPerson);
+    expect(inPersonText).toContain("in person");
+    expect(inPersonText).not.toContain("by in person");
+    const deliver = gettingReadyWorkbookSheets(
+      { deliver_the_job: { kind: "deliver-job", version: 1, beforeHow: "text", afterHow: "video" } },
+      "Dog walking",
+      false,
+    ).find((page) => page.id === "ready-b")!;
+    const deliverText = JSON.stringify(deliver);
+    expect(deliverText).toContain("by text");
+    expect(deliverText).toContain("a short video");
+    expect(deliverText).not.toContain("by Text");
+    expect(deliverText).not.toContain("A short video");
+    expect(howClause(["in_person"], [{ id: "in_person", sentence: "face to face", prep: "" }])).toBe("face to face");
     expect(text).not.toContain("and ask for feedback");
     const empty = gettingReadyWorkbookSheets(undefined, "Dog walking", true).find((page) => page.id === "ready-b")!;
     const feedback = empty.blocks.find((block) => block.kind === "paragraph" && block.parts.some((part) => typeof part === "string" && part.includes("ask the owner for feedback")));

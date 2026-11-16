@@ -236,7 +236,7 @@ export function Handbook({
           <p
             data-handbook-name=""
             data-name-font={nameFont}
-            className={`truncate text-[13px] leading-4 ${nameFont ? NAME_FONT_CLASS[nameFont] : "text-[#6B7280]"}`}
+            className={`truncate text-[13px] leading-[26px] ${nameFont ? NAME_FONT_CLASS[nameFont] : "text-[#6B7280]"}`}
           >
             {businessName}
           </p>

@@ -213,7 +213,7 @@ describe("Getting Ready workbook wrap-up", () => {
     ).find((page) => page.id === "ready-b")!;
     render(<ScriptedSheetPage sheet={sheet} />);
     const payment = screen.getByText("cash on the day");
-    const feedback = screen.getByText("text or email");
+    const feedback = screen.getByText("by text or email");
     expect(payment.className).toBe(WORKBOOK_ANSWER);
     expect(feedback.className).toBe(WORKBOOK_ANSWER);
     expect(payment.className).not.toMatch(/underline|border-b/);

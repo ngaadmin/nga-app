@@ -171,7 +171,7 @@ export function SetPriceFlow({
                       ·
                     </span>
                     <span className="font-semibold text-[#19347D]" data-kept="">
-                      {screen.copy.keepLabel} {row ? formatOngoingMoney(row.keptPerJob, currency) : "—"}
+                      {screen.copy.keepLabel} {row ? formatOngoingMoney(row.keptPerJob, currency) : screen.copy.keepEmpty}
                     </span>
                   </p>
                 </div>

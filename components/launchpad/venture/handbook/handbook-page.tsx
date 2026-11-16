@@ -314,7 +314,9 @@ export function PosterTemplatePage({
       {showIdentity ? <MiniIdentity /> : null}
       <AccentLabel as="h2">{poster.heading}</AccentLabel>
       {intro ? <p className={TEMPLATE_HINT}>{intro}</p> : null}
-      <img src={poster.draftSrc} alt={poster.previewAlt ?? ""} width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
+      {poster.draftSrc?.trim() ? (
+        <img src={poster.draftSrc} alt={poster.previewAlt ?? ""} width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
+      ) : null}
       <button type="button" className={`mt-3 text-left ${link}`} data-poster-open="" onClick={() => setFile("a4")}>
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-1 shrink-0">
           <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />

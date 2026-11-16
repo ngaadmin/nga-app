@@ -24,6 +24,7 @@ import {
   PRACTICE_WHEN,
   PRACTICE_WHO,
   SUGGESTION_PROMPT,
+  howClause,
   WRAP_JOB_HINT,
   WRAP_JOB_KEY,
 } from "@/lib/launchpad/content/getting-ready/copy";
@@ -66,11 +67,11 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
       question: "How will you deliver a good job?",
       hint: DELIVER_HINT,
       deliverBlocks: [
-        { heading: "One day before the job", lead: "I will contact the owner to confirm the agreed details of the job by {pick}.", slot: "before" },
+        { heading: "One day before the job", lead: "I will contact the owner to confirm the agreed details of the job {pick}.", slot: "before" },
         { heading: "Straight after I've delivered the service", lead: "I will show proof by sending {pick}.", slot: "after" },
       ],
-      beforeOptions: BEFORE_HOW.map((row) => ({ id: row.id, label: row.label, sentence: row.sentence })),
-      afterOptions: AFTER_HOW.map((row) => ({ id: row.id, label: row.label, sentence: row.sentence })),
+      beforeOptions: BEFORE_HOW.map((row) => ({ id: row.id, label: howClause([row.id], BEFORE_HOW), sentence: row.sentence })),
+      afterOptions: AFTER_HOW.map((row) => ({ id: row.id, label: row.sentence, sentence: row.sentence })),
     };
   }
   if (step === "wrap-job") {

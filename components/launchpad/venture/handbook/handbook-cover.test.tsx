@@ -164,6 +164,8 @@ describe("workbook page 1, the cover", () => {
     expect(bar.textContent).toBe("Script Paws");
     expect(bar.getAttribute("data-name-font")).toBe("pacifico");
     expect(bar.className).toContain(NAME_FONT_CLASS.pacifico);
+    expect(bar.className).toContain("leading-[26px]");
+    expect(bar.parentElement?.parentElement?.className).toContain("h-16");
   });
 
   it("cause skipped: the cause clause drops out", () => {

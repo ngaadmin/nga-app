@@ -18,6 +18,7 @@ import {
   PRACTICE_WHO,
   agreeTitles,
   feedbackWrap,
+  howClause,
   joinHow,
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
@@ -56,10 +57,10 @@ export function gettingReadyWorkbookSheets(
     return label ? [label] : [];
   });
   const titles = agreeTitles(AGREE_ITEMS.filter((item) => agree?.understood[item.id]).map((item) => item.id));
-  const before = deliver ? BEFORE_HOW.find((row) => row.id === deliver.beforeHow)?.label : undefined;
-  const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.label : undefined;
+  const before = deliver ? howClause([deliver.beforeHow], BEFORE_HOW) : undefined;
+  const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.sentence : undefined;
   const payment = joinHow(wrap?.paymentHow ?? [], PAYMENT_HOW);
-  const feedback = joinHow(wrap?.feedbackHow ?? [], FEEDBACK_HOW);
+  const feedback = howClause(wrap?.feedbackHow ?? [], FEEDBACK_HOW);
   const who = practice ? PRACTICE_WHO.find((row) => row.id === practice.who)?.label ?? practice.who : null;
   const when = practice ? PRACTICE_WHEN.find((row) => row.id === practice.when)?.label ?? practice.when : null;
   const service = serviceLabel.trim() ? serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1) : null;
@@ -89,14 +90,14 @@ export function gettingReadyWorkbookSheets(
   const deliverBlocks: ScriptedBlock[] = [
     { kind: "section", text: "How I'll deliver the job" },
     { kind: "sub", text: "One day before the job" },
-    { kind: "paragraph", parts: ["I will contact the owner to confirm the agreed details of the job by ", before || templates ? { value: before ?? null } : NOT_YET, "."] },
+    { kind: "paragraph", parts: ["I will contact the owner to confirm the agreed details of the job ", before || templates ? { value: before ?? null } : NOT_YET, "."] },
     { kind: "sub", text: "Straight after I've delivered the service" },
     { kind: "paragraph", parts: ["I will show proof by sending ", after || templates ? { value: after ?? null } : NOT_YET, "."] },
     { kind: "section", text: "How I'll wrap up a job" },
     { kind: "sub", text: "Taking payment" },
     { kind: "paragraph", parts: ["I will collect payment by ", payment || templates ? { value: payment || null } : NOT_YET, "."] },
     { kind: "sub", text: "Getting feedback" },
-    { kind: "paragraph", parts: ["I will ask the owner for feedback or a short review by ", feedback || templates ? { value: feedback || null } : NOT_YET, "."] },
+    { kind: "paragraph", parts: ["I will ask the owner for feedback or a short review ", feedback || templates ? { value: feedback || null } : NOT_YET, "."] },
   ];
 
   const practiceBlocks: ScriptedBlock[] = [

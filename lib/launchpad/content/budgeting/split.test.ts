@@ -8,8 +8,8 @@ describe("budget split dollars", () => {
     expect(splitDollars(100, DEFAULT)).toEqual([5, 15, 40, 40]);
   });
 
-  it("gives the half-dollar tie at 250 to Emergencies, the higher percent", () => {
-    expect(splitDollars(250, DEFAULT)).toEqual([12, 38, 100, 100]);
+  it("rounds each jar on its own, including a half dollar", () => {
+    expect(splitDollars(250, DEFAULT)).toEqual([13, 38, 100, 100]);
   });
 
   it("treats an empty field as 100 and keeps a typed 0 as zero", () => {
@@ -19,19 +19,15 @@ describe("budget split dollars", () => {
     expect(splitDollars(0, DEFAULT)).toEqual([0, 0, 0, 0]);
   });
 
-  it("keeps odd amounts as whole dollars that sum to the total", () => {
-    for (const total of [1, 3, 7, 11, 99]) {
-      const shares = splitDollars(total, DEFAULT);
-      expect(shares.reduce((sum, value) => sum + value, 0)).toBe(total);
-      expect(shares.every((value) => Number.isInteger(value))).toBe(true);
-    }
-    // 1 dollar: the 0.4 tie between the two 40% jars goes to the earlier one.
-    expect(splitDollars(1, DEFAULT)).toEqual([0, 0, 1, 0]);
+  it("rounds $200 at 0/15/40/40 to $0, $30, $80 and $80", () => {
+    expect(splitDollars(200, [0, 15, 40, 40])).toEqual([0, 30, 80, 80]);
   });
 
-  it("breaks a remainder tie toward the higher percent", () => {
-    expect(splitDollars(2, [10, 10])).toEqual([1, 1]);
-    expect(splitDollars(1, [10, 30])).toEqual([0, 1]);
+  it("rounds each jar on its own when the percents do not use the whole dollar", () => {
+    expect(splitDollars(1, DEFAULT)).toEqual([0, 0, 0, 0]);
+    expect(splitDollars(2, [10, 10])).toEqual([0, 0]);
+    expect(splitDollars(1, [10, 30])).toEqual([0, 0]);
+    expect(splitDollars(3, DEFAULT).every((value) => Number.isInteger(value))).toBe(true);
   });
 
   it("steps 5 points from the current percent and stays inside 0 to 100", () => {

@@ -52,6 +52,8 @@ describe("Set the price", () => {
     expect(screen.queryByRole("textbox", { name: "Price for Dog walking" })).toBeNull();
     releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getAllByText("You keep nothing yet").length).toBeGreaterThan(0);
+    expect(document.querySelector("[data-kept]")?.textContent).toBe("You keep nothing yet");
     expect(screen.getByText("Pricing")).toBeTruthy();
     expect(screen.getByText(/a 30-minute walk at \$15/)).toBeTruthy();
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
@@ -67,6 +69,22 @@ describe("Set the price", () => {
     expect(within(row).getByRole("heading", { name: "Dog walking" })).toBeTruthy();
     expect(within(row).getByRole("textbox", { name: "Price for Dog walking" })).toBeTruthy();
     expect(within(row).getByText(/Cost/)).toBeTruthy();
+  });
+
+  it("shows a payload edit of the empty keep line", () => {
+    const screenSpec = dogWalkingSetPriceScreen();
+    render(
+      <SetPriceFlow
+        screen={{ ...screenSpec, copy: { ...screenSpec.copy, keepEmpty: "still open" } }}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking"]), "l2-costs": costs }}
+      />,
+    );
+    releaseNarration();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("You keep still open")).toBeTruthy();
+    expect(screen.queryByText("nothing yet")).toBeNull();
+    expect(document.querySelector("[data-kept]")?.textContent).toBe("You keep still open");
   });
 });
 

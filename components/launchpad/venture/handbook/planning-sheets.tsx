@@ -5,6 +5,7 @@ import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf 
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { chipLabel, joinMid, joinPhrase, lowerFirst, playedBackTimes, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
+import { weeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
 import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -30,6 +31,13 @@ function WeekBar({ label, width }: { label: string; width: number }) {
 
 function nameFor(id: string, labels: readonly { id: string; label: string }[]): string {
   return labels.find((row) => row.id === id)?.label ?? id;
+}
+
+/** The stored pick is the short phrase. The on-screen words, including "others", come from the payload. */
+function comparedPhrase(value: string | undefined, price: { lower: string; same: string; higher: string }): string {
+  if (value === "lower than") return price.lower;
+  if (value === "higher than") return price.higher;
+  return price.same;
 }
 
 /** My price, written on the page. The coin stack sits below the figures. */
@@ -69,7 +77,7 @@ export function PriceSheet() {
           <p className={WORKBOOK_BODY}>
             {compared && competitor ? (
               <>
-                {s.price.othersCharge} <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>{s.price.mineIsShort} <ChosenValue>{row.comparedToOthers ?? s.price.aboutTheSame}</ChosenValue> others.
+                {s.price.othersCharge} <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>{s.price.mineIsShort} <ChosenValue>{comparedPhrase(row.comparedToOthers, s.price)}</ChosenValue>.
               </>
             ) : (
               s.price.notCheckedPeriod
@@ -346,7 +354,7 @@ export function PricingPlaybackPage() {
                     <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>
                   </>
                 )}
-              {s.price.theyIncludePeriod} <ChosenValue>{addons}</ChosenValue>.
+              {addons ? <>{s.price.theyIncludePeriod} <ChosenValue>{addons}</ChosenValue>.</> : null}
             </>
           )
           : s.price.notCheckedShort}
@@ -368,7 +376,7 @@ export function PricingPlaybackPage() {
           <p className={WORKBOOK_HINT} data-doodle-anchor={row === price?.prices[0] ? "price-calc" : undefined}>
             {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
           </p>
-          {row.comparedToOthers ? <p className={WORKBOOK_BODY}>{s.price.mineIs} <ChosenValue>{row.comparedToOthers}</ChosenValue></p> : null}
+          {row.comparedToOthers ? <p className={WORKBOOK_BODY}>{s.price.mineIs} <ChosenValue>{comparedPhrase(row.comparedToOthers, s.price)}</ChosenValue></p> : null}
         </div>
       ))}
     </div>
@@ -383,17 +391,23 @@ export function TypicalWeekPage() {
   const currency = readCurrencyPreference();
   const templates = useTemplateBlanks();
   if (!jobs) return templates ? <p className={`mt-2 ${WORKBOOK_BODY}`}>{s.jobs.aTypicalWeek} <BlankSlot /></p> : null;
-  const mix = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`).join(" + ") ?? "";
-  const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatWorkbookMoney(row.keptPerJob, currency)}`).join(" + ");
+  const rows = jobs.mode === "multi"
+    ? (jobs.typicalWeek ?? [])
+    : jobs.jobsPerWeek
+      ? [{ serviceId: labels[0]?.id ?? "", jobsPerWeek: jobs.jobsPerWeek, keptPerJob: jobs.keptPerJob ?? 0 }]
+      : [];
+  const mix = rows.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`.trim()).join(" + ");
+  const keep = weeklyKeep(rows);
+  const math = rows.map((row) => `${row.jobsPerWeek} × ${formatWorkbookMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
       <AccentLabel>{s.jobs.coverMine}</AccentLabel>
       <h3 className={`mt-2 ${WORKBOOK_SUB}`}>{s.jobs.typicalWeek}</h3>
       <p className={`mt-1 max-w-[248px] ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
-      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
+      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(keep, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       {math && (
         <p className={WORKBOOK_HINT}>
-          {math} = {formatWorkbookMoney(jobs.weeklyKeep ?? 0, currency)} {s.jobs.aWeekPeriod}
+          {math} = {formatWorkbookMoney(keep, currency)} {s.jobs.aWeekPeriod}
         </p>
       )}
       <p className={`max-w-[248px] ${WORKBOOK_BODY}`}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> {s.jobs.weeksToCoverShort} <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>

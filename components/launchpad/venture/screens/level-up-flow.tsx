@@ -403,7 +403,7 @@ export function LevelUpFlow({
                   const on = currentPlan.options.includes(id);
                   patch({ ...currentPlan, options: on ? currentPlan.options.filter((item) => item !== id) : [...currentPlan.options, id] });
                 }}
-                className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                className="absolute inset-0 z-overlay h-full w-full cursor-pointer opacity-0"
               >
                 <option value="">{slots.emptyLabel}</option>
                 {visible.map((option) => (
@@ -424,7 +424,7 @@ export function LevelUpFlow({
                 aria-label={slots.startLead}
                 value={currentPlan.when}
                 onChange={(event) => patch({ ...currentPlan, when: event.target.value })}
-                className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                className="absolute inset-0 z-overlay h-full w-full cursor-pointer opacity-0"
               >
                 <option value="">{slots.emptyLabel}</option>
                 {(content.grow.startOptions ?? []).map((option) => (
@@ -461,7 +461,7 @@ export function LevelUpFlow({
                 aria-label={slots.checkInLead}
                 value={currentPlan.checkIn}
                 onChange={(event) => patch({ ...currentPlan, checkIn: event.target.value })}
-                className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                className="absolute inset-0 z-overlay h-full w-full cursor-pointer opacity-0"
               >
                 <option value="">{slots.emptyLabel}</option>
                 {(content.grow.checkInOptions ?? []).map((option) => (

@@ -358,7 +358,7 @@ function StackedMulti({
           if (!id) return;
           onChange(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
         }}
-        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+        className="absolute inset-0 z-overlay h-full w-full cursor-pointer opacity-0"
       >
         <option value="">{emptyLabel}</option>
         {options.map((option) => (

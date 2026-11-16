@@ -75,6 +75,7 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
       weeksEmpty: "0 weeks",
     },
     audio: { src: "/launchpad/pricing/l2-jobs-vo.mp3", durationMs: 25626 },
+    weekAudio: { src: "/launchpad/pricing/l2-jobs-week-vo.mp3", durationMs: 14420 },
   };
 }
 

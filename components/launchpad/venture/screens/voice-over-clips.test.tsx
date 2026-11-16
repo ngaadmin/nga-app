@@ -63,23 +63,14 @@ describe("intro narration clips", () => {
     expect(screen.getByText(storyClipDurationLabel(spec.audio!.durationMs)!)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
+    expect(spec.weekAudio).toEqual({ src: "/launchpad/pricing/l2-jobs-week-vo.mp3", durationMs: 14420 });
     releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.queryByRole("button", { name: "Replay" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Mute sound" })).toBeNull();
-    expect(screen.queryByText("Voice created with Grok")).toBeNull();
-    expect(spec.weekAudio).toBeUndefined();
-  });
-
-  it("plays a jobs week intro from the payload slot when a clip is set", () => {
-    const spec = dogWalkingJobsCoverScreen();
-    spec.weekAudio = { src: "/launchpad/pricing/l2-jobs-week-vo.mp3", durationMs: 12000 };
-    render(<JobsCoverFlow screen={spec} floors={[]} />);
-    releaseNarration();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(playStoryClipOnScreen).toHaveBeenCalledWith(spec.weekAudio.src);
+    expect(playStoryClipOnScreen).toHaveBeenCalledWith(spec.weekAudio!.src);
     expect(screen.getByRole("button", { name: "Replay" })).toBeTruthy();
+    expect(screen.getByText(storyClipDurationLabel(spec.weekAudio!.durationMs)!)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
     expect(screen.getByText(spec.copy.weekIntro!)).toBeTruthy();
   });
 

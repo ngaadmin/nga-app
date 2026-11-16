@@ -239,9 +239,9 @@ export function FundingFlow({
                 <li key={id} className="flex items-center gap-2">
                   <span className="min-w-0 flex-1 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{label}</span>
                   <button type="button" aria-label={`Less ${label}`} className="flex size-11 shrink-0 items-center justify-center rounded-full font-sans text-[16px] font-semibold leading-none text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3]" onClick={() => setValue(stepDollar(value, -1))}>−</button>
-                  <label className="flex h-11 w-[4.75rem] shrink-0 items-center justify-center gap-0.5">
+                  <label className="flex h-11 w-[5.5rem] shrink-0 items-center justify-center gap-1">
                     <span className="font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.dollar}</span>
-                    <input aria-label={label} inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value.replace(/\D/g, "").slice(0, 4))} className="w-10 bg-transparent text-center font-sans text-[18px] font-semibold leading-[26px] tabular-nums text-[#19347D] outline-none" />
+                    <input aria-label={label} inputMode="numeric" value={value} data-split-input={id} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setValue(event.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 4))} className="h-10 w-16 rounded-lg bg-white text-center font-sans text-[18px] font-semibold leading-[26px] tabular-nums text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" />
                   </label>
                   <button type="button" aria-label={`More ${label}`} className="flex size-11 shrink-0 items-center justify-center rounded-full font-sans text-[16px] font-semibold leading-none text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3]" onClick={() => setValue(stepDollar(value, 1))}>+</button>
                 </li>

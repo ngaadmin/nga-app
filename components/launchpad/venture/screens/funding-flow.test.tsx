@@ -86,6 +86,10 @@ describe("Funding bronze", () => {
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByRole("textbox", { name: spec.copy.borrowed }), { target: { value: "30" } });
     expect(document.querySelector("[data-split-total]")?.textContent).toContain("Covered: $80 of $80");
+    const own = screen.getByRole("textbox", { name: spec.copy.ownMoney }) as HTMLInputElement;
+    expect(own.className).toContain("shadow-[inset_0_0_0_1.5px_#0CC1E0]");
+    fireEvent.change(own, { target: { value: "050" } });
+    expect(own.value).toBe("50");
     expect(document.querySelector("[data-tick]")).toBeTruthy();
     expect(screen.queryByText(spec.copy.overWarning)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

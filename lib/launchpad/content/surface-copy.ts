@@ -267,6 +267,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     week2: "Week 2",
     typicalWeek: "Typical week",
     aWeekPeriod: "a week.",
+    keep: "Keep",
     weeksToCoverShort: "weeks to cover",
     typicalReadOnly: "Your typical week stays read-only here.",
     aTypicalWeek: "A typical week",

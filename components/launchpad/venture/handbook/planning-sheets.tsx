@@ -404,7 +404,7 @@ export function TypicalWeekPage() {
       <AccentLabel>{s.jobs.coverMine}</AccentLabel>
       <h3 className={`mt-2 ${WORKBOOK_SUB}`}>{s.jobs.typicalWeek}</h3>
       <p className={`mt-1 max-w-[248px] ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
-      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatWorkbookMoney(keep, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
+      <p className={WORKBOOK_BODY}>{s.jobs.keep} <ChosenValue>{formatWorkbookMoney(keep, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       {math && (
         <p className={WORKBOOK_HINT}>
           {math} = {formatWorkbookMoney(keep, currency)} {s.jobs.aWeekPeriod}

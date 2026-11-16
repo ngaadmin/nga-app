@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { BudgetSplit } from "@/components/launchpad/venture/handbook/budget-split";
-import { writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
+import { writeBudgetMoneyMade, writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 
 afterEach(() => {
   cleanup();
@@ -75,5 +75,19 @@ describe("My budget split field", () => {
     expect(screen.getByText("$40")).toBeTruthy();
     expect(screen.getByText("$60")).toBeTruthy();
     expect(screen.getByText("$80")).toBeTruthy();
+  });
+
+  it("plays the lesson Money made total back without changing Money I earned", () => {
+    writeBudgetMoneyMade("80");
+    render(<BudgetSplit percents={[5, 15, 40, 40]} />);
+    expect(field().value).toBe("100");
+    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("Money made");
+    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
+    expect(screen.getByText("$5")).toBeTruthy();
+    fireEvent.change(field(), { target: { value: "250" } });
+    expect(field().value).toBe("250");
+    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
+    expect(window.localStorage.getItem("lp-venture-test:budget-earned")).toBe("250");
+    expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("80");
   });
 });

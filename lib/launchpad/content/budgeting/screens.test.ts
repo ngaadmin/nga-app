@@ -15,6 +15,7 @@ describe("Budgeting voice-overs", () => {
     if (screen.type !== "picture") throw new Error("expected a picture screen");
     expect(screen.pages.map((page) => page.id)).toEqual(["s1", "s2", "s3", "s4"]);
     expect(screen.pages[3]?.split).toBe(true);
+    expect(screen.pages[3] && "audio" in screen.pages[3]).toBe(false);
     for (const clip of CLIPS) {
       const page = screen.pages.find((item) => item.id === clip.id);
       expect(page && "audio" in page ? page.audio : undefined).toEqual({ src: clip.src, durationMs: clip.durationMs });

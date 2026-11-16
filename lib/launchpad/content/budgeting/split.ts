@@ -16,6 +16,7 @@ const PAY_BASE = 40;
 /** Each + or − moves one row by this many percentage points. */
 export const BUDGET_SPLIT_STEP = 5;
 const SPLIT_KEY = "lp-venture-test:budget-split";
+const MONEY_MADE_KEY = "lp-venture-test:budget-money-made";
 
 export function stepSplitPercent(value: number, direction: 1 | -1): number {
   return Math.min(100, Math.max(0, value + direction * BUDGET_SPLIT_STEP));
@@ -37,6 +38,22 @@ export function readBudgetSplit(): number[] | null {
 
 export function writeBudgetSplit(percents: readonly number[]): void {
   window.localStorage.setItem(SPLIT_KEY, JSON.stringify(percents));
+}
+
+/** Lesson "Money made" on Set your own split. Separate from the workbook Money I earned field. */
+export function readBudgetMoneyMade(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(MONEY_MADE_KEY);
+    if (raw == null || !/^\d{1,5}$/.test(raw)) return null;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+export function writeBudgetMoneyMade(digits: string): void {
+  window.localStorage.setItem(MONEY_MADE_KEY, digits);
 }
 
 /**

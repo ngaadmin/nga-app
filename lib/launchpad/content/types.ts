@@ -569,7 +569,17 @@ export type LaunchpadPicturePage =
       audio?: { src: string; durationMs: number };
       split?: false;
     }
-  | { id: string; split: true };
+  | {
+      id: string;
+      split: true;
+      context: string;
+      guidance: string;
+      ask: string;
+      madeAsk: string;
+      madeLabel: string;
+      madeHelp: string;
+      madeDefault: string;
+    };
 
 /**
  * Level 7 Level Up. One bronze step. Statements and screen copy live on

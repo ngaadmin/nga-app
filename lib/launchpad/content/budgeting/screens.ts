@@ -1,5 +1,17 @@
 import type { LaunchpadBronze, LaunchpadPictureScreen, LaunchpadSilver, LaunchpadTask } from "@/lib/launchpad/content/types";
-import { BUDGETING_SCREEN_1, BUDGETING_SCREEN_2, BUDGETING_SCREEN_3, BUDGETING_TITLE } from "@/lib/launchpad/content/budgeting/copy";
+import {
+  BUDGETING_SCREEN_1,
+  BUDGETING_SCREEN_2,
+  BUDGETING_SCREEN_3,
+  BUDGETING_SPLIT_ASK,
+  BUDGETING_SPLIT_CONTEXT,
+  BUDGETING_SPLIT_GUIDANCE,
+  BUDGETING_SPLIT_MADE_ASK,
+  BUDGETING_SPLIT_MADE_DEFAULT,
+  BUDGETING_SPLIT_MADE_HELP,
+  BUDGETING_SPLIT_MADE_LABEL,
+  BUDGETING_TITLE,
+} from "@/lib/launchpad/content/budgeting/copy";
 
 const PAGES: LaunchpadPictureScreen["pages"] = [
   {
@@ -23,7 +35,17 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
     body: BUDGETING_SCREEN_3,
     audio: { src: "/launchpad/budgeting/l6-s3-vo.mp3", durationMs: 24346 },
   },
-  { id: "s4", split: true },
+  {
+    id: "s4",
+    split: true,
+    context: BUDGETING_SPLIT_CONTEXT,
+    guidance: BUDGETING_SPLIT_GUIDANCE,
+    ask: BUDGETING_SPLIT_ASK,
+    madeAsk: BUDGETING_SPLIT_MADE_ASK,
+    madeLabel: BUDGETING_SPLIT_MADE_LABEL,
+    madeHelp: BUDGETING_SPLIT_MADE_HELP,
+    madeDefault: BUDGETING_SPLIT_MADE_DEFAULT,
+  },
 ];
 
 function budgetingScreen(taskId: string): LaunchpadPictureScreen {

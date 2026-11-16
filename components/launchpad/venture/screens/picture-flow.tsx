@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import type { LaunchpadPictureScreen } from "@/lib/launchpad/content/types";
 import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
 import { STORY_BEAT_NEXT_LOCK_MS, playStoryClipFromGesture, stopStoryAudio, storyBeatNextEnabled } from "@/lib/academy/lessons/story-audio/playback";
-import { SplitEditor } from "@/components/launchpad/venture/screens/split-editor";
+import { SplitEditor, type SplitCopy } from "@/components/launchpad/venture/screens/split-editor";
 import { writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 import { LessonContinue, LessonCredit, LessonSurface } from "@/components/launchpad/venture/screens/screen-ui";
 import { LESSON_BODY } from "@/components/launchpad/venture/screens/screen-ui";
@@ -98,7 +98,7 @@ export function PictureFlow({
         {pageCredit(current) ? <LessonCredit credit={pageCredit(current) ?? ""} /> : null}
         <div data-task-screen="picture" data-picture-page={current.id}>
           {current.split ? (
-            <SplitEditor onChange={setSplit} />
+            <SplitEditor copy={current satisfies SplitCopy} onChange={setSplit} />
           ) : (
             <>
               <img src={current.image} alt={current.alt} className={ART_CLASS} />

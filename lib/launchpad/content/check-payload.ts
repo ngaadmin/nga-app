@@ -551,7 +551,13 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       list(screen.pages, `${where} pages`, 1).forEach((page, i) => {
         if (!isObj(page)) fail(`${where} page ${i + 1} is malformed.`);
         text(page.id, `${where} page ${i + 1} id`);
-        if (page.split === true) return;
+        if (page.split === true) {
+          for (const field of ["context", "guidance", "ask", "madeAsk", "madeLabel", "madeHelp", "madeDefault"] as const) {
+            text(page[field], `${where} page ${i + 1} ${field}`);
+          }
+          if ("audio" in page) fail(`${where} page ${i + 1} split page must not carry a voice-over.`);
+          return;
+        }
         text(page.image, `${where} page ${i + 1} image`);
         text(page.alt, `${where} page ${i + 1} alt`);
         text(page.body, `${where} page ${i + 1} body`);

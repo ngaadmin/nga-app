@@ -150,6 +150,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     businessName: "Your business name",
     logoAndName: "logo and name",
     editEarned: "Edit money I earned",
+    moneyMade: "Money made",
     earnedPlaceholder: "100",
     myHandbook: "My handbook",
     fallbackName: "My business",

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
 import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { fieldsAnswer } from "@/lib/launchpad/content/answers";
-import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE } from "@/lib/launchpad/content/budgeting/copy";
+import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE, BUDGETING_SPLIT_MADE_ASK, BUDGETING_SPLIT_MADE_HELP, BUDGETING_SPLIT_MADE_LABEL } from "@/lib/launchpad/content/budgeting/copy";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
 import { readBudgetSplit, writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
@@ -165,12 +165,19 @@ describe("Budgeting picture screens", () => {
     const text = editor.textContent ?? "";
     const contextAt = text.indexOf(BUDGETING_SPLIT_CONTEXT);
     const guidanceAt = text.indexOf(BUDGETING_SPLIT_GUIDANCE);
+    const madeAt = text.indexOf(BUDGETING_SPLIT_MADE_ASK);
     const askAt = text.indexOf(BUDGETING_SPLIT_ASK);
     const givingAt = text.indexOf("Giving");
     expect(contextAt).toBeGreaterThanOrEqual(0);
     expect(contextAt).toBeLessThan(guidanceAt);
-    expect(guidanceAt).toBeLessThan(askAt);
+    expect(guidanceAt).toBeLessThan(madeAt);
+    expect(madeAt).toBeLessThan(askAt);
     expect(askAt).toBeLessThan(givingAt);
+    expect(text).not.toContain("from your sales, so each budget item gets its share");
+    expect(screen.getByRole("textbox", { name: BUDGETING_SPLIT_MADE_LABEL })).toBeTruthy();
+    expect(screen.getByText(BUDGETING_SPLIT_MADE_HELP)).toBeTruthy();
+    expect(document.querySelector("[data-split-dollars='giving']")?.textContent).toBe("$5");
+    expect(document.querySelector("[data-split-dollars='pay']")?.textContent).toBe("$40");
     const context = editor.querySelector("[data-split-copy='context']")!;
     expect(context.className).toContain("text-[18px]");
     expect(context.className).toContain("leading-[26px]");
@@ -179,6 +186,27 @@ describe("Budgeting picture screens", () => {
     expect(guidance.className).toContain("text-[16px]");
     expect(ask.className).toContain("text-[21px]");
     expect(editor.textContent).not.toMatch(/rule of thumb/i);
+  });
+
+  it("shows a payload edit of the money-made prompt and recalculates the jar dollars", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const next = structuredClone(screenSpec);
+    const page = next.pages[3];
+    if (!page?.split) throw new Error("split page missing");
+    page.madeAsk = "A payload sales prompt.";
+    render(<PictureFlow screen={next} onExit={() => {}} onFinish={() => {}} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    expect(screen.getByText("A payload sales prompt.")).toBeTruthy();
+    expect(screen.queryByText(BUDGETING_SPLIT_MADE_ASK)).toBeNull();
+    expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox", { name: page.madeLabel }), { target: { value: "200" } });
+    expect(document.querySelector("[data-split-dollars='giving']")?.textContent).toBe("$10");
+    expect(document.querySelector("[data-split-dollars='emergencies']")?.textContent).toBe("$30");
+    expect(document.querySelector("[data-split-dollars='pay']")?.textContent).toBe("$80");
+    expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("200");
   });
 
   it("keeps the Grok credit off every Budgeting story screen", () => {

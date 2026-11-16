@@ -4,7 +4,7 @@ import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
-import { BUDGET_JARS, budgetPercents, earnedAmount, earnedDigits, readBudgetSplit, splitDollars, storedGivingPercent } from "@/lib/launchpad/content/budgeting/split";
+import { BUDGET_JARS, budgetPercents, earnedAmount, earnedDigits, readBudgetMoneyMade, readBudgetSplit, splitDollars, storedGivingPercent } from "@/lib/launchpad/content/budgeting/split";
 import { formatWholeMoney } from "@/lib/dashboard/currency/format-money";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
@@ -50,6 +50,7 @@ export function BudgetSplit({
   });
   const currency = readCurrencyPreference();
   const amounts = splitDollars(earnedAmount(raw), shares);
+  const moneyMade = readBudgetMoneyMade();
   return (
     <div data-budget-sheet="">
       <AccentLabel as="h2">{heading}</AccentLabel>
@@ -77,6 +78,11 @@ export function BudgetSplit({
           className={`w-[6ch] bg-transparent outline-none placeholder:text-[#19347D]/40 ${WORKBOOK_ANSWER}`}
         />
       </label>
+      {moneyMade != null ? (
+        <p className={`mt-3 ${WORKBOOK_BODY}`} data-money-made-playback="">
+          {s.workbook.moneyMade} <span className={WORKBOOK_ANSWER}>{formatWholeMoney(earnedAmount(moneyMade), currency)}</span>
+        </p>
+      ) : null}
       <ul className="mt-4 flex flex-col gap-[22px]">
         {BUDGET_JARS.map((jar, index) => (
           <li key={jar.id} className="grid grid-cols-[minmax(0,1fr)_3.25rem_4.25rem] items-center gap-x-3">

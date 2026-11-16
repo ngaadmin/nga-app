@@ -244,6 +244,13 @@ export function soonestGrowCheckIn(
   return best ? { period: best.period, date: best.date } : { period: fallback ? periodWord(fallback) : "", date: fallbackDate };
 }
 
+/** The quarterly review date. It does not follow the shortest experiment check-in. */
+export function quarterlyReviewCheckIn(checkInOptions: readonly GrowChoice[] | undefined, today: Date): SoonestCheckIn {
+  const option = (checkInOptions ?? []).find((item) => item.months === 3);
+  const months = option?.months && option.months > 0 ? option.months : 3;
+  return { period: option ? periodWord(option) : "", date: addMonths(today, months) };
+}
+
 export function formatCheckInDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }

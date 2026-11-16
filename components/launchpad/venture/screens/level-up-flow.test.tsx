@@ -258,7 +258,7 @@ describe("Level Up screens", () => {
     }
   });
 
-  it("shows a payload edit of the closer heading and the shortest of mixed picks", () => {
+  it("shows a payload edit of the closer heading and a three-month review date", () => {
     const edited = structuredClone(grow);
     edited.content.grow.closerHeadline = "Come back in {period}.";
     const answer = {
@@ -277,9 +277,9 @@ describe("Level Up screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Come back in two weeks.")).toBeTruthy();
+    expect(screen.getByText("Come back in three months.")).toBeTruthy();
     expect(screen.queryByText("See you in two weeks.")).toBeNull();
-    expect(screen.getByText("Your next check-in: November 25, 2026")).toBeTruthy();
+    expect(screen.getByText("Your next check-in: February 11, 2027")).toBeTruthy();
   });
 
   it("shows a payload edit of a bundles lead-in", () => {
@@ -376,11 +376,11 @@ describe("Level Up screens", () => {
     expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 3")).toBeTruthy();
-    expect(screen.getByText("See you in this week.")).toBeTruthy();
-    expect(screen.getByText("Your next check-in: November 17, 2026")).toBeTruthy();
+    expect(screen.getByText("See you in three months.")).toBeTruthy();
+    expect(screen.getByText("Your next check-in: February 10, 2027")).toBeTruthy();
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    expect(write).toHaveBeenCalledWith(expect.stringContaining("November 17, 2026"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("February 10, 2027"));
     expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
     expect(screen.getByRole("status").textContent).toBe("Copied");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

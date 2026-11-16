@@ -11,7 +11,7 @@ import {
   fillToken,
   formatCheckInDate,
   joinList,
-  soonestGrowCheckIn,
+  quarterlyReviewCheckIn,
   pickedStatements,
   sectionLabel,
   statementsIn,
@@ -196,11 +196,11 @@ export function LevelUpFlow({
   const growDetail = statementMode || Boolean(content.grow.startOptions?.length && content.grow.checkInOptions?.length && growIdeas.every((idea) => idea.successLine));
   const growTotal = 1 + (growDetail ? growIdeas.length : 0) + 1;
   const total = screen.step === "improve" ? pickPages + (planAvailable ? 1 : 0) : screen.step === "reflect" ? pickPages : growTotal;
-  const soonest = soonestGrowCheckIn(draft.growPlans, content.grow.startOptions, content.grow.checkInOptions, today);
-  const checkInLabel = formatCheckInDate(soonest.date);
+  const quarterly = quarterlyReviewCheckIn(content.grow.checkInOptions, today);
+  const checkInLabel = formatCheckInDate(quarterly.date);
   const checkInLine = fillToken(content.grow.checkIn, "date", checkInLabel);
   const closerHeadline = content.grow.closerHeadline.includes("{period}")
-    ? fillToken(content.grow.closerHeadline, "period", soonest.period)
+    ? fillToken(content.grow.closerHeadline, "period", quarterly.period)
     : content.grow.closerHeadline;
 
   const save = (next: LevelUpAnswer, done: boolean) => {

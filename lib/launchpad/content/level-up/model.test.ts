@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseLevelUpAnswer } from "@/lib/launchpad/content/answers";
-import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
+import { addDays, addMonths, checkInClipboard, expandJobsFor, fillToken, formatCheckInDate, joinList, quarterlyReviewCheckIn, soonestGrowCheckIn, weeklyFocusRows } from "@/lib/launchpad/content/level-up/model";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadLevelUpScreen } from "@/lib/launchpad/content/types";
 
@@ -38,6 +38,10 @@ describe("Level Up check-in date", () => {
     const none = soonestGrowCheckIn([], grow.startOptions, grow.checkInOptions, today);
     expect(none.period).toBe("three months");
     expect(formatCheckInDate(none.date)).toBe(formatCheckInDate(addMonths(today, 3)));
+    const quarterly = quarterlyReviewCheckIn(grow.checkInOptions, today);
+    expect(quarterly.period).toBe("three months");
+    expect(formatCheckInDate(quarterly.date)).toBe(formatCheckInDate(addMonths(today, 3)));
+    expect(formatCheckInDate(quarterly.date)).not.toBe(formatCheckInDate(mixed.date));
     expect(addDays(today, 14).getDate()).toBe(25);
   });
 

@@ -160,6 +160,14 @@ export const DO_DIFFERENTLY: readonly ChipOption[] = chips([
 
 export const SOMETHING_ELSE_ID = "something-else";
 
+/** A do-differently idea that repeats an extra the learner already picked. */
+export const ADDON_IDEA_BLOCKS: readonly { addonId: string; ideaId: string }[] = [
+  { addonId: "photo-of-the-dog-after-every-walk", ideaId: "send-photo-updates-after-each-job" },
+  { addonId: "short-note-of-how-the-walk-went-anything-spotted", ideaId: "include-a-short-written-update" },
+  { addonId: "solo-walk-one-dog-only", ideaId: "walk-one-dog-at-a-time" },
+  { addonId: "weekend-or-after-school-slots", ideaId: "offer-weekend-or-after-school-times" },
+];
+
 export function catalogFor(serviceId: string): ServiceCatalog | undefined {
   return SERVICE_CATALOGS.find((row) => row.serviceId === serviceId);
 }

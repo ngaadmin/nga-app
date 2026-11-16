@@ -52,20 +52,11 @@ describe("Know your cost flow", () => {
     expect(screen.queryByText("Notebook for owners' notes")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
 
-    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
-
-    fireEvent.click(screen.getByRole("button", { name: "Add costs" }));
-    fireEvent.click(screen.getAllByRole("button", { name: "Calculate the cost" })[0]!);
     expect(screen.getByRole("textbox", { name: "Amount for Poop bags" }).getAttribute("value") ?? (screen.getByRole("textbox", { name: "Amount for Poop bags" }) as HTMLInputElement).value).toBe("0.05");
     fireEvent.change(screen.getByRole("textbox", { name: "Amount for Treats" }), { target: { value: "0" } });
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    fireEvent.click(screen.getAllByRole("button", { name: "Calculate the cost" })[0]!);
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
 
-    const ready = screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
-    expect(ready.disabled).toBe(false);
-    fireEvent.click(ready);
     expect(screen.getByText("Grand total to start")).toBeTruthy();
     const grand = document.querySelector("[data-grand-total]")?.textContent;
     expect(grand).toMatch(/^\$\d+$/);

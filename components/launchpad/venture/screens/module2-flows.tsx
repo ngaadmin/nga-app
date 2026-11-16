@@ -14,6 +14,7 @@ import {
   catalogFor,
   chipLabel,
   isAvailabilitySlot,
+  ADDON_IDEA_BLOCKS,
   SOMETHING_ELSE_ID,
 } from "@/lib/launchpad/content/planning/catalog";
 import type { LaunchpadChip, LaunchpadCompetitorScreen, LaunchpadCustomerScreen, LaunchpadFloor, LaunchpadOfferLoopScreen } from "@/lib/launchpad/content/types";
@@ -371,7 +372,8 @@ export function CompetitorFlow({
     persist(screen.answerKey, next);
   };
   const pricesReady = draft.priceHigh >= draft.priceLow && (!!draft.jobComparedId || !!draft.jobComparedExtra?.trim());
-  const ideaReady = draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim();
+  const blockedIdeas = new Set(ADDON_IDEA_BLOCKS.filter((pair) => draft.addons.includes(pair.addonId)).map((pair) => pair.ideaId));
+  const ideaReady = !blockedIdeas.has(draft.doDifferently) && (draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim());
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={step}>
       <LessonTopBar
@@ -422,8 +424,8 @@ export function CompetitorFlow({
                 <p className="text-[16px] text-[#6B7280]">{screen.copy.ideaHint}</p>
                 <div className="mt-2 flex flex-col">
                   {screen.ideas.map((idea) => (
-                    <label key={idea.id} className="flex h-11 items-center gap-2 border-b border-[#F3F4F6] text-[18px] text-[#19347D]">
-                      <input type="radio" name="do-differently" checked={draft.doDifferently === idea.id} onChange={() => write({ ...draft, doDifferently: idea.id })} />
+                    <label key={idea.id} className={`flex h-11 items-center gap-2 border-b border-[#F3F4F6] text-[18px] text-[#19347D] ${blockedIdeas.has(idea.id) ? "opacity-40" : ""}`}>
+                      <input type="radio" name="do-differently" checked={draft.doDifferently === idea.id} disabled={blockedIdeas.has(idea.id)} onChange={() => write({ ...draft, doDifferently: idea.id })} />
                       {idea.label}
                     </label>
                   ))}

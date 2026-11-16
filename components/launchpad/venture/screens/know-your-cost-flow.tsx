@@ -316,7 +316,8 @@ export function KnowYourCostFlow({
                   done: true,
                 },
               });
-              setStep({ name: "hub" });
+              const first = ref.current.ongoing[0];
+              setStep(first ? { name: "service", serviceId: first.serviceId } : screen.showTotals ? { name: "totals" } : { name: "workbook" });
             }}
           >
             Done
@@ -336,7 +337,12 @@ export function KnowYourCostFlow({
       const intro = screen.copy.serviceIntro.split("{service}").join(service.label);
       body = (
         <>
-          <BackTitle title={service.label} onBack={() => setStep({ name: "ongoing" })} />
+          <BackTitle title={service.label} onBack={() => {
+            const list = ref.current.ongoing;
+            const at = list.findIndex((row) => row.serviceId === service.serviceId);
+            const prev = at > 0 ? list[at - 1] : undefined;
+            setStep(prev ? { name: "service", serviceId: prev.serviceId } : { name: "startup" });
+          }} />
           <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
             <p className="text-[16px] leading-snug text-[#6B7280]">{intro}</p>
             <div className="mt-2">
@@ -388,7 +394,10 @@ export function KnowYourCostFlow({
                       : row,
                   ),
                 });
-                setStep({ name: "ongoing" });
+                const list = ref.current.ongoing;
+                const at = list.findIndex((row) => row.serviceId === service.serviceId);
+                const next = list[at + 1];
+                setStep(next ? { name: "service", serviceId: next.serviceId } : screen.showTotals ? { name: "totals" } : { name: "workbook" });
               }}
             >
               Done

@@ -331,6 +331,16 @@ export function LaunchpadHome({
                 </div>
                 <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink">{home.complete}</p>
               </div>
+              <div className="mt-1.5 flex items-center gap-2">
+                <button type="button" onClick={() => onOpenVenture(v.ventureId)} className="font-heading text-[14px] font-bold text-nga-ink" data-reopen-business="">
+                  {home.reopen}
+                </button>
+                {onOpenHandbook && (
+                  <button type="button" aria-label={WORKBOOK_FLOOR_LABEL} onClick={() => onOpenHandbook(v.ventureId, v.level)} className="flex size-11 items-center justify-center" data-handbook-button="">
+                    <WorkbookMark />
+                  </button>
+                )}
+              </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-[3px] bg-nga-mist" role="progressbar" aria-label={home.complete} aria-valuenow={v.total} aria-valuemax={v.total} aria-valuemin={0}>
                 <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: "100%" }} />
               </div>

@@ -439,6 +439,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     inProgress: "In Progress",
     myBusinesses: "My Businesses",
     complete: "Complete",
+    reopen: "Open",
   },
   lift: {
     goingUp: "Going up to Level",

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IDENTITY_ANSWER_KEY, launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
 import { fieldsAnswer, identityAnswerOf, selectionAnswer, selectionOf, type CompetitorAnswer, type CustomerAnswer, type OfferAnswer } from "@/lib/launchpad/content/answers";
@@ -41,6 +41,10 @@ afterEach(cleanup);
 
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const SILVERS = FLOORS.flatMap((f) => f.silvers);
+
+beforeEach(() => {
+  window.localStorage.setItem("lp-venture-test:workbook-intro-seen", "1");
+});
 
 function through(silverId: string, base: VentureTestProgress = EMPTY_VENTURE_TEST_PROGRESS): VentureTestProgress {
   return applyVentureTestShortcut({ kind: "through-silver", silverId }, FLOORS, base)!.progress;
@@ -278,6 +282,20 @@ const goalField = (key: string, name: string) =>
     .flatMap((g) => (g.type === "short-text" && g.answerKey === key ? g.fields : []))
     .find((f) => f.name === name)!;
 const SKILL_PREFILL = goalField("l1-goal-learn-new-skills", "skill").options![0]!.prefill!;
+
+describe("workbook intro", () => {
+  it("shows the context screen once, then opens the pages", () => {
+    window.localStorage.removeItem("lp-venture-test:workbook-intro-seen");
+    render(<Harness entry="building" initial={through("l1-s1")} />);
+    expect(screen.getByRole("heading", { name: "Your workbook" })).toBeTruthy();
+    expect(screen.getByText("As you build your business, every task you complete is saved here automatically.")).toBeTruthy();
+    expect(document.querySelector("[data-screen-type='context']")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(window.localStorage.getItem("lp-venture-test:workbook-intro-seen")).toBe("1");
+    expect(document.querySelector("[data-handbook-page]")).toBeTruthy();
+    expect(screen.queryByText("As you build your business, every task you complete is saved here automatically.")).toBeNull();
+  });
+});
 
 describe("<Handbook>", () => {
   it("opens on page 1; Next page and a left swipe move forward in order, Previous and a right swipe go back, the dots follow", () => {

@@ -175,7 +175,7 @@ function MaterialsStep({
   const selected = new Set(sales?.selected ?? []);
   const friends = sales?.where.friends ?? [];
   const fields = (screen.pieceFields ?? []).filter((field) => {
-    if (field.channelId === "flyers") return selected.has("flyers") || selected.has("noticeboard");
+    if (field.channelId === "flyers") return selected.has("flyers");
     if (field.channelId === "verbal") return selected.has("friends") && friends.includes("see");
     if (field.channelId === "message") return selected.has("friends") && friends.includes("message");
     if (field.channelId === "online") return selected.has("online");
@@ -267,17 +267,17 @@ function TargetsStep({
   const selected = new Set(sales?.selected ?? []);
   const friends = sales?.where.friends ?? [];
   const lines = [
-    selected.has("flyers") ? { id: "flyers", before: s.sales.printAndDistribute, after: s.sales.flyers } : null,
-    selected.has("friends") && friends.includes("see") ? { id: "see", before: s.sales.tellPeople, after: s.sales.inPerson } : null,
-    selected.has("friends") && friends.includes("message") ? { id: "message", before: s.sales.sendMessage, after: s.sales.people } : null,
-    selected.has("online") ? { id: "days", before: s.sales.sharePost, after: s.sales.daysInAdvance } : null,
-    selected.has("online") ? { id: "ask", before: s.sales.askFriends, after: s.sales.friendsShare } : null,
-    selected.has("noticeboard") ? { id: "board", before: s.sales.putUp, after: s.sales.posters } : null,
+    selected.has("flyers") ? { id: "flyers", before: s.sales.printAndDistribute, after: s.sales.flyers, choice: false } : null,
+    selected.has("friends") && friends.includes("see") ? { id: "see", before: s.sales.tellPeople, after: s.sales.inPerson, choice: false } : null,
+    selected.has("friends") && friends.includes("message") ? { id: "message", before: s.sales.sendMessage, after: s.sales.people, choice: false } : null,
+    selected.has("online") ? { id: "share", before: s.sales.sharePost, after: "", choice: true } : null,
+    selected.has("online") ? { id: "ask", before: s.sales.askFriends, after: s.sales.friendsShare, choice: false } : null,
   ].flatMap((row) => (row ? [row] : []));
   const cards = selected.has("cards");
   const [counts, setCounts] = useState<Record<string, string>>({});
-  const ids = [...lines.map((line) => line.id), ...(cards ? ["cards", "stores"] : [])];
-  const ready = ids.every((id) => Number(counts[id]) > 0);
+  const [shareWhen, setShareWhen] = useState("");
+  const ids = [...lines.filter((line) => !line.choice).map((line) => line.id), ...(cards ? ["cards", "stores"] : [])];
+  const ready = ids.every((id) => Number(counts[id]) > 0) && (!selected.has("online") || Boolean(shareWhen));
   const field = (id: string) => (
     <input
       aria-label={id}
@@ -288,13 +288,24 @@ function TargetsStep({
     />
   );
   return (
-    <LessonSurface title={screen.title} onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "tell-people", version: 1, counts: Object.fromEntries(ids.map((id) => [id, Number(counts[id])])) })} />}>
+    <LessonSurface title={screen.title} onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "tell-people", version: 1, counts: Object.fromEntries(ids.map((id) => [id, Number(counts[id])])), ...(shareWhen ? { shareWhen } : {}) })} />}>
       <div data-task-screen="sales-targets">
         {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
         {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
         <div className="mt-4 flex flex-col gap-3">
           {lines.map((line) => (
-            <p key={line.id} className={LESSON_BODY}>{line.before} {field(line.id)} {line.after}</p>
+            <p key={line.id} className={LESSON_BODY}>
+              {line.before}{" "}
+              {line.choice ? (
+                <select aria-label={line.before.trim()} value={shareWhen} onChange={(event) => setShareWhen(event.target.value)} className="mx-1 h-9 rounded-lg border border-[#D5DAE3] bg-white px-2 font-sans text-[18px] font-semibold text-[#19347D]">
+                  <option value="" />
+                  {s.sales.shareTimes.map((option) => (
+                    <option key={option.id} value={option.id}>{option.label}</option>
+                  ))}
+                </select>
+              ) : field(line.id)}{" "}
+              {line.after}
+            </p>
           ))}
           {cards ? (
             <p className={LESSON_BODY}>{s.sales.iWillPrint} {field("cards")} {s.sales.businessCards} {field("stores")} {s.sales.storesLeave}</p>

@@ -258,6 +258,8 @@ export type TellPeopleAnswer = {
   kind: "tell-people";
   version: 1;
   counts: Readonly<Record<string, number>>;
+  /** When the online post will be shared. */
+  shareWhen?: string;
 };
 
 /** Level 4 order system. The tracker pick and the reminder. */
@@ -588,7 +590,8 @@ export function parseMarketingMaterialsAnswer(value: unknown): MarketingMaterial
 
 export function parseTellPeopleAnswer(value: unknown): TellPeopleAnswer | null {
   if (!isRecord(value) || value.kind !== "tell-people" || value.version !== 1) return null;
-  return { kind: "tell-people", version: 1, counts: countMap(value.counts) };
+  const shareWhen = typeof value.shareWhen === "string" && ID_RE.test(value.shareWhen) ? value.shareWhen : "";
+  return { kind: "tell-people", version: 1, counts: countMap(value.counts), ...(shareWhen ? { shareWhen } : {}) };
 }
 
 export function salesChannelsOf(answers: LaunchpadAnswers | undefined, key: string): SalesChannelsAnswer | undefined {

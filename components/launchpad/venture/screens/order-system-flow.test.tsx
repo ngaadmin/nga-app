@@ -54,8 +54,9 @@ describe("Set up your order system", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText(copy.playbackTitle)).toBeTruthy();
     expect(screen.getByText(copy.templateStrong).className).toContain("font-semibold");
-    expect(screen.getByText(copy.repeatLine)).toBeTruthy();
-    expect(screen.getByText(copy.checkLine)).toBeTruthy();
+    expect(screen.getByText(copy.repeatScreen)).toBeTruthy();
+    expect(screen.getByText(copy.checkScreen)).toBeTruthy();
+    expect(screen.queryByText(copy.repeatLine)).toBeNull();
     expect(screen.getAllByText("the night before").length).toBeGreaterThan(0);
     expect(document.querySelector("[data-scribble-large='star']")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

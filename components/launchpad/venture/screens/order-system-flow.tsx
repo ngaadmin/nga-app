@@ -128,13 +128,13 @@ function OrderSystemScreens({
           <>
             <ScreenPrompt tone="question" flush>{copy.playbackTitle}</ScreenPrompt>
             <p className={`mt-[21px] ${LESSON_BODY}`}>
-              {copy.templateBefore}
+              {copy.templateScreen}
               <span className="font-semibold">{copy.templateStrong}</span>
               {copy.templateAfter}
             </p>
-            <p className={`mt-4 ${LESSON_BODY}`}>{copy.repeatLine}</p>
+            <p className={`mt-4 ${LESSON_BODY}`}>{copy.repeatScreen}</p>
             <StackedSelect lead={copy.reminderLead} value={reminder} emptyLabel={copy.emptyLabel} options={copy.reminderOptions} onChange={setReminder} />
-            <p className={`mt-[22px] ${LESSON_BODY}`}>{copy.checkLine}</p>
+            <p className={`mt-[22px] ${LESSON_BODY}`}>{copy.checkScreen}</p>
           </>
         )}
       </div>

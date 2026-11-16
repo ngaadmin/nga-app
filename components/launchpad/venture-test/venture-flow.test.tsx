@@ -15,6 +15,7 @@ const VENTURES: Record<string, LaunchpadVentureView> = {
 
 beforeEach(() => {
   localStorage.clear();
+  localStorage.setItem("lp-venture-test:workbook-intro-seen", "1");
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 });
 afterEach(cleanup);

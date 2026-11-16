@@ -22,6 +22,10 @@ import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-a
 import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { layoutWorkbookDoodles } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { ContextScreen } from "@/components/launchpad/venture/screens/context-screen";
+import { LessonContinue, LessonSurface } from "@/components/launchpad/venture/screens/screen-ui";
+
+const WORKBOOK_INTRO_KEY = "lp-venture-test:workbook-intro-seen";
 
 const READ_ONLY_SAVE = () => {};
 
@@ -122,6 +126,21 @@ export function Handbook({
     .filter((tab) => scopeLevel == null || tab.level === scopeLevel)
     .map((tab) => (scopeLevel == null ? tab : { ...tab, tappable: true }));
   // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return window.localStorage.getItem(WORKBOOK_INTRO_KEY) !== "1";
+    } catch {
+      return false;
+    }
+  });
+  const dismissIntro = () => {
+    try {
+      window.localStorage.setItem(WORKBOOK_INTRO_KEY, "1");
+    } catch {
+      // The intro can show again next visit.
+    }
+    setShowIntro(false);
+  };
   const [templatesOpen, setTemplatesOpen] = useState(initialTemplates);
   const [templatePage, setTemplatePage] = useState(0);
   const poster = s.templates.poster;
@@ -171,6 +190,20 @@ export function Handbook({
 
   const go = (i: number) => setIndex(Math.max(0, Math.min(pages.length - 1, i)));
   const editable = page ? isHandbookPageEditable(entry, page.done) && !!setAnswer : false;
+
+  if (showIntro) {
+    return (
+      <div role="dialog" aria-modal="true" aria-label={s.workbook.introHeading} className="fixed inset-0 z-modal mx-auto flex w-full max-w-[430px] flex-col bg-white" data-handbook={entry} data-workbook-intro="">
+        <LessonSurface
+          title={s.workbook.introHeading}
+          onBack={onClose}
+          footer={<LessonContinue onClick={dismissIntro} />}
+        >
+          <ContextScreen screen={{ id: "workbook-intro", type: "context", context: s.workbook.introContext, guidance: s.workbook.introGuidance }} />
+        </LessonSurface>
+      </div>
+    );
+  }
 
   return (
     <div

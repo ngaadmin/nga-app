@@ -523,11 +523,16 @@ export type OrderSystemCopy = {
   templateBefore: string;
   templateStrong: string;
   templateAfter: string;
+  /** On-screen You form. The workbook keeps templateBefore and repeatLine. */
+  templateScreen: string;
+  repeatScreen: string;
   repeatLine: string;
   reminderLead: string;
   reminderDefault: string;
   reminderOptions: readonly { id: string; label: string }[];
   checkLine: string;
+  /** On-screen You form. The workbook keeps checkLine. */
+  checkScreen: string;
   workbookTitle: string;
   trackerBefore: string;
   trackerAfter: string;

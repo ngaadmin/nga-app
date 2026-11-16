@@ -28,7 +28,6 @@ export const CHANNELS = [
   { id: "friends", label: "Friends and family", short: "friends" },
   { id: "online", label: "An online post or online community group", short: "online post" },
   { id: "cards", label: "Business cards", short: "business card" },
-  { id: "noticeboard", label: "Noticeboard in a public place (supermarket, sports club, community center)", short: "noticeboard" },
 ] as const;
 
 export type SalesChannelId = (typeof CHANNELS)[number]["id"];
@@ -43,6 +42,7 @@ export const WHERE_GROUPS = [
       { id: "school", label: "At school (with permission)", sentence: "at school (with permission)" },
       { id: "library", label: "A library", sentence: "a library" },
       { id: "shop", label: "A local shop window", sentence: "a local shop window" },
+      { id: "mailboxes", label: "In people's mailboxes near me", sentence: "in people's mailboxes near me" },
     ],
   },
   {
@@ -73,23 +73,19 @@ export const WHERE_GROUPS = [
       { id: "work", label: "At work or school", sentence: "at work or school" },
     ],
   },
-  {
-    channelId: "noticeboard",
-    heading: "Noticeboard in a public place (supermarket, sports club, community center)",
-    label: "Where does it go up?",
-    allowOwn: true,
-    options: [
-      { id: "school", label: "At school (with permission)", sentence: "at school (with permission)" },
-      { id: "library", label: "A library", sentence: "a library" },
-      { id: "shop", label: "A local shop window", sentence: "a local shop window" },
-    ],
-  },
 ] as const;
 
 export const WHERE_PAGES: readonly (readonly SalesChannelId[])[] = [
   ["flyers", "friends"],
-  ["online", "cards", "noticeboard"],
+  ["online", "cards"],
 ];
+
+export const SHARE_TIMES = [
+  { id: "today", label: "today" },
+  { id: "tomorrow", label: "tomorrow" },
+  { id: "this-week", label: "this week" },
+  { id: "next-week", label: "next week" },
+] as const;
 
 export const HOOKS = [
   { id: "too-busy", label: "Too busy to walk your dog?" },
@@ -193,7 +189,10 @@ export const ORDER_SYSTEM = {
   question: "How will you keep track of your orders?",
   context: "Once people know about your business, they will start getting in touch. A simple system means no job or customer gets missed.",
   guidance: "Pick where you will keep your orders. A calendar is the best choice because it can repeat regular jobs and remind you before each one.",
-  trackerLead: "I will keep my orders in",
+  trackerLead: "You will keep your orders in",
+  templateScreen: "When someone books, you will write down the details using the ",
+  repeatScreen: "For a regular job, you will add it as a repeat so it never slips.",
+  checkScreen: "You will check your orders every morning.",
   emptyLabel: "choose",
   trackerOptions: [
     { id: "calendar", label: "My calendar (best choice)", workbook: "My calendar" },
@@ -205,7 +204,7 @@ export const ORDER_SYSTEM = {
   templateStrong: "Taking a customer order",
   templateAfter: " template.",
   repeatLine: "For a regular job, I will add it as a repeat so it never slips.",
-  reminderLead: "I will set a reminder",
+  reminderLead: "You will set a reminder",
   reminderDefault: "night-before",
   reminderOptions: [
     { id: "night-before", label: "the night before" },

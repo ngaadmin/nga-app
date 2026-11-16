@@ -95,6 +95,7 @@ function checkSurfaceCopy(value: Obj, where: string): void {
     else if (typeof item === "boolean") bool(item, `${where} ${key}`);
     else if (Array.isArray(item) && where.endsWith("templates") && key === "pages") checkTemplatePages(item, `${where} ${key}`);
     else if (Array.isArray(item) && key === "exampleRows") checkExampleRows(item, `${where} ${key}`);
+    else if (Array.isArray(item) && item.every(isObj)) item.forEach((row, i) => checkSurfaceCopy(row as Obj, `${where} ${key} ${i + 1}`));
     else if (isObj(item)) checkSurfaceCopy(item, `${where} ${key}`);
     else fail(`${where} ${key} is missing.`);
   }
@@ -867,7 +868,7 @@ function checkOrderOptions(value: unknown, where: string): void {
 
 function checkOrderSystem(value: unknown, where: string): void {
   if (!isObj(value)) fail(`${where} is missing.`);
-  for (const field of ["question", "context", "guidance", "trackerLead", "emptyLabel", "playbackTitle", "templateBefore", "templateStrong", "templateAfter", "repeatLine", "reminderLead", "checkLine", "workbookTitle", "trackerBefore", "trackerAfter", "reminderBefore", "reminderAfter", "checkBefore", "checkPick", "checkAfter"] as const) {
+  for (const field of ["question", "context", "guidance", "trackerLead", "emptyLabel", "playbackTitle", "templateBefore", "templateStrong", "templateAfter", "templateScreen", "repeatScreen", "repeatLine", "reminderLead", "checkLine", "checkScreen", "workbookTitle", "trackerBefore", "trackerAfter", "reminderBefore", "reminderAfter", "checkBefore", "checkPick", "checkAfter"] as const) {
     text(value[field], `${where} ${field}`);
   }
   checkOrderOptions(value.trackerOptions, `${where} trackerOptions`);

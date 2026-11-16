@@ -14,6 +14,7 @@ import {
   PIECE_FIELDS,
   PROOFS,
   SALES_CHANNELS_KEY,
+  SHARE_TIMES,
   TELL_PEOPLE_KEY,
   WHERE_GROUPS,
 } from "@/lib/launchpad/content/sales/copy";
@@ -174,7 +175,6 @@ function activePieces(answers: LaunchpadAnswers | undefined): ("flyer" | "verbal
   if (selected.has("friends") && friends.includes("message") && marketing?.pieces["message-close"]) out.push("message");
   if (selected.has("online") && marketing?.pieces["online-close"]) out.push("online");
   if (selected.has("cards")) out.push("card");
-  if (selected.has("noticeboard") && !selected.has("flyers") && marketing?.pieces["flyer-book"]) out.push("flyer");
   return out;
 }
 
@@ -237,10 +237,8 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   const pieces = activePieces(answers).flatMap((id) => {
     const meta = PIECE_META.find((row) => row.id === id);
     if (!meta) return [];
-    const subhead = id === "flyer" && sales?.selected.includes("noticeboard") && !sales.selected.includes("flyers")
-      ? "What my noticeboard will say"
-      : meta.subhead;
-    const underline = subhead === "What my noticeboard will say" ? "noticeboard" : meta.underline;
+    const subhead = meta.subhead;
+    const underline = meta.underline;
     const built = marketingLines(answers, id, businessName);
     return [{ id, subhead, underline, lines: built.lines.map((line) => emphasize(line, built.tokens)) }];
   });
@@ -251,7 +249,7 @@ export function salesWorkbookSheets(answers: LaunchpadAnswers | undefined, busin
   });
   const tell = tellPeopleOf(answers, TELL_PEOPLE_KEY);
   if (tell && sales) {
-    const rows = tellLines(sales.selected, sales.where.friends ?? [], tell.counts);
+    const rows = tellLines(sales.selected, sales.where.friends ?? [], tell.counts, tell.shareWhen);
     if (rows.length) {
       sheets.push({
         id: "sales-tell",
@@ -285,6 +283,7 @@ export function tellLines(
   selected: readonly string[],
   friendsWhere: readonly string[],
   counts: Readonly<Record<string, number>>,
+  shareWhen?: string,
 ): (string | { value: string | null })[][] {
   const on = new Set(selected);
   const rows: { id: string; parts: (string | { value: string | null })[] }[] = [];
@@ -293,7 +292,8 @@ export function tellLines(
   if (on.has("friends") && friendsWhere.includes("see")) rows.push({ id: "see", parts: ["I will tell ", num("see"), " people in person."] });
   if (on.has("friends") && friendsWhere.includes("message")) rows.push({ id: "message", parts: ["I will send the message to ", num("message"), " people."] });
   if (on.has("online")) {
-    rows.push({ id: "days", parts: ["I will share the post ", num("days"), " days in advance."] });
+    const when = SHARE_TIMES.find((option) => option.id === shareWhen)?.label ?? null;
+    rows.push({ id: "share", parts: ["I will share the post online ", { value: when }, "."] });
     rows.push({ id: "ask", parts: ["I will ask ", num("ask"), " friends to share it."] });
   }
   if (on.has("cards")) {
@@ -302,6 +302,5 @@ export function tellLines(
       parts: ["I will print ", num("cards"), " business cards and ask ", num("stores"), " stores if I can leave them there for their customers."],
     });
   }
-  if (on.has("noticeboard")) rows.push({ id: "board", parts: ["I will put up ", num("board"), " posters on a noticeboard."] });
   return rows.map((row) => row.parts);
 }

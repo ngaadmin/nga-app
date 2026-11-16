@@ -124,6 +124,7 @@ describe("Launchpad home In Progress tile", () => {
     const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", contentHash: "seed", source: "seed" } };
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={ventures} reset={false} />);
     expect(await screen.findByText("Growing")).toBeTruthy();
+    window.localStorage.setItem("lp-venture-test:workbook-intro-seen", "1");
     fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
     expect(await screen.findByRole("heading", { name: "My budget split" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Level 6, Budgeting/ })).toBeTruthy();

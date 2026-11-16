@@ -10,6 +10,7 @@ import {
   findSentence,
   POLISH_QUESTIONS,
   practiceLines,
+  practiceServiceSentence,
   wrapJobLines,
 } from "@/lib/launchpad/content/getting-ready/copy";
 import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
@@ -69,14 +70,17 @@ describe("getting ready sentences", () => {
   });
 
   it("lowercases the practice service and groups the other feedback", () => {
-    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will practice dog walking.");
-    const practice = gettingReadyWorkbookSheets(undefined, "dog walking and grooming", true, "I will practice ")
+    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do dog walking for them.");
+    expect(practiceServiceSentence(["Dog walking"])).toBe("I will do dog walking for them.");
+    expect(practiceServiceSentence(["Dog walking", "Grooming"])).toBe("I will do dog walking and grooming for them.");
+    expect(practiceServiceSentence(["Dog walking", "Grooming", "Dog sitting"])).toBe("I will do dog walking, grooming, and dog sitting for them.");
+    const practice = gettingReadyWorkbookSheets(undefined, "dog walking and grooming", true)
       .find((page) => page.id === "ready-c")!;
     const practiceText = JSON.stringify(practice);
-    expect(practiceText).toContain("I will practice ");
+    expect(practiceText).toContain("I will do ");
     expect(practiceText).toContain("dog walking and grooming");
-    expect(practiceText).not.toContain("for them");
-    expect(practiceText).not.toMatch(/\bthem\b|\bthey\b|\btheir\b/);
+    expect(practiceText).toContain(" for them.");
+    expect(practiceText).not.toContain("I will practice");
     const wrap = feedbackWrap([
       { id: "service_explained", result: "good" },
       { id: "cost", result: "good" },

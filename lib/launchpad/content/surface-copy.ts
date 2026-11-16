@@ -194,7 +194,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     introGuidance: "You can open your workbook as you go, and again once your business is up and running, to look back at your plan.",
     close: "Close workbook",
     title: "My workbook",
-    practiceService: "I will practice ",
+    practiceServiceLead: "I will do {picks} for them.",
     readOnly: "Read only",
     floors: "Workbook floors",
     previous: "Previous page",

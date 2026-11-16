@@ -153,6 +153,7 @@ describe("Getting Ready bronze task surfaces", () => {
     expect(menu?.className).not.toContain("absolute");
     fireEvent.click(screen.getByRole("button", { name: "a family member" }));
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
+    expect(screen.getByText("I will do dog walking for them.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "When you will practice" }));
     fireEvent.click(screen.getByRole("button", { name: "tomorrow" }));
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);

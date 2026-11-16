@@ -20,6 +20,7 @@ import {
   PRACTICE_WHO,
   findReady,
   practiceLines,
+  practiceServiceSentence,
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
 import {
@@ -558,6 +559,14 @@ function PracticeStep({
   const [when, setWhen] = useState(saved?.when);
   const ready = !!who && picked.length > 0 && !!when;
   const toggle = (id: string) => setPicked((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  const serviceLine = picked.length
+    ? practiceServiceSentence(
+        picked.map((id) => services.find((row) => row.id === id)?.label ?? id),
+        screen.practiceServiceLead ?? s.workbook.practiceServiceLead,
+        s.list.comma,
+        s.list.and,
+      )
+    : "";
   const stems = [
     { lead: screen.practiceWhoLead, label: s.ready.who, value: who, options: screen.practiceWho ?? [], onPick: setWho },
     { lead: screen.practiceWhenLead, label: s.ready.when, value: when, options: screen.practiceWhen ?? [], onPick: setWhen },
@@ -576,6 +585,7 @@ function PracticeStep({
             <Chip key={row.id} variant="lined" label={row.label} selected={picked.includes(row.id)} onClick={() => toggle(row.id)} />
           ))}
         </div>
+        {serviceLine ? <p className={`mt-4 ${LESSON_BODY}`} data-practice-service="">{serviceLine}</p> : null}
         {stems.map((stem) => {
           const [before, after] = stem.lead?.split("{pick}") ?? ["", ""];
           return (

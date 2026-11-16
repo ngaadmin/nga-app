@@ -713,7 +713,7 @@ function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) 
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const picked = (practice?.services ?? []).map((id) => services.find((row) => row.id === id)?.label ?? id);
   const serviceLabel = joinPhrase(picked.map((label) => label.charAt(0).toLowerCase() + label.slice(1)), copy.list.comma, copy.list.and);
-  const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates, copy.workbook.practiceService).find((item) => item.id === sheet);
+  const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates, copy.workbook.practiceServiceLead).find((item) => item.id === sheet);
   return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
 

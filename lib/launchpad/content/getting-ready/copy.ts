@@ -1,4 +1,5 @@
-import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
+import { joinMid, joinPhrase } from "@/lib/launchpad/content/planning/catalog";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 
 /**
  * Getting Ready copy and sentences (framework rows 28-33, md5 bbaf7a74).
@@ -216,13 +217,22 @@ export function wrapJobLines(paymentHow: string | readonly string[], feedbackHow
   return { title: WRAP_JOB_PLAYBACK, lines };
 }
 
+/** Fills "I will do {picks} for them." The closing stays in the payload string. */
+export function practiceServiceSentence(
+  labels: readonly string[],
+  lead: string = LAUNCHPAD_SURFACE_COPY.workbook.practiceServiceLead,
+  comma: string = LAUNCHPAD_SURFACE_COPY.list.comma,
+  andWord: string = LAUNCHPAD_SURFACE_COPY.list.and,
+): string {
+  return lead.replace("{picks}", joinMid(labels, comma, andWord));
+}
+
 export function practiceLines(who: string, serviceLabel: string, when: string): string[] {
   const whoLabel = PRACTICE_WHO.find((row) => row.id === who)?.label ?? who;
   const whenLabel = PRACTICE_WHEN.find((row) => row.id === when)?.label ?? when;
-  const service = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
   return [
     `I will do a practice run for ${whoLabel}.`,
-    `I will practice ${service}.`,
+    practiceServiceSentence([serviceLabel]),
     `I will do it ${whenLabel}.`,
   ];
 }

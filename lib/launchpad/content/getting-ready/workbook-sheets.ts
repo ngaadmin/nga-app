@@ -22,9 +22,15 @@ import {
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
 import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
-import type { ScriptedBlock, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
+import type { ScriptedBlock, ScriptedPart, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
 
 const NOT_YET = "Not answered yet";
+
+/** "I will do " + picks + " for them." The closing stays after {picks} in the payload. */
+function practiceServiceParts(lead: string, service: string | null, templates: boolean): ScriptedPart[] {
+  const [before = "", after = ""] = lead.split("{picks}");
+  return [before, service || templates ? { value: service } : NOT_YET, after];
+}
 
 function slot(text: string | null, templates: boolean): ScriptedBlock {
   if (text) return { kind: "paragraph", parts: [{ value: text }] };
@@ -36,7 +42,7 @@ export function gettingReadyWorkbookSheets(
   answers: LaunchpadAnswers | undefined,
   serviceLabel: string,
   templates: boolean,
-  practiceStem: string = LAUNCHPAD_SURFACE_COPY.workbook.practiceService,
+  practiceLead: string = LAUNCHPAD_SURFACE_COPY.workbook.practiceServiceLead,
 ): readonly ScriptedSheet[] {
   const find = findCustomersOf(answers, FIND_CUSTOMERS_KEY);
   const agree = agreeJobOf(answers, AGREE_JOB_KEY);
@@ -96,7 +102,7 @@ export function gettingReadyWorkbookSheets(
   const practiceBlocks: ScriptedBlock[] = [
     { kind: "section", text: "Your practice run" },
     { kind: "paragraph", parts: ["I will do a practice run for ", who || templates ? { value: who } : NOT_YET, "."] },
-    { kind: "paragraph", parts: [practiceStem, service || templates ? { value: service } : NOT_YET, "."] },
+    { kind: "paragraph", parts: practiceServiceParts(practiceLead, service, templates) },
     { kind: "paragraph", parts: ["I will do it ", when || templates ? { value: when } : NOT_YET, "."] },
     { kind: "section", text: "Feedback from my trial run" },
   ];

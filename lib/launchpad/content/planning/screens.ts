@@ -73,8 +73,8 @@ export function competitorScreen(): LaunchpadCompetitorScreen {
     addons: COMPETITOR_ADDONS,
     ideas: DO_DIFFERENTLY,
     copy: {
-      pricesIntro: "Pick one job to compare from what you offer. Enter the lowest and highest price you find.",
-      extrasIntro: "Tick any extras they often include, then pick one way you could stand out.",
+      pricesIntro: "For each service you offer, choose what competitors include and enter the average price.",
+      extrasIntro: "Choose the extras they often include, then pick one way you could stand out.",
       addJob: "Add another job",
       addExtra: "Add another extra",
       ideaTitle: "Something I could do differently",

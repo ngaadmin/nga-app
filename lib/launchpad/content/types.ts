@@ -332,6 +332,8 @@ export type LaunchpadSetPriceScreen = TaskScreenBase & {
   copy: {
     context: string;
     guidance: string;
+    /** Third paragraph on the voice-over intro. */
+    later?: string;
     /** Worked example kept under the price fields. */
     howTo?: string;
     /** Shown once, on the first voice-over in the kit. */

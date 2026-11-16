@@ -3,9 +3,10 @@
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useState } from "react";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import type { CompetitorAnswer, CustomerAnswer, LaunchpadAnswers, OfferAnswer, ServiceOffering } from "@/lib/launchpad/content/answers";
+import type { CompetitorAnswer, CompetitorServicePrice, CustomerAnswer, LaunchpadAnswers, OfferAnswer, ServiceOffering } from "@/lib/launchpad/content/answers";
 import { competitorOf, customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
+import { joinList } from "@/lib/launchpad/content/level-up/model";
 import {
   AVAILABILITY_COLUMNS,
   AVAILABILITY_ROWS,
@@ -323,8 +324,54 @@ export function CustomerCheckFlow({
   );
 }
 
+function StackedMulti({
+  label,
+  options,
+  selected,
+  emptyLabel,
+  joinWord,
+  onChange,
+}: {
+  label: string;
+  options: readonly { id: string; label: string }[];
+  selected: readonly string[];
+  emptyLabel: string;
+  joinWord: string;
+  onChange: (next: string[]) => void;
+}) {
+  const chosen = options.filter((option) => selected.includes(option.id));
+  const joined = joinList(chosen.map((option) => option.label), joinWord);
+  const filled = joined.length > 0;
+  return (
+    <div className="relative">
+      <div className={`flex w-full min-h-8 items-start justify-between gap-2 border-b-[1.5px] py-1 text-left ${filled ? "border-[#0CC1E0]" : "border-[#8A94A8]"}`}>
+        <span className={`min-w-0 flex-1 text-left font-sans text-[18px] font-semibold leading-[26px] ${filled ? "text-[#0CC1E0]" : "text-[#8A94A8]"}`}>{joined || emptyLabel}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" className="ml-1 mt-2 inline-block shrink-0">
+          <path d="M1 1l4 4 4-4" fill="none" stroke={filled ? "#0CC1E0" : "#8A94A8"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <select
+        aria-label={label}
+        value=""
+        onChange={(event) => {
+          const id = event.target.value;
+          if (!id) return;
+          onChange(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
+        }}
+        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+      >
+        <option value="">{emptyLabel}</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>{option.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export function CompetitorFlow({
   screen,
+  floors = [],
   answers: answersProp,
   setAnswer: setAnswerProp,
   onExit = () => {},
@@ -341,78 +388,139 @@ export function CompetitorFlow({
   const answers = answersProp ?? ctx?.answers ?? {};
   const persist = setAnswerProp ?? ((key, answer) => ctx?.setAnswer(key, answer));
   const offer = offerOf(answers, screen.offerFrom);
-  const packages: LaunchpadChip[] = [];
+  const named = chosenServices(floors, answers, screen.servicesFrom);
+  const services: { serviceId: string; label: string; packages: LaunchpadChip[] }[] = [];
   for (const row of offer?.offerings ?? []) {
     const catalog = catalogFor(row.serviceId);
-    for (const id of row.packages) {
+    const packages = row.packages.flatMap((id) => {
       const found = catalog?.packages.find((item) => item.id === id);
-      if (found && !packages.some((item) => item.id === id)) packages.push(found);
-    }
+      return found ? [found] : [];
+    });
+    if (!packages.length) continue;
+    services.push({ serviceId: row.serviceId, label: named.find((item) => item.id === row.serviceId)?.label ?? "", packages });
   }
   const s = useSurfaceCopy();
   const saved = competitorOf(answers, screen.answerKey);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [page, setPage] = useState(0);
   const [ideasOpen, setIdeasOpen] = useState(false);
-  const [jobExtraOpen, setJobExtraOpen] = useState(false);
-  const [draft, setDraft] = useState<CompetitorAnswer>(
-    () =>
-      saved ?? {
-        kind: "competitor",
-        version: 1,
-        walkersChecked: 3,
-        priceLow: 12,
-        priceHigh: 20,
-        addons: [],
-        doDifferently: "walk-one-dog-at-a-time",
-        ...(packages[0] ? { jobComparedId: packages[0].id } : {}),
-      },
-  );
+  const [draft, setDraft] = useState<CompetitorAnswer>(() => {
+    const seeded: CompetitorServicePrice[] = services.map((service) => ({
+      serviceId: service.serviceId,
+      offers: service.packages.map((item) => item.id),
+      averages: {},
+    }));
+    const base: CompetitorAnswer = saved ?? {
+      kind: "competitor",
+      version: 1,
+      walkersChecked: 3,
+      priceLow: 12,
+      priceHigh: 20,
+      addons: [],
+      doDifferently: "walk-one-dog-at-a-time",
+      ...(seeded[0]?.offers[0] ? { jobComparedId: seeded[0].offers[0] } : {}),
+    };
+    return { ...base, servicePrices: base.servicePrices?.length ? base.servicePrices : seeded };
+  });
+  const rows = draft.servicePrices ?? [];
+  const service = services[page];
+  const row = rows.find((item) => item.serviceId === service?.serviceId);
+  const extras = page >= services.length;
+  const total = services.length + 1;
+  const priceReady = (item: CompetitorServicePrice | undefined) =>
+    !!item && item.offers.length > 0 && item.offers.every((id) => (item.averages[id] ?? 0) >= 1);
+  const packed = (): CompetitorAnswer => {
+    const servicePrices = rows.map((item) => ({
+      serviceId: item.serviceId,
+      offers: item.offers,
+      averages: Object.fromEntries(item.offers.flatMap((id) => ((item.averages[id] ?? 0) >= 1 ? [[id, item.averages[id]!]] : []))),
+    }));
+    const amounts = servicePrices.flatMap((item) => item.offers.map((id) => item.averages[id] ?? 0)).filter((amount) => amount >= 1);
+    const low = amounts.length ? Math.min(...amounts) : draft.priceLow;
+    const high = amounts.length ? Math.max(...amounts) : draft.priceHigh;
+    return {
+      ...draft,
+      priceLow: low,
+      priceHigh: Math.max(high, low),
+      ...(servicePrices[0]?.offers[0] ? { jobComparedId: servicePrices[0].offers[0] } : {}),
+      ...(servicePrices.length ? { servicePrices } : {}),
+    };
+  };
   const write = (next: CompetitorAnswer) => {
     setDraft(next);
     persist(screen.answerKey, next);
   };
-  const pricesReady = draft.priceHigh >= draft.priceLow && (!!draft.jobComparedId || !!draft.jobComparedExtra?.trim());
+  const setRow = (next: CompetitorServicePrice) => {
+    const servicePrices = rows.some((item) => item.serviceId === next.serviceId)
+      ? rows.map((item) => (item.serviceId === next.serviceId ? next : item))
+      : [...rows, next];
+    write({ ...draft, servicePrices });
+  };
   const blockedIdeas = new Set(ADDON_IDEA_BLOCKS.filter((pair) => draft.addons.includes(pair.addonId)).map((pair) => pair.ideaId));
   const ideaReady = !blockedIdeas.has(draft.doDifferently) && (draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim());
+  const ready = extras ? ideaReady : priceReady(row);
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={step}>
+    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={extras ? "extras" : service?.serviceId}>
       <LessonTopBar
         title={s.competitor.title}
-        onBack={() => (step === 2 ? setStep(1) : onExit())}
-        trailing={<span className="text-[18px] font-semibold text-[#0A8FA8]">{step} of 2</span>}
+        onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
+        trailing={<span className="text-[18px] font-semibold text-[#0A8FA8]">{page + 1} of {total}</span>}
       />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
-        {step === 1 ? (
+        {!extras && service && row ? (
           <>
-            <p className={LESSON_HINT}>{screen.copy.pricesIntro}</p>
-            <p className={`mt-3 ${LESSON_BODY}`}>
-              {s.competitor.iChecked}{" "}
-              <input aria-label={s.competitor.walkersChecked} inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
-              {" "}{s.competitor.otherWalkersFor}{" "}
-              <select aria-label={s.competitor.jobCompared} value={draft.jobComparedId ?? ""} onChange={(event) => write({ ...draft, jobComparedId: event.target.value || undefined })} className="mx-1 h-9 rounded-lg bg-white px-2 font-semibold shadow-[inset_0_0_0_1.5px_#0CC1E0]">
-                <option value="">{s.competitor.chooseJob}</option>
-                {packages.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-              </select>
-              {" "}{s.competitor.theyCharge}
-              <input aria-label={s.competitor.lowest} inputMode="numeric" value={String(draft.priceLow)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceLow: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
-              to $
-              <input aria-label={s.competitor.highest} inputMode="numeric" value={String(draft.priceHigh)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 9999) write({ ...draft, priceHigh: n }); }} className="mx-1 inline-block h-8 w-14 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
-              .
-            </p>
-            <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setJobExtraOpen((open) => !open)}>{screen.copy.addJob}</button>
-            {jobExtraOpen && (
-              <input aria-label={s.competitor.anotherJob} maxLength={40} value={draft.jobComparedExtra ?? ""} onChange={(event) => write({ ...draft, jobComparedExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder={s.competitor.typeJob} />
-            )}
+            {page === 0 ? <p className={LESSON_HINT}>{screen.copy.pricesIntro}</p> : null}
+            {page === 0 ? (
+              <p className={`mt-3 ${LESSON_BODY}`}>
+                {s.competitor.iChecked}{" "}
+                <input aria-label={s.competitor.walkersChecked} inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
+                {" "}{s.competitor.checkedWalkers}
+              </p>
+            ) : null}
+            {service.label ? <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[21px] font-semibold leading-[30px] text-[#0CC1E0]`}>{service.label}</h2> : null}
+            <p className={`mt-3 ${LESSON_BODY}`}>{s.competitor.offerLead}</p>
+            <StackedMulti
+              label={s.competitor.offerLead}
+              options={service.packages}
+              selected={row.offers}
+              emptyLabel={s.competitor.choose}
+              joinWord={s.competitor.andWord}
+              onChange={(offers) => setRow({ ...row, offers })}
+            />
+            {service.packages.filter((item) => row.offers.includes(item.id)).map((item) => (
+              <label key={item.id} className="mt-4 flex items-center justify-between gap-3">
+                <span className={LESSON_BODY}>{item.label}</span>
+                <span className="flex h-11 w-[120px] shrink-0 items-center gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8]">
+                  <span className="font-sans text-[16px] leading-[23px] text-[#4A5568]" aria-hidden="true">$</span>
+                  <input
+                    inputMode="numeric"
+                    aria-label={`${s.competitor.averagePrice} ${item.label}`}
+                    value={row.averages[item.id] ? String(row.averages[item.id]) : ""}
+                    onChange={(event) => {
+                      const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+                      const amount = Number(digits);
+                      const averages = { ...row.averages };
+                      if (amount >= 1 && amount <= 9999) averages[item.id] = amount;
+                      else delete averages[item.id];
+                      setRow({ ...row, averages });
+                    }}
+                    className="w-full bg-transparent text-right font-sans text-[20px] font-bold leading-[26px] tabular-nums text-[#19347D] outline-none"
+                  />
+                </span>
+              </label>
+            ))}
           </>
         ) : (
           <>
             <p className={LESSON_HINT}>{screen.copy.extrasIntro}</p>
             <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{s.competitor.oftenInclude}</h2>
-            <div className="flex flex-wrap gap-2">
-              {screen.addons.map((item) => (
-                <Chip key={item.id} tone="package" label={item.label} selected={draft.addons.includes(item.id)} onClick={() => write({ ...draft, addons: toggle(draft.addons, item.id) })} />
-              ))}
-            </div>
+            <StackedMulti
+              label={s.competitor.oftenInclude}
+              options={screen.addons}
+              selected={draft.addons}
+              emptyLabel={s.competitor.choose}
+              joinWord={s.competitor.andWord}
+              onChange={(addons) => write({ ...draft, addons })}
+            />
             <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{screen.copy.ideaTitle}</h2>
             <button type="button" className="flex h-11 w-full items-center justify-between rounded-xl bg-white px-3 text-left font-semibold text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8]" onClick={() => setIdeasOpen(true)}>
               {chipLabel(draft.doDifferently)}
@@ -441,11 +549,14 @@ export function CompetitorFlow({
         )}
       </div>
       <div className="px-5 pb-[18px]">
-        {step === 1 ? (
-          <LessonContinue disabled={!pricesReady} onClick={() => pricesReady && setStep(2)} />
-        ) : (
-          <LessonContinue disabled={!ideaReady} onClick={() => ideaReady && onFinish(draft)} />
-        )}
+        <LessonContinue
+          disabled={!ready}
+          onClick={() => {
+            if (!ready) return;
+            if (!extras) setPage(page + 1);
+            else onFinish(packed());
+          }}
+        />
       </div>
     </section>
   );

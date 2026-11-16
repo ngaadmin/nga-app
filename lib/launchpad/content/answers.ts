@@ -146,6 +146,12 @@ export type CustomerAnswer = {
   timesExtra?: string;
 };
 
+export type CompetitorServicePrice = {
+  serviceId: string;
+  offers: readonly string[];
+  averages: Readonly<Record<string, number>>;
+};
+
 export type CompetitorAnswer = {
   kind: "competitor";
   version: 1;
@@ -154,6 +160,8 @@ export type CompetitorAnswer = {
   jobComparedExtra?: string;
   priceLow: number;
   priceHigh: number;
+  /** One average per offered package, one group per service. */
+  servicePrices?: readonly CompetitorServicePrice[];
   addons: readonly string[];
   addonsExtra?: string;
   doDifferently: string;
@@ -929,6 +937,28 @@ export function parseCustomerAnswer(value: unknown): CustomerAnswer | null {
   };
 }
 
+function parseServicePrices(value: unknown): CompetitorServicePrice[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const rows: CompetitorServicePrice[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.slice(0, 12)) {
+    if (!isRecord(raw) || typeof raw.serviceId !== "string" || !ID_RE.test(raw.serviceId) || seen.has(raw.serviceId)) continue;
+    const offers = idGroup(raw.offers).slice(0, 12);
+    const averages: Record<string, number> = {};
+    if (isRecord(raw.averages)) {
+      for (const [key, amount] of Object.entries(raw.averages)) {
+        if (!ID_RE.test(key) || !offers.includes(key)) continue;
+        const price = wholePrice(amount);
+        if (price !== null) averages[key] = price;
+      }
+    }
+    if (!offers.length) continue;
+    seen.add(raw.serviceId);
+    rows.push({ serviceId: raw.serviceId, offers, averages });
+  }
+  return rows.length ? rows : undefined;
+}
+
 export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
   if (!isRecord(value) || value.kind !== "competitor" || value.version !== 1) return null;
   if (typeof value.walkersChecked !== "number" || !Number.isInteger(value.walkersChecked) || value.walkersChecked < 1 || value.walkersChecked > 10) return null;
@@ -941,6 +971,7 @@ export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
   const addonsExtra = optText(value.addonsExtra, 40);
   const ideaExtra = optText(value.doDifferentlyExtra, 80);
   if (!jobId && !jobExtra) return null;
+  const servicePrices = parseServicePrices(value.servicePrices);
   return {
     kind: "competitor",
     version: 1,
@@ -949,6 +980,7 @@ export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
     ...(jobExtra ? { jobComparedExtra: jobExtra } : {}),
     priceLow: low,
     priceHigh: high,
+    ...(servicePrices ? { servicePrices } : {}),
     addons: idGroup(value.addons),
     ...(addonsExtra ? { addonsExtra } : {}),
     doDifferently: value.doDifferently,

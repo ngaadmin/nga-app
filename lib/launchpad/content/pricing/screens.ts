@@ -33,7 +33,9 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
       context:
         "The price you charge must cover your job costs and still leave something for you as profit. A fair price also has to make sense compared to what others charge for the same kind of job.",
       guidance:
-        "Start with the prices you found other businesses charge for the services you researched and the tool will tell you how much you will have left after you cover the costs to do that job. Then adjust your prices to what you want to charge your customers. Later on, the tool will also help you calculate how many jobs you need to do at the prices you've set, in order to make back the money you invested to start your business.",
+        "Start with the prices you found other businesses charge for the services you researched and the tool will tell you how much you will have left after you cover the costs to do that job. Then adjust your prices to what you want to charge your customers.",
+      later:
+        "Later on, the tool will also help you calculate how many jobs you need to do at the prices you've set, in order to make back the money you invested to start your business.",
       howTo:
         "For example, a 30-minute walk at $15: restock for that walk is $0.30, so you keep $14.70. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
       credit: "Voice created with Grok",

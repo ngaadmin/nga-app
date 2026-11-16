@@ -33,6 +33,14 @@ describe("Set the price", () => {
         answers={{ "l1-offer": selectionAnswer(["dog-walking", "dog-training"]), "l2-costs": costs }}
       />,
     );
+    expect(document.querySelector("[data-price-art='wallet']")).toBeTruthy();
+    expect(screen.getByText("Voice created with Grok")).toBeTruthy();
+    expect(screen.getByText(/Later on, the tool will also help you calculate/)).toBeTruthy();
+    expect(screen.queryByRole("textbox", { name: "Price for Dog walking" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Pricing")).toBeTruthy();
+    expect(screen.getByText(/a 30-minute walk at \$15/)).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
     fireEvent.change(screen.getByRole("textbox", { name: "Price for Dog walking" }), { target: { value: "15" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Price for Dog training" }), { target: { value: "25" } });
     expect(screen.getByText("You keep $14.60")).toBeTruthy();

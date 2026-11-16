@@ -96,9 +96,11 @@ describe("Research what competitors offer", () => {
         }}
       />,
     );
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();
+    expect(screen.getByRole("option", { name: "Walk one dog only" })).toBeTruthy();
+    expect(screen.queryByRole("option", { name: "Solo walk (one dog only)" })).toBeNull();
     expect(screen.getByRole("button", { name: "Walk one dog at a time" })).toBeTruthy();
     const edited = structuredClone(competitorScreen());
     const addon = edited.addons.find((item) => item.id === "solo-walk-one-dog-only");
@@ -113,9 +115,46 @@ describe("Research what competitors offer", () => {
         availability: [],
       },
     }} />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("button", { name: "A payload addon label" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Walk one dog only" })).toBeNull();
+    expect(screen.getByRole("option", { name: "A payload addon label" })).toBeTruthy();
+    expect(screen.queryByRole("option", { name: "Walk one dog only" })).toBeNull();
+  });
+
+  it("asks for an average on each offered service and keeps the count on the first one", () => {
+    const onFinish = vi.fn();
+    render(
+      <CompetitorFlow
+        screen={competitorScreen()}
+        answers={{
+          "l2-offer": {
+            kind: "offer",
+            version: 1,
+            offerings: [
+              { serviceId: "dog-walking", packages: ["30-minute-walk", "60-minute-walk"], addons: [] },
+              { serviceId: "grooming", packages: ["bath"], addons: [] },
+            ],
+            availability: [],
+          },
+        }}
+        onFinish={onFinish}
+      />,
+    );
+    expect(screen.getByLabelText("Walkers checked")).toBeTruthy();
+    fireEvent.change(screen.getByRole("combobox", { name: "My competitors all offer" }), { target: { value: "60-minute-walk" } });
+    expect(screen.queryByRole("textbox", { name: "Average price 60-minute walk" })).toBeNull();
+    fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByLabelText("Walkers checked")).toBeNull();
+    expect(screen.getByText("My competitors all offer")).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox", { name: "Average price Bath" }), { target: { value: "25" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByText("My competitors all offer")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onFinish.mock.calls[0]?.[0].servicePrices).toEqual([
+      { serviceId: "dog-walking", offers: ["30-minute-walk"], averages: { "30-minute-walk": 15 } },
+      { serviceId: "grooming", offers: ["bath"], averages: { bath: 25 } },
+    ]);
   });
 });
 

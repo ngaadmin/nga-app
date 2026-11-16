@@ -12,7 +12,8 @@ import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { currencySymbol } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { LESSON_HINT, LessonContinue, LessonCredit, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonCredit, LessonSurface, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
@@ -55,6 +56,7 @@ export function SetPriceFlow({
     for (const row of saved?.prices ?? []) init[row.serviceId] = String(row.price);
     return init;
   });
+  const [intro, setIntro] = useState(true);
   const [compared, setCompared] = useState<Record<string, ComparedToOthers | "">>(() => {
     const init: Record<string, ComparedToOthers | ""> = {};
     for (const row of saved?.prices ?? []) if (row.comparedToOthers) init[row.serviceId] = row.comparedToOthers;
@@ -68,14 +70,21 @@ export function SetPriceFlow({
       const cost = serviceTotal(service.lines);
       const row: ServicePrice = { serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) };
       const choice = nextCompared[service.serviceId];
-      if (rangedService === service.serviceId && choice) row.comparedToOthers = choice;
+      const priced = competitor?.servicePrices?.find((item) => item.serviceId === service.serviceId);
+      const hasAverage = (priced?.offers ?? []).some((id) => (priced?.averages[id] ?? 0) >= 1);
+      if ((hasAverage || rangedService === service.serviceId) && choice) row.comparedToOthers = choice;
       return [row];
     });
   const rows = buildRows(drafts, compared);
   const answer: PriceAnswer = { kind: "price", version: 1, prices: rows };
+  const needsCompare = (serviceId: string) => {
+    const priced = competitor?.servicePrices?.find((item) => item.serviceId === serviceId);
+    const hasAverage = (priced?.offers ?? []).some((id) => (priced?.averages[id] ?? 0) >= 1);
+    return hasAverage || rangedService === serviceId;
+  };
   const ready =
     services.length === 0 ||
-    (rows.length === services.length && rows.every((row) => row.keptPerJob > 0 && (rangedService !== row.serviceId || !!row.comparedToOthers)));
+    (rows.length === services.length && rows.every((row) => row.keptPerJob > 0 && (!needsCompare(row.serviceId) || !!row.comparedToOthers)));
 
   const commit = (nextDrafts: Record<string, string>, nextCompared = compared) => {
     setDrafts(nextDrafts);
@@ -83,14 +92,32 @@ export function SetPriceFlow({
     persist(screen.answerKey, { kind: "price", version: 1, prices: buildRows(nextDrafts, nextCompared) });
   };
 
+  if (intro) {
+    return (
+      <LessonSurface
+        title={s.price.title}
+        onBack={() => onExit(answer)}
+        progress={{ index: 1, total: 2 }}
+        showMute
+        creditSlot
+        footer={<LessonContinue onClick={() => setIntro(false)} />}
+      >
+        <div data-task-screen="set-price" data-price-page="intro">
+          <img src={SCRIBBLE_SRC.wallet} alt="" data-price-art="wallet" className="mx-auto mt-5 block h-[120px] w-auto" />
+          <p className={`mt-5 ${LESSON_BODY}`}>{screen.copy.context}</p>
+          <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.guidance}</p>
+          {screen.copy.later ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.later}</p> : null}
+          {screen.copy.credit ? <LessonCredit credit={screen.copy.credit} /> : null}
+        </div>
+      </LessonSurface>
+    );
+  }
+
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price">
-      <LessonTopBar title={s.price.title} onBack={() => onExit(answer)} />
+    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price" data-price-page="fields">
+      <LessonTopBar title={s.price.title} onBack={() => setIntro(true)} progress={{ index: 2, total: 2 }} />
       <div className={`mx-5 mt-1 ${SCROLL}`}>
         <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.eyebrow}</p>
-        <p className={`mt-1 ${LESSON_HINT}`}>{screen.copy.context}</p>
-        <p className={`mt-2 ${LESSON_HINT}`}>{screen.copy.guidance}</p>
-        {screen.copy.credit ? <LessonCredit credit={screen.copy.credit} /> : null}
         <div className="mt-4 flex flex-col gap-2">
           {services.length === 0 && <p className="text-[16px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
           {services.map((service) => {
@@ -128,9 +155,21 @@ export function SetPriceFlow({
                     </span>
                   </p>
                 </div>
-                {rangedService === service.serviceId && competitor ? (
+                {(() => {
+                  const priced = competitor?.servicePrices?.find((item) => item.serviceId === service.serviceId);
+                  const amounts = (priced?.offers ?? []).flatMap((id) => {
+                    const amount = priced?.averages[id];
+                    return amount && amount >= 1 ? [amount] : [];
+                  });
+                  if (!amounts.length && !(rangedService === service.serviceId && competitor)) {
+                    return <p className="mt-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">{s.price.notChecked}</p>;
+                  }
+                  return (
                   <p className="mt-1 text-[18px] text-[#19347D]">
-                    {s.price.othersChargeDollar}{competitor.priceLow} to ${competitor.priceHigh}{s.price.mineIs}{" "}
+                    {amounts.length
+                      ? <>{s.price.othersChargeDollar}{amounts.join(s.price.averageJoin)}{s.price.onAverage}</>
+                      : <>{s.price.othersChargeDollar}{competitor?.priceLow} to ${competitor?.priceHigh}</>}
+                    {s.price.mineIs}{" "}
                     <select
                       aria-label={`${s.price.comparedFor} ${service.label}`}
                       value={compared[service.serviceId] ?? ""}
@@ -146,9 +185,8 @@ export function SetPriceFlow({
                       <option value="higher than">{s.price.higher}</option>
                     </select>
                   </p>
-                ) : (
-                  <p className="mt-1 font-sans text-[16px] leading-[23px] text-[#4A5568]">{s.price.notChecked}</p>
-                )}
+                  );
+                })()}
                 {low && <p className="mt-1 text-[18px] text-[#B45309]">{screen.copy.lowKeep}</p>}
               </article>
             );

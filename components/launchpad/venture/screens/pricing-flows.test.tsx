@@ -40,10 +40,11 @@ describe("Set the price", () => {
     expect(screen.queryByText(/I give|charity share|donate/i)).toBeNull();
     expect(document.querySelector("[data-charity-line]")).toBeNull();
     const tile = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
-    const row = tile.querySelector("[data-service-tile-layout='row']") as HTMLElement;
-    expect(row.className).toContain("flex-row");
+    const row = tile.querySelector("[data-service-tile-layout='price']") as HTMLElement;
+    expect(row.className).toContain("flex-col");
     expect(within(row).getByRole("heading", { name: "Dog walking" })).toBeTruthy();
     expect(within(row).getByRole("textbox", { name: "Price for Dog walking" })).toBeTruthy();
+    expect(within(row).getByText(/Cost/)).toBeTruthy();
   });
 });
 

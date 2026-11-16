@@ -92,7 +92,9 @@ export function checkLaunchpadVenturePayload(value: unknown, expectedVentureId?:
 function checkSurfaceCopy(value: Obj, where: string): void {
   for (const [key, item] of Object.entries(value)) {
     if (typeof item === "string") text(item, `${where} ${key}`);
+    else if (typeof item === "boolean") bool(item, `${where} ${key}`);
     else if (Array.isArray(item) && where.endsWith("templates") && key === "pages") checkTemplatePages(item, `${where} ${key}`);
+    else if (Array.isArray(item) && key === "exampleRows") checkExampleRows(item, `${where} ${key}`);
     else if (isObj(item)) checkSurfaceCopy(item, `${where} ${key}`);
     else fail(`${where} ${key} is missing.`);
   }
@@ -127,6 +129,24 @@ function checkTemplatePages(value: unknown[], where: string): void {
       checkTemplateLines(page.wrapFields, `${pw} wrap fields`);
     }
     if (page.ticks !== undefined) checkTemplateLines(page.ticks, `${pw} ticks`);
+    if (page.ledger === true) {
+      bool(page.ledger, `${pw} ledger`);
+      text(page.answerKey, `${pw} answerKey`);
+      text(page.exampleLabel, `${pw} exampleLabel`);
+      text(page.addRow, `${pw} addRow`);
+      checkExampleRows(page.exampleRows, `${pw} exampleRows`);
+    }
+  });
+}
+
+function checkExampleRows(value: unknown, where: string): void {
+  list(value, where, 1).forEach((row, i) => {
+    if (!isObj(row) || !isObj(row.values)) fail(`${where} ${i + 1} is malformed.`);
+    for (const cell of Object.values(row.values)) text(cell, `${where} ${i + 1} value`);
+    if (row.ticks !== undefined) {
+      if (!isObj(row.ticks)) fail(`${where} ${i + 1} ticks are malformed.`);
+      for (const cell of Object.values(row.ticks)) text(cell, `${where} ${i + 1} tick`);
+    }
   });
 }
 

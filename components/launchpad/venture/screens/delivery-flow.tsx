@@ -81,18 +81,19 @@ function Replay({ before, value, after }: { before: string; value: string; after
   );
 }
 
-function Doodle({ name }: { name: string }) {
+function Doodle({ name, size = 56 }: { name: string; size?: number }) {
   const src = scribble(name);
   if (!src) return null;
   return (
     <img
       src={src}
       alt=""
-      width={56}
-      height={56}
+      width={size}
+      height={size}
       draggable={false}
       data-scribble-large={name}
-      className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto w-14 mix-blend-multiply"
+      className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto mix-blend-multiply"
+      style={{ width: size }}
     />
   );
 }
@@ -397,7 +398,7 @@ function Shell({
       onBack={onBack}
       progress={{ index: page + 1, total: 3 }}
       footer={<LessonContinue disabled={!ready} onClick={onNext} />}
-      decoration={<Doodle name={screen.doodles[page] ?? ""} />}
+      decoration={<Doodle name={screen.doodles[page] ?? ""} size={screen.step === "ready" && page === 1 ? 136 : 56} />}
     >
       <div data-task-screen="delivery" data-delivery-step={screen.step} data-order-page={page + 1}>
         {children}

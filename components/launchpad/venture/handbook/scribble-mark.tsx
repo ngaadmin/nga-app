@@ -120,10 +120,10 @@ export function layoutWorkbookDoodles(scroll: HTMLElement, pageNumber: number, s
       const turn = Math.floor(placed / 1);
       if (!punch || !card) {
         img.className = "pointer-events-none absolute top-1/2 z-raised h-auto w-8 -translate-y-1/2 mix-blend-multiply";
-        img.style.right = `${(turn % 2 ? 18 : 0) + 48}px`;
+        img.style.right = "4px";
         img.style.transform = `translateY(-70%) rotate(${RHYTHM_ROT[turn % RHYTHM_ROT.length]}deg)`;
         const node = el as HTMLElement;
-        node.classList.add("relative", "pr-[96px]");
+        node.classList.add("relative", "pr-[44px]");
         node.appendChild(img);
         return;
       }

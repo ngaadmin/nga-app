@@ -411,18 +411,21 @@ export function KnowYourCostFlow({
             {services.map((service) => (
               <article
                 key={service.serviceId}
-                className={`flex flex-row items-center gap-2 rounded-[14px] px-3 py-2.5 ${service.done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
+                className={`flex flex-col gap-1 rounded-[14px] px-3 py-2.5 ${service.done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
                 data-service-card={service.serviceId}
-                data-service-tile-layout="row"
+                data-service-tile-layout="wrap"
               >
-                <h2 className="shrink-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
-                <p className="shrink-0 whitespace-nowrap text-right font-sans text-[16px] leading-[23px] text-[#4A5568]">
-                  {service.done ? (
-                    <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
-                  ) : (
-                    s.costs.notCalculated
-                  )}
-                </p>
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <h2 className="min-w-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
+                  <p className="shrink-0 text-right font-sans text-[18px] leading-[26px] text-[#4A5568]">
+                    {service.done ? (
+                      <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
+                    ) : (
+                      s.costs.notCalculated
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-2">
                 {service.done ? (
                   <button type="button" className="shrink-0 font-semibold text-[#0CC1E0]" onClick={() => setStep({ name: "service", serviceId: service.serviceId })}>
                     Edit
@@ -437,6 +440,7 @@ export function KnowYourCostFlow({
                   </button>
                 )}
                 {service.done && <TickBadge size={22} />}
+                </div>
               </article>
             ))}
           </div>

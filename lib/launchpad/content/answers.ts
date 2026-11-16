@@ -346,7 +346,21 @@ export type LaunchpadAnswer =
   | GetReadyAnswer
   | WrapUpJobAnswer
   | RecordJobAnswer
-  | LevelUpAnswer;
+  | LevelUpAnswer
+  | OrderTrackerAnswer;
+
+/** Learner rows on My order tracker. Example rows are not stored here. */
+export type OrderTrackerRow = {
+  id: string;
+  values: Readonly<Record<string, string>>;
+  ticks: Readonly<Record<string, "yes" | "no">>;
+};
+
+export type OrderTrackerAnswer = {
+  kind: "order-tracker";
+  version: 1;
+  rows: readonly OrderTrackerRow[];
+};
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -707,6 +721,43 @@ export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
   };
 }
 
+function trackerCell(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+export function parseOrderTrackerAnswer(value: unknown): OrderTrackerAnswer | null {
+  if (!isRecord(value) || value.kind !== "order-tracker" || value.version !== 1 || !Array.isArray(value.rows)) return null;
+  const rows: OrderTrackerRow[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.rows.slice(0, 30)) {
+    if (!isRecord(raw) || typeof raw.id !== "string" || !ID_RE.test(raw.id) || seen.has(raw.id)) continue;
+    seen.add(raw.id);
+    const values: Record<string, string> = {};
+    if (isRecord(raw.values)) {
+      for (const [key, cell] of Object.entries(raw.values)) {
+        if (!FIELD_NAME_RE.test(key)) continue;
+        const text = trackerCell(cell);
+        if (text) values[key] = text;
+      }
+    }
+    const ticks: Record<string, "yes" | "no"> = {};
+    if (isRecord(raw.ticks)) {
+      for (const [key, cell] of Object.entries(raw.ticks)) {
+        if (!FIELD_NAME_RE.test(key)) continue;
+        if (cell === "yes" || cell === "no") ticks[key] = cell;
+      }
+    }
+    rows.push({ id: raw.id, values, ticks });
+  }
+  return { kind: "order-tracker", version: 1, rows };
+}
+
+export function orderTrackerOf(answers: LaunchpadAnswers | undefined, key: string): OrderTrackerAnswer | undefined {
+  const value = answers?.[key];
+  return value?.kind === "order-tracker" ? value : undefined;
+}
+
 export function levelUpOf(answers: LaunchpadAnswers | undefined, key: string): LevelUpAnswer | undefined {
   const value = answers?.[key];
   return value?.kind === "level-up" ? value : undefined;
@@ -766,6 +817,8 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseRecordJobAnswer(value);
     case "level-up":
       return parseLevelUpAnswer(value);
+    case "order-tracker":
+      return parseOrderTrackerAnswer(value);
     default:
       return null;
   }

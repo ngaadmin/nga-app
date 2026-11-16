@@ -111,6 +111,18 @@ export function TaskWorkbook(props: {
           {props.nextHint}
         </p>
       )}
+      {props.onSkip && (
+        <div className="mx-5 mb-2 flex justify-center">
+          <button
+            type="button"
+            onClick={props.onSkip}
+            className={BTN_CYAN_OUTLINE_COMPACT}
+            data-skip-for-now=""
+          >
+            {s.chrome.skipForNow}
+          </button>
+        </div>
+      )}
       </div>
       <div className="mx-5 mt-auto flex flex-none items-center justify-between gap-3 pb-4 pt-2 short:pb-3" data-workbook-nav="">
         {showPrevious && (
@@ -129,18 +141,6 @@ export function TaskWorkbook(props: {
           {forward}
         </button>
       </div>
-      {props.onSkip && (
-        <div className="mx-5 -mt-1 pb-4 text-center">
-          <button
-            type="button"
-            onClick={props.onSkip}
-            className="min-h-11 px-3 font-sans text-[16px] font-semibold leading-[23px] text-nga-slate underline underline-offset-4"
-            data-skip-for-now=""
-          >
-            {s.chrome.skipForNow}
-          </button>
-        </div>
-      )}
       {props.onComeBackLater && (
         <div className="mx-5 -mt-1 pb-4 text-center">
           <button

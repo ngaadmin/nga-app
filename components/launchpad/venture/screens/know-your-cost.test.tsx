@@ -90,14 +90,14 @@ describe("Know your cost flow", () => {
     expect(finished.current?.ongoing.find((service) => service.serviceId === "dog-walking")?.lines.find((line) => line.id === "treats")?.amount).toBe(0);
   });
 
-  it("puts each service on one row and does not repeat the ongoing title", () => {
+  it("wraps each service so the action stays inside the card", () => {
     render(<Harness />);
     fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[1]!);
     expect(screen.getAllByRole("heading", { name: "Ongoing costs" })).toHaveLength(1);
     const tile = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
-    expect(tile.getAttribute("data-service-tile-layout")).toBe("row");
-    expect(tile.className).toContain("flex-row");
-    expect(tile.querySelector("h2")?.parentElement).toBe(tile);
+    expect(tile.getAttribute("data-service-tile-layout")).toBe("wrap");
+    expect(tile.className).toContain("flex-col");
+    expect(tile.querySelector("h2")?.parentElement).not.toBe(tile);
     const calculate = within(tile).getByRole("button", { name: "Calculate the cost" });
     expect(calculate.className).toContain("shrink-0");
     expect(calculate.className).not.toContain("w-full");

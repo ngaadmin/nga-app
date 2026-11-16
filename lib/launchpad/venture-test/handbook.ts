@@ -147,6 +147,7 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
     } else if (page.silver.id === "l5-s2") {
       out.push({ ...page, kind: "summary", sheet: "ready-before" });
       out.push({ ...page, kind: "summary", sheet: "ready-after" });
+      out.push({ ...page, kind: "summary", sheet: "order-tracker" });
     } else if (page.silver.id === "l5-s3") {
       out.push({ ...page, kind: "summary", sheet: "job-record" });
     } else if (page.silver.id === "l4-s1") {

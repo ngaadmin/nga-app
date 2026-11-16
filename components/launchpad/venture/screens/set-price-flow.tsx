@@ -99,18 +99,10 @@ export function SetPriceFlow({
             const low = row ? row.keptPerJob <= 0 : false;
             return (
               <article key={service.serviceId} className="rounded-[14px] bg-white px-3 py-2.5 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={service.serviceId}>
-                <div className="flex flex-row items-center gap-2" data-service-tile-layout="row">
-                  <h2 className="shrink-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
-                  <p className="min-w-0 flex-1 text-right font-sans text-[16px] leading-[23px] text-[#4A5568]">
-                    {screen.copy.costLabel} {formatOngoingMoney(cost, currency)}
-                    <span className="mx-1 text-[#D9DEE8]" aria-hidden="true">
-                      ·
-                    </span>
-                    <span className="font-semibold text-[#19347D]" data-kept="">
-                      {screen.copy.keepLabel} {row ? formatOngoingMoney(row.keptPerJob, currency) : "—"}
-                    </span>
-                  </p>
-                  <label className="flex h-9 w-[88px] shrink-0 items-center gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8]">
+                <div className="flex flex-col gap-1" data-service-tile-layout="price">
+                  <div className="flex items-center justify-between gap-2">
+                  <h2 className="min-w-0 font-sans text-[18px] font-bold leading-[26px] text-[#19347D]">{service.label}</h2>
+                  <label className="flex h-11 w-[120px] shrink-0 items-center gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8]">
                     <span className="font-sans text-[16px] leading-[23px] text-[#4A5568]" aria-hidden="true">
                       {symbol}
                     </span>
@@ -122,9 +114,19 @@ export function SetPriceFlow({
                         const next = event.target.value.replace(/\D/g, "").slice(0, 4);
                         commit({ ...drafts, [service.serviceId]: next });
                       }}
-                      className="w-full bg-transparent text-right font-sans text-[18px] font-bold leading-[26px] tabular-nums text-[#19347D] outline-none"
+                      className="w-full bg-transparent text-right font-sans text-[20px] font-bold leading-[26px] tabular-nums text-[#19347D] outline-none"
                     />
                   </label>
+                  </div>
+                  <p className="font-sans text-[16px] leading-[23px] text-[#4A5568]">
+                    {screen.copy.costLabel} {formatOngoingMoney(cost, currency)}
+                    <span className="mx-1 text-[#D9DEE8]" aria-hidden="true">
+                      ·
+                    </span>
+                    <span className="font-semibold text-[#19347D]" data-kept="">
+                      {screen.copy.keepLabel} {row ? formatOngoingMoney(row.keptPerJob, currency) : "—"}
+                    </span>
+                  </p>
                 </div>
                 {rangedService === service.serviceId && competitor ? (
                   <p className="mt-1 text-[18px] text-[#19347D]">

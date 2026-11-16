@@ -98,9 +98,9 @@ export function CostWorkbookBody({
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}
           </div>
-          <div className={`${WORKBOOK_PRICE_ROW} mt-1 ${WORKBOOK_BODY}`}>
+          <div className={`${WORKBOOK_PRICE_ROW} mt-1 font-sans text-[18px] font-bold leading-[26px] text-[#0CC1E0]`}>
             <span>{s.costs.startupTotal}</span>
-            <span className="text-left tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
+            <span className="text-left tabular-nums" data-startup-total="">{money(view.startupTotal)}</span>
           </div>
           <HandRule className={part === "rest" ? "mb-0 mt-1" : "mb-1 mt-2"} />
           <h3 className={`${part === "rest" ? "mb-0.5" : "mb-1"} ${WORKBOOK_GROUP}`}>{s.costs.ongoingCostPerJob}</h3>

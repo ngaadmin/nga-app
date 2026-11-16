@@ -622,7 +622,10 @@ describe("L7 weekly focus and the Templates tab", () => {
     expect(within(ticks).getByText("Reminder set?")).toBeTruthy();
     expect(within(ticks).queryByRole("checkbox")).toBeNull();
     expect(ticks.querySelectorAll("input")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByRole("heading", { name: "My order tracker" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(screen.getByText("Owner name")).toBeTruthy();
@@ -760,7 +763,7 @@ describe("L5 delivery workbook", () => {
     spec.playbackTitle = "Before the job";
     const progress = withShortcutSampleAnswers(through("l5-s3"), floors, "dog-walking", "Happy Paws");
     const sheets = handbookPages(progress, floors).filter((page) => page.level === 5).map((page) => page.sheet);
-    expect(sheets).toEqual(["ready-before", "ready-after", "job-record"]);
+    expect(sheets).toEqual(["ready-before", "ready-after", "order-tracker", "job-record"]);
     render(
       <Handbook
         entry="building"
@@ -783,6 +786,59 @@ describe("L5 delivery workbook", () => {
     expect(after?.textContent).not.toContain("by in person");
     expect(after?.textContent).toContain("I will ask, 'How did it go?'");
     expect(after?.textContent).not.toContain("I will ask How did it go?");
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(document.querySelector("[data-order-tracker]")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "My order tracker" })).toBeTruthy();
+  });
+
+  it("plays saved tracker rows and a payload edit of the example label", () => {
+    const floors = structuredClone(FLOORS);
+    const progress = withShortcutSampleAnswers(through("l5-s3"), floors, "dog-walking", "Happy Paws");
+    const saved = setProgressAnswer(progress, "order_tracker", {
+      kind: "order-tracker",
+      version: 1,
+      rows: [{ id: "row-1", values: { customer: "Riley", price: "$15" }, ticks: { paid: "yes" } }],
+    });
+    render(
+      <Handbook
+        entry="building"
+        businessName="Happy Paws"
+        floors={floors}
+        progress={saved}
+        iconVentureId="dog-walking"
+        setAnswer={() => {}}
+        onClose={() => {}}
+        initialSheet="order-tracker"
+      />,
+    );
+    expect(screen.getByDisplayValue("Riley")).toBeTruthy();
+    expect(screen.getByDisplayValue("$15")).toBeTruthy();
+    expect(document.querySelector("[data-example-row]")?.textContent).toContain("Sam");
+    expect(screen.queryByText("A payload example")).toBeNull();
+  });
+
+  it("shows a payload edit of the tracker example label", () => {
+    const copy = structuredClone(LAUNCHPAD_SURFACE_COPY);
+    const tracker = copy.templates.pages.find((item) => item.id === "order-tracker");
+    if (!tracker) throw new Error("tracker missing");
+    tracker.exampleLabel = "A payload example";
+    const progress = withShortcutSampleAnswers(through("l5-s3"), FLOORS, "dog-walking", "Happy Paws");
+    render(
+      <SurfaceCopyProvider value={copy}>
+        <Handbook
+          entry="building"
+          businessName="Happy Paws"
+          floors={FLOORS}
+          progress={progress}
+          iconVentureId="dog-walking"
+          setAnswer={() => {}}
+          onClose={() => {}}
+          initialSheet="order-tracker"
+        />
+      </SurfaceCopyProvider>,
+    );
+    expect(screen.getByText("A payload example")).toBeTruthy();
+    expect(screen.queryByText(LAUNCHPAD_SURFACE_COPY.templates.pages.find((item) => item.id === "order-tracker")?.exampleLabel ?? "")).toBeNull();
   });
 });
 
@@ -918,11 +974,12 @@ describe("workbook playback only", () => {
     const paper = document.querySelector("[data-paper-scroll]");
     expect(paper, label).toBeTruthy();
     const earnedPage = label === "budget-split";
+    const trackerPage = label === "order-tracker";
     const inputs = [...paper!.querySelectorAll("input, textarea, [contenteditable='true']")].filter(
-      (el) => !(earnedPage && el.id === "budget-earned"),
+      (el) => !(earnedPage && el.id === "budget-earned") && !trackerPage,
     );
     const buttons = [...paper!.querySelectorAll("button")].filter(
-      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]") && !(earnedPage && btn.hasAttribute("data-budget-earned-edit")),
+      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]") && !(earnedPage && btn.hasAttribute("data-budget-earned-edit")) && !(trackerPage && btn.hasAttribute("data-tracker-add")),
     );
     expect(inputs, label).toHaveLength(0);
     expect(buttons.map((btn) => (btn.getAttribute("aria-label") || btn.textContent || "").replace(/\s+/g, " ").trim()), label).toEqual([]);
@@ -977,6 +1034,7 @@ describe("template and L4 workbook placement", () => {
       "Here's your draft poster",
       "Business card",
       "My order booking form",
+      "My order tracker",
     ]);
     expect(posterAt).toBe(2);
     expect(pages.slice(0, posterAt).every((page) => page.kind !== "poster")).toBe(true);
@@ -984,7 +1042,7 @@ describe("template and L4 workbook placement", () => {
     fireEvent.click(screen.getByRole("button", { name: "Templates" }));
     for (const title of pages.map((page) => (page.kind === "poster" ? LAUNCHPAD_SURFACE_COPY.templates.poster.heading : page.title))) {
       expect(screen.getByRole("heading", { name: title })).toBeTruthy();
-      if (title !== "My order booking form") fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+      if (title !== "My order tracker") fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     }
     expect(screen.queryByRole("heading", { name: "My order system" })).toBeNull();
   });

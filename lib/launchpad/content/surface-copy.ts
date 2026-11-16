@@ -7,6 +7,11 @@
 
 export type WorkbookTemplateField = { id: string; label: string; wide?: boolean };
 
+export type WorkbookLedgerExample = {
+  values: Readonly<Record<string, string>>;
+  ticks?: Readonly<Record<string, string>>;
+};
+
 export type WorkbookTemplatePage = {
   id: string;
   title: string;
@@ -22,6 +27,12 @@ export type WorkbookTemplatePage = {
   fields?: readonly WorkbookTemplateField[];
   wrapFields?: readonly WorkbookTemplateField[];
   ticks?: readonly WorkbookTemplateField[];
+  /** Learner rows saved under answerKey. Example rows are sample data, not a student's orders. */
+  ledger?: boolean;
+  answerKey?: string;
+  exampleLabel?: string;
+  addRow?: string;
+  exampleRows?: readonly WorkbookLedgerExample[];
 };
 
 const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
@@ -93,6 +104,42 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
       { id: "done", label: "Done?" },
       { id: "paid", label: "Paid?" },
       { id: "asked", label: "Feedback asked?" },
+    ],
+  },
+  {
+    id: "order-tracker",
+    title: "My order tracker",
+    ledger: true,
+    answerKey: "order_tracker",
+    scribble: "calendar",
+    intro: "These are the details to collect for each order.",
+    tip: "Here's a table you can use. Put each order on its own row.",
+    exampleLabel: "Example",
+    addRow: "Add a row",
+    fields: [
+      { id: "dateBooked", label: "Date booked" },
+      { id: "customer", label: "Customer (first name only)" },
+      { id: "service", label: "Service and package" },
+      { id: "dayTime", label: "Day and time" },
+      { id: "cadence", label: "One-off or regular" },
+      { id: "price", label: "Price" },
+      { id: "notes", label: "Notes" },
+    ],
+    ticks: [
+      { id: "reminder", label: "Reminder set?" },
+      { id: "done", label: "Done?" },
+      { id: "paid", label: "Paid?" },
+      { id: "asked", label: "Feedback asked?" },
+    ],
+    exampleRows: [
+      {
+        values: { dateBooked: "12 Mar", customer: "Sam", service: "30-minute walk", dayTime: "Saturday morning", cadence: "One-off", price: "$15", notes: "Meet at the park" },
+        ticks: { reminder: "yes", done: "yes", paid: "no", asked: "no" },
+      },
+      {
+        values: { dateBooked: "14 Mar", customer: "Alex", service: "30-minute walk", dayTime: "Tuesday after school", cadence: "Regular", price: "$15", notes: "Front gate" },
+        ticks: { reminder: "yes", done: "no", paid: "no", asked: "no" },
+      },
     ],
   },
 ];

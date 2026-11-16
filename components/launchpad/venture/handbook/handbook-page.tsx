@@ -26,7 +26,7 @@ import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-bloc
 import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import { FREDOKA_HEADING_CLASS, NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { costsOf, fieldsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsOf, orderTrackerOf, practiceRunOf, type OrderTrackerRow } from "@/lib/launchpad/content/answers";
 import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
@@ -329,8 +329,101 @@ export function PosterTemplatePage({
   );
 }
 
+function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
+  const ctx = useLaunchpadAnswers();
+  const key = page.answerKey ?? "";
+  const rows = orderTrackerOf(ctx?.answers, key)?.rows ?? [];
+  const save = (next: readonly OrderTrackerRow[]) => {
+    if (key) ctx?.setAnswer(key, { kind: "order-tracker", version: 1, rows: next });
+  };
+  const add = () => {
+    const values: Record<string, string> = {};
+    for (const field of page.fields ?? []) values[field.id] = "";
+    const ticks: Record<string, "yes" | "no"> = {};
+    for (const tick of page.ticks ?? []) ticks[tick.id] = "no";
+    save([...rows, { id: `row-${rows.length + 1}`, values, ticks }]);
+  };
+  const columns = [...(page.fields ?? []), ...(page.ticks ?? [])];
+  const head = (
+    <tr>
+      {columns.map((column) => (
+        <th key={column.id} className="px-1 text-left font-sans text-[16px] font-semibold leading-[23px] text-[#19347D]">{column.label}</th>
+      ))}
+    </tr>
+  );
+  return (
+    <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} data-order-tracker="" aria-label={page.title}>
+      <MiniIdentity />
+      <AccentLabel as="h2">{page.title}</AccentLabel>
+      {page.intro ? <p className={TEMPLATE_HINT}>{page.intro}</p> : null}
+      {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
+      <p className={`mt-3 ${WORKBOOK_SUB}`} data-example-label="">{page.exampleLabel}</p>
+      <div className="mt-1 overflow-x-auto">
+        <table className="w-max min-w-full border-collapse">
+          <thead>{head}</thead>
+          <tbody>
+            {(page.exampleRows ?? []).map((row, index) => (
+              <tr key={index} data-example-row="">
+                {(page.fields ?? []).map((field) => (
+                  <td key={field.id} className="px-1 font-sans text-[16px] leading-[23px] text-[#19347D]">{row.values[field.id] ?? ""}</td>
+                ))}
+                {(page.ticks ?? []).map((tick) => (
+                  <td key={tick.id} className="px-1 text-center font-sans text-[16px] text-[#19347D]" data-example-tick={row.ticks?.[tick.id] === "yes" ? "yes" : "no"}>{row.ticks?.[tick.id] === "yes" ? "✓" : ""}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 overflow-x-auto" data-learner-rows="">
+        <table className="w-max min-w-full border-collapse">
+          <thead>{head}</thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={row.id}>
+                {(page.fields ?? []).map((field) => (
+                  <td key={field.id} className="px-1">
+                    <input
+                      aria-label={`${field.label} ${index + 1}`}
+                      value={row.values[field.id] ?? ""}
+                      onChange={(event) => {
+                        const values = { ...row.values, [field.id]: event.target.value };
+                        save(rows.map((item) => (item.id === row.id ? { ...item, values } : item)));
+                      }}
+                      className="w-24 bg-transparent font-sans text-[16px] leading-[23px] text-[#19347D] outline-none"
+                    />
+                  </td>
+                ))}
+                {(page.ticks ?? []).map((tick) => (
+                  <td key={tick.id} className="px-1 text-center">
+                    <input
+                      type="checkbox"
+                      aria-label={`${tick.label} ${index + 1}`}
+                      checked={row.ticks[tick.id] === "yes"}
+                      onChange={(event) => {
+                        const ticks = { ...row.ticks, [tick.id]: event.target.checked ? "yes" as const : "no" as const };
+                        save(rows.map((item) => (item.id === row.id ? { ...item, ticks } : item)));
+                      }}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {page.addRow ? (
+        <button type="button" onClick={add} data-tracker-add="" className="mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#0CC1E0]">
+          {page.addRow}
+        </button>
+      ) : null}
+    </article>
+  );
+}
+
 /** One paperclip page. Strings, fields, and ticks come from the payload. */
 export function WorkbookTemplatePage({ page }: { page: WorkbookTemplatePage }) {
+  if (page.ledger) return <OrderTrackerLedger page={page} />;
   const templates = useSurfaceCopy().templates;
   const ctx = useLaunchpadAnswers();
   const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
@@ -543,6 +636,8 @@ export function HandbookPage({
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.sheet === "order-system" ? (
         <OrderSystemWorkbook silver={page.silver} />
+      ) : page.sheet === "order-tracker" ? (
+        <OrderTrackerFromCopy />
       ) : page.sheet === "ready-before" || page.sheet === "ready-after" || page.sheet === "job-record" ? (
         <DeliveryWorkbook silver={page.silver} sheet={page.sheet} />
       ) : page.sheet?.startsWith("sales-") ? (
@@ -574,6 +669,11 @@ function OrderLine({ before, pick, after }: { before: string; pick?: string | nu
       {after}
     </p>
   );
+}
+
+function OrderTrackerFromCopy() {
+  const page = useSurfaceCopy().templates.pages.find((item) => item.id === "order-tracker");
+  return page ? <WorkbookTemplatePage page={page} /> : null;
 }
 
 function OrderSystemWorkbook({ silver }: { silver: HandbookPageView["silver"] }) {

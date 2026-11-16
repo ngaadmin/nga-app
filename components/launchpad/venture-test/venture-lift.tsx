@@ -10,7 +10,7 @@ export function VentureLift({ from, to, toName, destination }: { from: number; t
   const caption = destination ?? `${goingUp} ${to} · ${toName}`;
   return (
     <section className="relative h-[690px] shrink-0" aria-live="polite" aria-label={caption} data-lift={destination ? "rooftop" : "floor"}>
-      <div className="absolute inset-x-[115px] top-10 flex h-[84px] items-center justify-center gap-3 rounded-2xl bg-nga-ink font-heading text-[34px] font-extrabold text-white">
+      <div className="absolute left-1/2 top-10 flex h-[84px] min-w-[160px] -translate-x-1/2 items-center justify-center gap-3 whitespace-nowrap rounded-2xl bg-nga-ink px-6 font-heading text-[34px] font-extrabold text-white">
         <span className={styles.liftFromDim}>{from}</span>
         <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" className={styles.liftArrow}>
           <path d="M12 4l7 9h-4.5v7h-5v-7H5z" fill={VT.cta} />

@@ -26,7 +26,7 @@ import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-bloc
 import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import { FREDOKA_HEADING_CLASS, NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { costsOf, fieldsOf, orderTrackerOf, practiceRunOf, type OrderTrackerRow } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
 import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { joinPhrase } from "@/lib/launchpad/content/planning/catalog";
@@ -276,9 +276,12 @@ function TemplateWriteIn({
   );
 }
 
-/** Draft poster on the Templates tab. The blank PDF opens in this page, not a new tab. */
+/** Draft poster, and any workbook page that uses the same preview and PDF viewer. The blank PDF opens here, not a new tab. A4 opens first. Letter is the other button in the viewer. */
 export function PosterTemplatePage({
   poster,
+  intro,
+  showIdentity = true,
+  embedMarker,
 }: {
   poster: {
     heading: string;
@@ -290,21 +293,28 @@ export function PosterTemplatePage({
     viewerClose: string;
     viewerPrint: string;
     draftSrc: string;
+    previewAlt?: string;
     a4Url: string;
     letterUrl: string;
     a4Download: string;
     letterDownload: string;
   };
+  intro?: string;
+  /** The handbook page already draws the business-name kicker. */
+  showIdentity?: boolean;
+  /** Embed in an existing page instead of claiming the templates poster article. */
+  embedMarker?: string;
 }) {
   const [file, setFile] = useState<"a4" | "letter" | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const src = file === "letter" ? poster.letterUrl : poster.a4Url;
   const link = "inline-flex items-start gap-1.5 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0] underline decoration-[#0CC1E0] underline-offset-[3px]";
-  return (
-    <article data-handbook-page="templates" data-workbook-templates="" data-template-page="poster" aria-label={poster.heading}>
-      <MiniIdentity />
+  const body = (
+    <>
+      {showIdentity ? <MiniIdentity /> : null}
       <AccentLabel as="h2">{poster.heading}</AccentLabel>
-      <img src={poster.draftSrc} alt="" width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
+      {intro ? <p className={TEMPLATE_HINT}>{intro}</p> : null}
+      <img src={poster.draftSrc} alt={poster.previewAlt ?? ""} width={290} data-draft-poster="" className="mx-auto mt-1.5 block h-auto w-[290px] border border-[#19347D] bg-white" />
       <button type="button" className={`mt-3 text-left ${link}`} data-poster-open="" onClick={() => setFile("a4")}>
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-1 shrink-0">
           <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
@@ -325,107 +335,31 @@ export function PosterTemplatePage({
           <iframe ref={frame} title={poster.heading} src={src} className="min-h-0 w-full flex-1 border-0" data-poster-frame="" />
         </div>
       )}
+    </>
+  );
+  if (embedMarker) return <div {...{ [embedMarker]: "" }}>{body}</div>;
+  return (
+    <article data-handbook-page="templates" data-workbook-templates="" data-template-page="poster" aria-label={poster.heading}>
+      {body}
     </article>
   );
 }
 
-function OrderTrackerLedger({ page, identity = true }: { page: WorkbookTemplatePage; identity?: boolean }) {
-  const ctx = useLaunchpadAnswers();
-  const key = page.answerKey ?? "";
-  const rows = orderTrackerOf(ctx?.answers, key)?.rows ?? [];
-  const save = (next: readonly OrderTrackerRow[]) => {
-    if (key) ctx?.setAnswer(key, { kind: "order-tracker", version: 1, rows: next });
-  };
-  const add = () => {
-    const values: Record<string, string> = {};
-    for (const field of page.fields ?? []) values[field.id] = "";
-    const ticks: Record<string, "yes" | "no"> = {};
-    for (const tick of page.ticks ?? []) ticks[tick.id] = "no";
-    save([...rows, { id: `row-${rows.length + 1}`, values, ticks }]);
-  };
-  const columns = [...(page.fields ?? []), ...(page.ticks ?? [])];
-  const head = (
-    <tr>
-      {columns.map((column) => (
-        <th key={column.id} className="break-words px-0.5 align-bottom text-left font-sans text-[16px] font-semibold leading-[20px] text-[#19347D]">{column.label}</th>
-      ))}
-    </tr>
-  );
-  return (
-    <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} data-order-tracker="" aria-label={page.title} className="min-w-0 max-w-full">
-      {identity ? <MiniIdentity /> : null}
-      <AccentLabel as="h2">{page.title}</AccentLabel>
-      {page.intro ? <p className={TEMPLATE_HINT}>{page.intro}</p> : null}
-      {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
-      <p className={`mt-3 ${WORKBOOK_SUB}`} data-example-label="">{page.exampleLabel}</p>
-      <div className="mt-1 max-w-full overflow-x-hidden">
-        <table className="w-full max-w-full table-fixed border-collapse">
-          <thead>{head}</thead>
-          <tbody>
-            {(page.exampleRows ?? []).map((row, index) => (
-              <tr key={index} data-example-row="">
-                {(page.fields ?? []).map((field) => (
-                  <td key={field.id} className="break-words px-0.5 font-sans text-[16px] leading-[20px] text-[#19347D]">{row.values[field.id] ?? ""}</td>
-                ))}
-                {(page.ticks ?? []).map((tick) => (
-                  <td key={tick.id} className="px-1 text-center font-sans text-[16px] text-[#19347D]" data-example-tick={row.ticks?.[tick.id] === "yes" ? "yes" : "no"}>{row.ticks?.[tick.id] === "yes" ? "✓" : ""}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-3 max-w-full overflow-x-hidden" data-learner-rows="">
-        <table className="w-full max-w-full table-fixed border-collapse">
-          <thead>{head}</thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.id}>
-                {(page.fields ?? []).map((field) => (
-                  <td key={field.id} className="px-1">
-                    <input
-                      aria-label={`${field.label} ${index + 1}`}
-                      value={row.values[field.id] ?? ""}
-                      onChange={(event) => {
-                        const values = { ...row.values, [field.id]: event.target.value };
-                        save(rows.map((item) => (item.id === row.id ? { ...item, values } : item)));
-                      }}
-                      className="w-full min-w-0 bg-transparent font-sans text-[16px] leading-[23px] text-[#19347D] outline-none"
-                    />
-                  </td>
-                ))}
-                {(page.ticks ?? []).map((tick) => (
-                  <td key={tick.id} className="px-1 text-center">
-                    <input
-                      type="checkbox"
-                      aria-label={`${tick.label} ${index + 1}`}
-                      checked={row.ticks[tick.id] === "yes"}
-                      onChange={(event) => {
-                        const ticks = { ...row.ticks, [tick.id]: event.target.checked ? "yes" as const : "no" as const };
-                        save(rows.map((item) => (item.id === row.id ? { ...item, ticks } : item)));
-                      }}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {page.addRow ? (
-        <button type="button" onClick={add} data-tracker-add="" className="mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#0CC1E0]">
-          {page.addRow}
-        </button>
-      ) : null}
-    </article>
-  );
-}
 
 /** One paperclip page. Strings, fields, and ticks come from the payload. */
 export function WorkbookTemplatePage({ page, identity = true }: { page: WorkbookTemplatePage; identity?: boolean }) {
   const templates = useSurfaceCopy().templates;
   const ctx = useLaunchpadAnswers();
-  if (page.ledger) return <OrderTrackerLedger page={page} identity={identity} />;
+  if (page.id === "order-tracker") {
+    return (
+      <PosterTemplatePage
+        poster={{ ...templates.orderTracker, heading: page.title }}
+        intro={page.intro}
+        showIdentity={identity}
+        embedMarker="data-order-tracker"
+      />
+    );
+  }
   const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
   const text = (id: string) => {
     const value = saved[id];

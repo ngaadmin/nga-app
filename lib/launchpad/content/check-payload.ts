@@ -124,6 +124,7 @@ function checkTemplatePages(value: unknown[], where: string): void {
     for (const field of ["lead", "subhead", "intro", "tip", "jobTitle", "wrapTitle"] as const) {
       text(page[field], `${pw} ${field}`, true);
     }
+    if (page.id === "order-tracker") return;
     checkTemplateLines(page.fields, `${pw} fields`);
     if (page.wrapFields !== undefined) {
       text(page.wrapTitle, `${pw} wrap title`);

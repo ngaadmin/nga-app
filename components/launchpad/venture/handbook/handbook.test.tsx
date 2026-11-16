@@ -808,19 +808,19 @@ describe("L5 delivery workbook", () => {
     const tracker = document.querySelector("[data-order-tracker]");
     expect(tracker).toBeTruthy();
     expect(screen.getByRole("heading", { name: "My order tracker" })).toBeTruthy();
-    expect(tracker?.textContent).toContain("Customer (first name only)");
-    expect(tracker?.querySelector(".overflow-x-auto")).toBeNull();
-    expect(tracker?.querySelector("table")?.className).toContain("table-fixed");
+    expect(tracker?.textContent).toContain("These are the details to collect for each order.");
+    expect(tracker?.textContent).not.toContain("Here's a table you can use. Put each order on its own row.");
+    expect(tracker?.querySelector("table")).toBeNull();
+    expect(tracker?.querySelector("[data-learner-rows]")).toBeNull();
+    expect(tracker?.querySelector("[data-tracker-add]")).toBeNull();
+    expect(tracker?.querySelector("[data-example-label]")).toBeNull();
+    expect(tracker?.querySelector("[data-draft-poster]")?.getAttribute("width")).toBe("290");
     expect(tracker?.querySelectorAll("[data-mini-identity]").length).toBe(0);
     expect(tracker?.closest("[data-handbook-page]")?.querySelectorAll("[data-mini-identity]").length).toBeLessThanOrEqual(1);
-    expect(tracker?.querySelector(".overflow-x-auto")).toBeNull();
-    expect(tracker?.textContent).toContain("Mar 12");
-    expect(tracker?.textContent).not.toContain("12 Mar");
   });
 
-  it("plays saved tracker rows and a payload edit of the example label", () => {
-    const floors = structuredClone(FLOORS);
-    const progress = withShortcutSampleAnswers(through("l5-s3"), floors, "dog-walking", "Happy Paws");
+  it("keeps stored tracker rows off the page and opens the blank PDF from the payload link", () => {
+    const progress = withShortcutSampleAnswers(through("l5-s3"), FLOORS, "dog-walking", "Happy Paws");
     const saved = setProgressAnswer(progress, "order_tracker", {
       kind: "order-tracker",
       version: 1,
@@ -830,7 +830,7 @@ describe("L5 delivery workbook", () => {
       <Handbook
         entry="building"
         businessName="Happy Paws"
-        floors={floors}
+        floors={FLOORS}
         progress={saved}
         iconVentureId="dog-walking"
         setAnswer={() => {}}
@@ -838,17 +838,29 @@ describe("L5 delivery workbook", () => {
         initialSheet="order-tracker"
       />,
     );
-    expect(screen.getByDisplayValue("Riley")).toBeTruthy();
-    expect(screen.getByDisplayValue("$15")).toBeTruthy();
-    expect(document.querySelector("[data-example-row]")?.textContent).toContain("Sam");
-    expect(screen.queryByText("A payload example")).toBeNull();
+    expect(screen.queryByDisplayValue("Riley")).toBeNull();
+    expect(screen.queryByText("Example")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add a row" })).toBeNull();
+    const print = LAUNCHPAD_SURFACE_COPY.templates.orderTracker;
+    fireEvent.click(screen.getByRole("button", { name: print.blankLink }));
+    const frame = document.querySelector("[data-poster-frame]") as HTMLIFrameElement;
+    expect(frame.getAttribute("src")).toBe(print.a4Url);
+    fireEvent.click(screen.getByRole("button", { name: print.openLetter }));
+    expect(frame.getAttribute("src")).toBe(print.letterUrl);
+    fireEvent.click(screen.getByRole("button", { name: print.viewerClose }));
+    expect(document.querySelector("[data-poster-viewer]")).toBeNull();
+    expect(screen.getByRole("heading", { name: "My order tracker" })).toBeTruthy();
+    expect(saved.answers?.order_tracker).toMatchObject({ kind: "order-tracker", rows: [{ id: "row-1" }] });
   });
 
-  it("shows a payload edit of the tracker example label", () => {
-    const copy = structuredClone(LAUNCHPAD_SURFACE_COPY);
-    const tracker = copy.templates.pages.find((item) => item.id === "order-tracker");
-    if (!tracker) throw new Error("tracker missing");
-    tracker.exampleLabel = "A payload example";
+  it("shows a payload edit of the tracker print link", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      templates: {
+        ...LAUNCHPAD_SURFACE_COPY.templates,
+        orderTracker: { ...LAUNCHPAD_SURFACE_COPY.templates.orderTracker, blankLink: "A payload tracker link." },
+      },
+    } as unknown as typeof LAUNCHPAD_SURFACE_COPY;
     const progress = withShortcutSampleAnswers(through("l5-s3"), FLOORS, "dog-walking", "Happy Paws");
     render(
       <SurfaceCopyProvider value={copy}>
@@ -864,8 +876,8 @@ describe("L5 delivery workbook", () => {
         />
       </SurfaceCopyProvider>,
     );
-    expect(screen.getByText("A payload example")).toBeTruthy();
-    expect(screen.queryByText(LAUNCHPAD_SURFACE_COPY.templates.pages.find((item) => item.id === "order-tracker")?.exampleLabel ?? "")).toBeNull();
+    expect(screen.getByRole("button", { name: "A payload tracker link." })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: LAUNCHPAD_SURFACE_COPY.templates.orderTracker.blankLink })).toBeNull();
   });
 });
 
@@ -996,17 +1008,16 @@ describe("workbook playback only", () => {
   function paperOffenders(label: string) {
     const paper = document.querySelector("[data-paper-scroll]");
     expect(paper, label).toBeTruthy();
-    const trackerPage = label === "order-tracker";
-    const inputs = [...paper!.querySelectorAll("input, textarea, [contenteditable='true']")].filter(() => !trackerPage);
+    const inputs = [...paper!.querySelectorAll("input, textarea, [contenteditable='true']")];
     const buttons = [...paper!.querySelectorAll("button")].filter(
-      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]") && !(trackerPage && btn.hasAttribute("data-tracker-add")),
+      (btn) => !btn.hasAttribute("data-poster-open") && !btn.closest("[data-poster-viewer]"),
     );
     expect(inputs, label).toHaveLength(0);
     expect(buttons.map((btn) => (btn.getAttribute("aria-label") || btn.textContent || "").replace(/\s+/g, " ").trim()), label).toEqual([]);
     if (label === "budget-split") expect(paper!.querySelector("#budget-earned"), label).toBeNull();
   }
 
-  it("renders no input, textarea, or editor button on any page, including Templates, except the order tracker", () => {
+  it("renders no input, textarea, or editor button on any page, including Templates and My order tracker", () => {
     const progress = withShortcutSampleAnswers(ALL, FLOORS, "dog-walking", "Happy Paws");
     render(<Harness entry="building" initial={progress} />);
     const seen = new Set<string>();

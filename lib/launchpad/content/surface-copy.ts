@@ -109,38 +109,9 @@ const WORKBOOK_TEMPLATE_PAGES: readonly WorkbookTemplatePage[] = [
   {
     id: "order-tracker",
     title: "My order tracker",
-    ledger: true,
     answerKey: "order_tracker",
     scribble: "calendar",
     intro: "These are the details to collect for each order.",
-    tip: "Here's a table you can use. Put each order on its own row.",
-    exampleLabel: "Example",
-    addRow: "Add a row",
-    fields: [
-      { id: "dateBooked", label: "Date booked" },
-      { id: "customer", label: "Customer (first name only)" },
-      { id: "service", label: "Service and package" },
-      { id: "dayTime", label: "Day and time" },
-      { id: "cadence", label: "One-off or regular" },
-      { id: "price", label: "Price" },
-      { id: "notes", label: "Notes" },
-    ],
-    ticks: [
-      { id: "reminder", label: "Reminder set?" },
-      { id: "done", label: "Done?" },
-      { id: "paid", label: "Paid?" },
-      { id: "asked", label: "Feedback asked?" },
-    ],
-    exampleRows: [
-      {
-        values: { dateBooked: "Mar 12", customer: "Sam", service: "30-minute walk", dayTime: "Saturday morning", cadence: "One-off", price: "$15", notes: "Meet at the park" },
-        ticks: { reminder: "yes", done: "yes", paid: "no", asked: "no" },
-      },
-      {
-        values: { dateBooked: "Mar 14", customer: "Alex", service: "30-minute walk", dayTime: "Tuesday after school", cadence: "Regular", price: "$15", notes: "Front gate" },
-        ticks: { reminder: "yes", done: "no", paid: "no", asked: "no" },
-      },
-    ],
   },
 ];
 
@@ -504,6 +475,22 @@ export const LAUNCHPAD_SURFACE_COPY = {
       letterUrl: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf",
       a4Download: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-A4.pdf?download=blank-poster-A4.pdf",
       letterDownload: "https://ugsvzfbviukmpclvsdct.supabase.co/storage/v1/object/public/launchpad-downloads/posters/blank-poster-Letter.pdf?download=blank-poster-Letter.pdf",
+    },
+    /** Same preview and viewer as the draft poster. A4 opens first. Letter is the other viewer button. */
+    orderTracker: {
+      blankLink: "Here's a blank tracker you can print. Add a row for every order.",
+      openA4: "Open A4",
+      downloadA4: "Download A4",
+      openLetter: "Open Letter",
+      downloadLetter: "Download Letter",
+      viewerClose: "Close",
+      viewerPrint: "Print",
+      draftSrc: "/launchpad/workbook/order-tracker/filled-tracker-example.png",
+      previewAlt: "Filled example of the order tracker",
+      a4Url: "/launchpad/workbook/order-tracker/blank-tracker-A4.pdf",
+      letterUrl: "/launchpad/workbook/order-tracker/blank-tracker-Letter.pdf",
+      a4Download: "/launchpad/workbook/order-tracker/blank-tracker-A4.pdf?download=blank-tracker-A4.pdf",
+      letterDownload: "/launchpad/workbook/order-tracker/blank-tracker-Letter.pdf?download=blank-tracker-Letter.pdf",
     },
   },
   buildComplete: {

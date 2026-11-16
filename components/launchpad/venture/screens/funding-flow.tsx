@@ -11,12 +11,35 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { BronzeFirstLead, LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
+import { LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
 import { TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function unitWord(unit: FundingRepayUnit, count: number): string {
   if (unit === "months") return count === 1 ? "month" : "months";
   return count === 1 ? "week" : "weeks";
+}
+
+function dollarText(value: string): number | null {
+  if (!/^\d{1,4}$/.test(value)) return null;
+  return Number(value);
+}
+
+function stepDollar(value: string, delta: number): string {
+  const current = dollarText(value) ?? 0;
+  return String(Math.min(9999, Math.max(0, current + delta)));
+}
+
+function SectionMark({ index, total }: { index: number; total: number }) {
+  return (
+    <div className="mx-5 mt-3 flex items-center gap-2" data-lesson-progress="">
+      {Array.from({ length: total }, (_, dot) => (
+        <span key={dot} aria-hidden="true" className={`size-2.5 rounded-full border-2 border-[#19347D] ${dot < index ? "bg-[#19347D]" : "bg-white"}`} />
+      ))}
+      <p className="ml-auto font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]">
+        Section {index} of {total}
+      </p>
+    </div>
+  );
 }
 
 /**
@@ -48,8 +71,17 @@ export function FundingFlow({
   const startup = costs ? startupTotal(costs) : 0;
   const money = known ? formatStartupMoney(startup, currency) : "";
   const saved = fundingOf(answers, screen.answerKey);
-  const [source, setSource] = useState<"own_cash" | "borrow" | null>(saved?.fundingSource ?? null);
-  const [step, setStep] = useState<"choose" | "confirm" | "payback">(saved?.fundingSource === "own_cash" ? "confirm" : saved?.fundingSource === "borrow" ? "payback" : "choose");
+  const [source, setSource] = useState<"own_cash" | "borrow" | "combination" | null>(saved?.fundingSource ?? null);
+  const [step, setStep] = useState<"choose" | "confirm" | "payback" | "split">(
+    saved?.fundingSource === "own_cash" ? "confirm" : saved?.fundingSource === "borrow" ? "payback" : "choose",
+  );
+  const [ownText, setOwnText] = useState(saved?.ownAmount !== undefined ? String(saved.ownAmount) : "0");
+  const [borrowedText, setBorrowedText] = useState(saved?.borrowedAmount !== undefined ? String(saved.borrowedAmount) : "0");
+  const ownAmount = dollarText(ownText);
+  const borrowedAmount = dollarText(borrowedText);
+  const covered = (ownAmount ?? 0) + (borrowedAmount ?? 0);
+  const splitExact = ownAmount !== null && borrowedAmount !== null && covered === startup;
+  const splitOver = ownAmount !== null && borrowedAmount !== null && covered > startup;
   const [mode, setMode] = useState<"fixed_over_time" | "weekly_amount" | null>(saved?.fundingRepayMode ?? null);
   const [count, setCount] = useState(saved?.fundingRepayCount ?? 1);
   const [unit, setUnit] = useState<FundingRepayUnit>(saved?.fundingRepayUnit ?? "weeks");
@@ -63,6 +95,10 @@ export function FundingFlow({
   const answer = useMemo((): FundingAnswer | null => {
     if (!known || !source) return null;
     if (source === "own_cash") return { kind: "funding", version: 1, fundingSource: "own_cash", startupTotal: startup, currency };
+    if (source === "combination") {
+      if (ownAmount === null || borrowedAmount === null || ownAmount + borrowedAmount !== startup) return null;
+      return { kind: "funding", version: 1, fundingSource: "combination", startupTotal: startup, currency, ownAmount, borrowedAmount };
+    }
     if (mode === "fixed_over_time" && count >= 1) {
       return {
         kind: "funding",
@@ -89,7 +125,7 @@ export function FundingFlow({
       };
     }
     return null;
-  }, [known, source, startup, currency, mode, count, unit, payment, weeklyOk, weekly, weeks]);
+  }, [known, source, startup, currency, mode, count, unit, payment, weeklyOk, weekly, weeks, ownAmount, borrowedAmount]);
 
   const save = (next: FundingAnswer) => persist(screen.answerKey, next);
 
@@ -100,23 +136,17 @@ export function FundingFlow({
         <button type="button" aria-label={s.chrome.back} onClick={() => (step === "choose" ? onExit() : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
-        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.funding.title}</h1>
+        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{screen.copy.header}</h1>
       </div>
+      {(step === "choose" || step === "split") && <SectionMark index={2} total={2} />}
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
         {step === "choose" && (
           <>
-            <BronzeFirstLead
-              flush
-              question={screen.copy.prompt}
-              context={screen.copy.context}
-              guidance={screen.copy.guidance}
-              questionClassName={known ? "" : "!text-[#C5CDD8]"}
-            />
             {known ? (
-              <div className="mt-4 rounded-2xl bg-[#F4FBFE] px-4 py-5 text-center" data-startup-total="">
-                <p className="text-[16px] text-[#6B7280]">{s.funding.startupIs}</p>
-                <p className="font-heading text-[40px] font-extrabold leading-none text-[#19347D]">{money}</p>
-                <p className="mt-1 text-[16px] text-[#9AA3B5]">{s.funding.fromCosts}</p>
+              <div className="mt-3 flex justify-center" data-startup-total="">
+                <p className="inline-flex rounded-full bg-[#E7F8FC] px-3 py-1 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">
+                  {s.funding.startupIs} {money}
+                </p>
               </div>
             ) : (
               <div className="mt-4 rounded-2xl border border-dashed border-[#D9DEE8] px-4 py-6 text-center">
@@ -130,9 +160,10 @@ export function FundingFlow({
               </div>
             )}
             {([
-              ["own_cash", screen.copy.ownCash],
-              ["borrow", screen.copy.borrow],
-            ] as const).map(([id, label]) => {
+              ["own_cash", screen.copy.ownCash, ""],
+              ["borrow", screen.copy.borrow, screen.copy.asterisk],
+              ["combination", screen.copy.combination, ""],
+            ] as const).map(([id, label, mark]) => {
               const on = source === id;
               return (
                 <button
@@ -141,13 +172,57 @@ export function FundingFlow({
                   disabled={!known}
                   aria-pressed={on}
                   onClick={() => setSource(id)}
-                  className={`mb-2 flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left font-heading text-[16px] font-bold ${on ? "bg-[#F4FBFE] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white text-[#19347D] shadow-[inset_0_0_0_1.5px_#E5E7EB]"} disabled:text-[#C5CDD8]`}
+                  className={`mb-2 mt-4 flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left font-heading text-[16px] font-bold first-of-type:mt-4 ${on ? "bg-[#F4FBFE] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0]" : "bg-white text-[#19347D] shadow-[inset_0_0_0_1.5px_#E5E7EB]"} disabled:text-[#C5CDD8]`}
                 >
-                  {label}
-                  <span className={`size-5 rounded-full ${on ? "bg-[#0CC1E0] shadow-[inset_0_0_0_4px_white,inset_0_0_0_6px_#0CC1E0]" : "shadow-[inset_0_0_0_1.5px_#D9DEE8]"}`} />
+                  <span className="pr-3">
+                    {label}
+                    {mark}
+                  </span>
+                  <span className={`size-5 shrink-0 rounded-full ${on ? "bg-[#0CC1E0] shadow-[inset_0_0_0_4px_white,inset_0_0_0_6px_#0CC1E0]" : "shadow-[inset_0_0_0_1.5px_#D9DEE8]"}`} />
                 </button>
               );
             })}
+            <p className="font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]" data-borrow-footnote="">
+              {screen.copy.asterisk}
+              {screen.copy.borrowFootnote}
+            </p>
+          </>
+        )}
+        {step === "split" && (
+          <>
+            <div className="mt-3 flex justify-center" data-startup-total="">
+              <p className="inline-flex rounded-full bg-[#E7F8FC] px-3 py-1 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">
+                {s.funding.startupIs} {money}
+              </p>
+            </div>
+            <ul className="mt-4 flex flex-col gap-2" data-funding-split="">
+              {([
+                ["own", screen.copy.ownMoney, ownText, setOwnText],
+                ["borrowed", screen.copy.borrowed, borrowedText, setBorrowedText],
+              ] as const).map(([id, label, value, setValue]) => (
+                <li key={id} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{label}</span>
+                  <button type="button" aria-label={`Less ${label}`} className="flex size-11 shrink-0 items-center justify-center rounded-full font-sans text-[16px] font-semibold leading-none text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3]" onClick={() => setValue(stepDollar(value, -1))}>−</button>
+                  <label className="flex h-11 w-[4.75rem] shrink-0 items-center justify-center gap-0.5">
+                    <span className="font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.dollar}</span>
+                    <input aria-label={label} inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value.replace(/\D/g, "").slice(0, 4))} className="w-10 bg-transparent text-center font-sans text-[18px] font-semibold leading-[26px] tabular-nums text-[#19347D] outline-none" />
+                  </label>
+                  <button type="button" aria-label={`More ${label}`} className="flex size-11 shrink-0 items-center justify-center rounded-full font-sans text-[16px] font-semibold leading-none text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3]" onClick={() => setValue(stepDollar(value, 1))}>+</button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 flex items-center justify-center gap-2 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]" data-split-total="">
+              {screen.copy.coveredBefore}
+              {covered}
+              {screen.copy.coveredOf}
+              {startup}
+              {splitExact ? <TickBadge size={22} /> : null}
+            </p>
+            {splitOver ? <p className="mt-1 text-center font-sans text-[18px] font-normal leading-[26px] text-[#B45309]" data-over-warning="">{screen.copy.overWarning}</p> : null}
+            <p className="mt-3 font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]" data-borrow-footnote="">
+              {screen.copy.asterisk}
+              {screen.copy.borrowFootnote}
+            </p>
           </>
         )}
         {step === "confirm" && (
@@ -223,7 +298,19 @@ export function FundingFlow({
       </div>
       <div className="px-5 pb-[18px]">
         {step === "choose" ? (
-          <LessonContinue disabled={!known || !source} onClick={() => source && setStep(source === "own_cash" ? "confirm" : "payback")}>Next</LessonContinue>
+          <LessonContinue
+            disabled={!known || !source}
+            onClick={() => source && setStep(source === "own_cash" ? "confirm" : source === "borrow" ? "payback" : "split")}
+          />
+        ) : step === "split" ? (
+          <LessonContinue
+            disabled={!splitExact || !answer}
+            onClick={() => {
+              if (!answer) return;
+              save(answer);
+              onFinish(answer);
+            }}
+          />
         ) : (
           <LessonContinue
             disabled={!answer}

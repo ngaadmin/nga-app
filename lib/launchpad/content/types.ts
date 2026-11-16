@@ -714,12 +714,24 @@ export type LaunchpadFundingScreen = TaskScreenBase & {
     context: string;
     guidance: string;
     prompt: string;
+    /** Interaction title. The bronze door keeps its own name. */
+    header: string;
     ownCash: string;
     borrow: string;
     /** Third funding choice. Opens the split step. */
-    combination?: string;
-    /** Footnote for the borrow option. The asterisk is UI, not part of this string. */
-    borrowFootnote?: string;
+    combination: string;
+    /** Shown beside the borrow choice and before the footnote. */
+    asterisk: string;
+    /** Footnote for the borrow option. The asterisk is a separate field. */
+    borrowFootnote: string;
+    ownMoney: string;
+    borrowed: string;
+    /** "Covered: $" then the amount, then coveredOf, then the start-up total. */
+    coveredBefore: string;
+    coveredOf: string;
+    /** Shown when the two amounts add up to more than the start-up total. */
+    overWarning: string;
+    dollar: string;
     ownCashConfirm: string;
     paybackTitle: string;
     fixedMode: string;

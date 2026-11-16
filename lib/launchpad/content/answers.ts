@@ -160,7 +160,7 @@ export type CompetitorAnswer = {
   doDifferentlyExtra?: string;
 };
 
-export type FundingSource = "own_cash" | "borrow";
+export type FundingSource = "own_cash" | "borrow" | "combination";
 export type FundingRepayMode = "fixed_over_time" | "weekly_amount";
 export type FundingRepayUnit = "weeks" | "months";
 
@@ -177,6 +177,9 @@ export type FundingAnswer = {
   fundingPeriodPayment?: number;
   fundingWeeklyAmount?: number;
   fundingWeeksToRepay?: number;
+  /** Whole dollars, only when fundingSource is combination. They add up to startupTotal. */
+  ownAmount?: number;
+  borrowedAmount?: number;
 };
 
 export type FindCustomersAnswer = {
@@ -914,11 +917,17 @@ export function competitorOf(answers: LaunchpadAnswers | undefined, key: string)
 
 export function parseFundingAnswer(value: unknown): FundingAnswer | null {
   if (!isRecord(value) || value.kind !== "funding" || value.version !== 1) return null;
-  if (value.fundingSource !== "own_cash" && value.fundingSource !== "borrow") return null;
+  if (value.fundingSource !== "own_cash" && value.fundingSource !== "borrow" && value.fundingSource !== "combination") return null;
   const startup = moneyAmount(value.startupTotal, true);
   if (startup === null) return null;
   const currency = typeof value.currency === "string" && /^[A-Z]{3}$/.test(value.currency) ? value.currency : "USD";
   const base: FundingAnswer = { kind: "funding", version: 1, fundingSource: value.fundingSource, startupTotal: startup, currency };
+  if (value.fundingSource === "combination") {
+    const own = moneyAmount(value.ownAmount, true);
+    const borrowed = moneyAmount(value.borrowedAmount, true);
+    if (own === null || borrowed === null || own + borrowed !== startup) return null;
+    return { ...base, ownAmount: own, borrowedAmount: borrowed };
+  }
   if (value.fundingSource === "own_cash") return base;
   if (value.fundingRepayMode === "fixed_over_time") {
     const count = typeof value.fundingRepayCount === "number" && Number.isInteger(value.fundingRepayCount) && value.fundingRepayCount >= 1 ? value.fundingRepayCount : null;

@@ -28,5 +28,16 @@ describe("funding payback", () => {
     });
     expect(borrow?.fundingWeeksToRepay).toBe(16);
     expect(JSON.stringify(borrow)).not.toMatch(/lender|parent/);
+    const mix = parseFundingAnswer({
+      kind: "funding",
+      version: 1,
+      fundingSource: "combination",
+      startupTotal: 80,
+      currency: "USD",
+      ownAmount: 30,
+      borrowedAmount: 50,
+    });
+    expect(mix).toEqual({ kind: "funding", version: 1, fundingSource: "combination", startupTotal: 80, currency: "USD", ownAmount: 30, borrowedAmount: 50 });
+    expect(parseFundingAnswer({ kind: "funding", version: 1, fundingSource: "combination", startupTotal: 80, currency: "USD", ownAmount: 90, borrowedAmount: 50 })).toBeNull();
   });
 });

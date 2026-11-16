@@ -170,6 +170,15 @@ export function FundingSheet() {
         <p className={`mt-2 ${WORKBOOK_BODY}`}>
           {s.sheets.illCover} <ChosenValue>{total}</ChosenValue> {s.sheets.fromOwnCash}
         </p>
+      ) : funding.fundingSource === "combination" ? (
+        <p className={`mt-2 ${WORKBOOK_BODY}`}>
+          {s.sheets.combinationBefore} <ChosenValue>{total}</ChosenValue>
+          {s.sheets.combinationWith}
+          <ChosenValue>{formatStartupMoney(funding.ownAmount ?? 0, currency as "USD")}</ChosenValue>
+          {s.sheets.combinationOwn}
+          <ChosenValue>{formatStartupMoney(funding.borrowedAmount ?? 0, currency as "USD")}</ChosenValue>
+          {s.sheets.combinationBorrowed}
+        </p>
       ) : (
         <ul className={`mt-2 list-disc pl-5 ${WORKBOOK_BODY}`}>
           <li>{s.sheets.illBorrow} <ChosenValue>{total}</ChosenValue></li>

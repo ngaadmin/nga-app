@@ -99,8 +99,11 @@ describe("bronze first screens: question, then context, then guidance", () => {
   it("Get the money you need to start", () => {
     const spec = firstScreen("Get the money you need to start") as LaunchpadFundingScreen;
     render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} />);
-    assertLead(spec.copy.prompt, spec.copy.context, spec.copy.guidance);
-    expect(follows(screen.getByText(spec.copy.guidance), screen.getByText("$80"))).toBe(true);
+    expect(screen.getByRole("heading", { name: spec.copy.header })).toBeTruthy();
+    expect(screen.queryByText(spec.copy.prompt)).toBeNull();
+    expect(screen.queryByText("From Know your cost")).toBeNull();
+    expect(screen.getByText(`Your start-up cost is $80`)).toBeTruthy();
+    expect(screen.getByRole("button", { name: spec.copy.combination })).toBeTruthy();
   });
 
   it("Reflect", () => {

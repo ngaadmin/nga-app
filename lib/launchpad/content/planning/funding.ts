@@ -33,6 +33,7 @@ export function fundingScreen(): LaunchpadFundingScreen {
       guidance:
         "Look at your start-up total. If you already have that amount, you can fund it yourself. If you need to borrow, pick a payback plan you can keep. You can repay a set amount over a number of weeks or months, or pick a weekly amount (for example $5 a week) and see how long it takes to pay back the whole start-up total. To keep things simple, these sums leave out interest.",
       prompt: "How will you cover it?",
+      introTitle: "Get the money you need to start",
       header: "Decide how to fund your business",
       ownCash: "Fully pay from my own cash or savings",
       borrow: "Borrow all the start-up money",

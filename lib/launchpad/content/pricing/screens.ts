@@ -63,7 +63,7 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
       guidance:
         "As we've just seen, each job costs a little. What's left after those costs are covered is what you can use to pay off your start-up costs. You can repay yourself, or someone else if you choose to borrow some money, as soon as possible, or pay it off over time, so there is also money left for other things.",
       weekIntro:
-        "Let's calculate how many jobs you need to do, to cover your start-up costs. First, set how many jobs you hope to do in a good week. The tool then tells you how many weeks it would take to fully repay the start-up costs, if you put all the money you made towards paying it off.",
+        "Let's calculate how many jobs you need to do, to cover your start-up costs. First, set how many jobs you hope to do in a good week. The tool then tells you how many weeks it would take to fully repay the start-up costs, if you put all the money you made toward paying it off.",
       eyebrow: "Pricing",
       singlePrompt: "How many jobs can you do each week?",
       multiPrompt: "Build a typical week. How many of each job will you do?",
@@ -72,6 +72,7 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
       weeklyLabel: "Weekly keep",
       startupLabel: "Start-up total",
       weeksLabel: "About",
+      weeksEmpty: "0 weeks",
     },
     audio: { src: "/launchpad/pricing/l2-jobs-vo.mp3", durationMs: 25626 },
   };

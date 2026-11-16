@@ -25,7 +25,10 @@ describe("Decide what to sell chips", () => {
     expect(screen.getByText("Extras").className).toContain("text-[18px]");
     expect(screen.getByText("Optional").className).toContain("text-[16px]");
     expect(screen.getByRole("button", { name: "Add another service" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Add another extra" })).toBeTruthy();
+    const extra = screen.getByRole("button", { name: "Add another extra" });
+    const offerScroll = document.querySelector("[data-offer-scroll]");
+    expect(offerScroll?.contains(extra)).toBe(true);
+    expect(offerScroll?.className).toContain("pb-6");
     expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Extra play time" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();

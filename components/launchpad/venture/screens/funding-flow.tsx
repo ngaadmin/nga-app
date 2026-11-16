@@ -157,7 +157,7 @@ export function FundingFlow({
         <button type="button" aria-label={s.chrome.back} onClick={() => (step === "intro" ? onExit() : step === "choose" ? setStep("intro") : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
-        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{screen.copy.header}</h1>
+        <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{step === "intro" ? screen.copy.introTitle : screen.copy.header}</h1>
       </div>
       {(step === "intro" || step === "choose" || step === "split") && <SectionMark index={step === "intro" ? 1 : 2} total={2} />}
       <div className="mx-5 mt-5 min-h-0 flex-1 overflow-y-auto pb-4">

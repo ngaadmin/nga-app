@@ -805,8 +805,13 @@ describe("L5 delivery workbook", () => {
     expect(after?.textContent).toContain("I will ask, 'How did it go?'");
     expect(after?.textContent).not.toContain("I will ask How did it go?");
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    expect(document.querySelector("[data-order-tracker]")).toBeTruthy();
+    const tracker = document.querySelector("[data-order-tracker]");
+    expect(tracker).toBeTruthy();
     expect(screen.getByRole("heading", { name: "My order tracker" })).toBeTruthy();
+    expect(tracker?.textContent).toContain("Customer (first name only)");
+    expect(tracker?.querySelector(".overflow-x-auto")).toBeNull();
+    expect(tracker?.querySelector("table")?.className).toContain("table-fixed");
+    expect(tracker?.querySelectorAll("[data-mini-identity]").length).toBeLessThanOrEqual(1);
   });
 
   it("plays saved tracker rows and a payload edit of the example label", () => {

@@ -251,7 +251,7 @@ export function JobsCoverFlow({
             <p className="mt-2 font-sans text-[18px] leading-[26px] text-[#19347D]">
               {screen.copy.weeksLabel}{" "}
               <b className="font-heading text-lg tabular-nums" data-weeks-needed="">
-                {multiWeeks === null ? "—" : `${multiWeeks} ${multiWeeks === 1 ? "week" : "weeks"}`}
+                {multiWeeks === null ? screen.copy.weeksEmpty : `${multiWeeks} ${multiWeeks === 1 ? "week" : "weeks"}`}
               </b>
             </p>
           </div>

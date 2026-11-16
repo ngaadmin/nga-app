@@ -100,7 +100,8 @@ describe("bronze first screens: question, then context, then guidance", () => {
     const spec = firstScreen("Get the money you need to start") as LaunchpadFundingScreen;
     vi.useFakeTimers();
     render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} />);
-    expect(screen.getByRole("heading", { name: spec.copy.header })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: spec.copy.introTitle })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: spec.copy.header })).toBeNull();
     expect(screen.getByText(spec.copy.context)).toBeTruthy();
     expect(screen.queryByText(spec.copy.prompt)).toBeNull();
     expect(screen.queryByText("From Know your cost")).toBeNull();
@@ -112,6 +113,7 @@ describe("bronze first screens: question, then context, then guidance", () => {
     vi.useRealTimers();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("button", { name: spec.copy.combination })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: spec.copy.header })).toBeTruthy();
   });
 
   it("Reflect", () => {

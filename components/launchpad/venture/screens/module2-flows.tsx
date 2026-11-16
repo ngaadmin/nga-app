@@ -127,17 +127,17 @@ export function OfferLoopFlow({
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
       <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
-      <div className="mx-5 mt-5 min-h-0 flex-1 overflow-y-auto pb-3">
+      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-6" data-offer-scroll="">
         <p className={LESSON_HINT}>
           {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? s.offer.thisService)}
         </p>
         {!onWhen && offering && catalog && (
           <>
-            <p className="mt-3 rounded-2xl bg-[#F7FAFD] px-3 py-3 text-[18px] leading-snug text-[#19347D]">
+            <p className="mt-2 rounded-2xl bg-[#F7FAFD] px-3 py-2 text-[18px] leading-snug text-[#19347D]">
               {s.offer.iOffer} {offering.packages.map((id) => chipLabel(id)).join(", ") || "…"}.
               {(offering.addons.length > 0 || offering.addonsExtra) && ` ${s.offer.extrasLead} ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
             </p>
-            <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
               <ScreenPrompt tone="section" flush>{screen.copy.packagesHeading}</ScreenPrompt>
               <p className={LESSON_HINT}>{screen.copy.packagesHint}</p>
             </div>
@@ -150,7 +150,7 @@ export function OfferLoopFlow({
             {extraOpen === "package" && (
               <input aria-label={s.offer.ownPackage} maxLength={40} value={offering.packagesExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, packagesExtra: event.target.value }))} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder={s.offer.typePackage} />
             )}
-            <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
               <ScreenPrompt tone="section" flush>{screen.copy.extrasHeading}</ScreenPrompt>
               <p className={LESSON_HINT}>{screen.copy.extrasHint}</p>
             </div>

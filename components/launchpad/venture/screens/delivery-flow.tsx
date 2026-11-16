@@ -71,9 +71,9 @@ function InlinePick({
   );
 }
 
-function Replay({ before, value, after }: { before: string; value: string; after: string }) {
+function Replay({ before, value, after, tight = false }: { before: string; value: string; after: string; tight?: boolean }) {
   return (
-    <p className={`mb-[18px] border-l-[3px] border-[#0CC1E0] pl-3 ${LESSON_BODY}`}>
+    <p className={`${tight ? "mb-2" : "mb-[18px]"} border-l-[3px] border-[#0CC1E0] pl-3 ${LESSON_BODY}`}>
       {before}
       {value ? <span className="font-semibold">{value}</span> : null}
       {after}
@@ -81,7 +81,7 @@ function Replay({ before, value, after }: { before: string; value: string; after
   );
 }
 
-function Doodle({ name, size = 56 }: { name: string; size?: number }) {
+function Doodle({ name, size = 56, bottom = 100 }: { name: string; size?: number; bottom?: number }) {
   const src = scribble(name);
   if (!src) return null;
   return (
@@ -92,8 +92,8 @@ function Doodle({ name, size = 56 }: { name: string; size?: number }) {
       height={size}
       draggable={false}
       data-scribble-large={name}
-      className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto mix-blend-multiply"
-      style={{ width: size }}
+      className="pointer-events-none absolute right-7 z-raised h-auto mix-blend-multiply"
+      style={{ width: size, bottom }}
     />
   );
 }
@@ -315,12 +315,12 @@ function RecordScreens({
       <>
           <BronzeFirstLead flush question={screen.question} context={screen.context} guidance={screen.guidance} />
           {only ? (
-            <Replay before={copy.serviceBefore} value={only.label} after={copy.serviceAfter} />
+            <Replay tight before={copy.serviceBefore} value={only.label} after={copy.serviceAfter} />
           ) : (
             <InlinePick before={copy.serviceBefore} after={copy.serviceAfter} value={job.serviceId} emptyLabel={copy.emptyLabel} options={lookups.services} onChange={(id) => update({ ...job, serviceId: id })} />
           )}
-          <Replay before={copy.priceBefore} value={price === null ? "" : moneyText(price)} after={copy.priceAfter} />
-          <p className={`mb-[18px] ${LESSON_BODY}`}>
+          <Replay tight before={copy.priceBefore} value={price === null ? "" : moneyText(price)} after={copy.priceAfter} />
+          <p className={`mb-2 ${LESSON_BODY}`}>
             {copy.paidBefore}
             <span className="mx-1 inline-flex h-8 w-[4.75rem] items-center gap-0 rounded-lg border-[1.5px] border-[#D5DAE3] bg-white pl-1.5">
               <span className="font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]" aria-hidden="true">{copy.paidPrefix}</span>
@@ -335,14 +335,16 @@ function RecordScreens({
             </span>
             {copy.paidAfter}
           </p>
-          <Replay before={copy.costBefore} value={cost === null ? "" : moneyText(cost)} after={copy.costAfter} />
-          <Replay before={copy.keptBefore} value={kept === null ? "" : moneyText(kept)} after={copy.keptAfter} />
+          <Replay tight before={copy.costBefore} value={cost === null ? "" : moneyText(cost)} after={copy.costAfter} />
+          <Replay tight before={copy.keptBefore} value={kept === null ? "" : moneyText(kept)} after={copy.keptAfter} />
           {kept !== null && kept <= 0 ? <p className={LESSON_HINT}>{copy.lowKeep}</p> : null}
-          <Replay before={copy.trackerLine} value="" after="" />
-          <button type="button" onClick={addJob} className="mb-3.5 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">
-            {copy.addJob}
-          </button>
-          <p className={LESSON_HINT}>{copy.note}</p>
+          <div data-record-gutter="" className="pr-[160px]">
+            <Replay tight before={copy.trackerLine} value="" after="" />
+            <button type="button" onClick={addJob} className="mb-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">
+              {copy.addJob}
+            </button>
+            <p className={LESSON_HINT}>{copy.note}</p>
+          </div>
       </>
     </Shell>
   );
@@ -368,15 +370,16 @@ function Shell({
   children: ReactNode;
 }) {
   const art = doodle ?? screen.doodles[page] ?? "";
-  const size = screen.step === "ready" && page === 1 ? 136 : screen.step === "ready" && page === 0 ? 80 : screen.step === "wrap" && page === 0 ? 80 : 56;
+  const record = screen.step === "record";
+  const size = record ? 136 : screen.step === "ready" && page === 1 ? 136 : screen.step === "ready" && page === 0 ? 80 : screen.step === "wrap" && page === 0 ? 80 : 56;
   return (
     <LessonSurface
       title={screen.title}
       onBack={onBack}
       progress={pages > 1 ? { index: page + 1, total: pages } : undefined}
-      air={screen.step === "ready" && page === 1 ? "roomy" : "standard"}
+      air={record ? "plain" : screen.step === "ready" && page === 1 ? "roomy" : "standard"}
       footer={<LessonContinue disabled={!ready} onClick={onNext} />}
-      decoration={<Doodle name={art} size={size} />}
+      decoration={<Doodle name={art} size={size} bottom={record ? 72 : 100} />}
     >
       <div data-task-screen="delivery" data-delivery-step={screen.step} data-order-page={page + 1}>
         {children}

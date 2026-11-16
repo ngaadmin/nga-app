@@ -381,6 +381,8 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
     weeklyLabel: string;
     startupLabel: string;
     weeksLabel: string;
+    /** Shown in place of a week count when no jobs are set yet. */
+    weeksEmpty?: string;
   };
   /** Narration for the opening text step only. */
   audio?: { src: string; durationMs: number };
@@ -735,6 +737,8 @@ export type LaunchpadFundingScreen = TaskScreenBase & {
     context: string;
     guidance: string;
     prompt: string;
+    /** Title on the voice-over intro. The choice screen keeps header. */
+    introTitle: string;
     /** Interaction title. The bronze door keeps its own name. */
     header: string;
     ownCash: string;

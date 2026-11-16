@@ -90,6 +90,7 @@ describe("Budgeting picture screens", () => {
       fireEvent.click(continueButton());
     }
     const lock = screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement;
+    expect(document.querySelector("[data-lesson-air='fitted']")?.className).toContain("pb-[30px]");
     expect(screen.getByText("Total 100%")).toBeTruthy();
     expect(lock.disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Less Giving" }));

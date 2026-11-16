@@ -116,7 +116,7 @@ export function TaskWorkbook(props: {
           <button
             type="button"
             onClick={props.onSkip}
-            className={BTN_CYAN_OUTLINE_COMPACT}
+            className="inline-flex h-11 flex-none items-center justify-center rounded-full bg-[#E7F8FC] px-5 font-heading text-[16px] font-bold leading-none text-[#0A8FA8]"
             data-skip-for-now=""
           >
             {s.chrome.skipForNow}

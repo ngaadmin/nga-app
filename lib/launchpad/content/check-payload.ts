@@ -655,7 +655,7 @@ function checkKnowYourCost(screen: Obj, where: string, answers: Answers): void {
 }
 
 const SET_PRICE_COPY = ["context", "guidance", "othersMissing", "keepLabel", "costLabel", "lowKeep", "emptyServices"] as const;
-const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "startupLabel", "weeksLabel"] as const;
+const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "startupLabel", "weeksLabel", "weeksEmpty"] as const;
 
 function checkClip(audio: unknown, where: string): void {
   if (audio === undefined) return;
@@ -975,6 +975,7 @@ function checkFunding(screen: Obj, where: string, answers: Answers): void {
     "context",
     "guidance",
     "prompt",
+    "introTitle",
     "header",
     "ownCash",
     "borrow",

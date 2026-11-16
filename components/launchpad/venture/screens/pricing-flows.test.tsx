@@ -98,6 +98,9 @@ describe("Jobs to cover costs", () => {
     releaseNarration();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("week");
+    expect(document.querySelector("[data-weeks-needed]")?.textContent).toBe(dogWalkingJobsCoverScreen().copy.weeksEmpty);
+    expect(screen.getByText(/toward paying it off/)).toBeTruthy();
+    expect(screen.queryByText(/towards/)).toBeNull();
     const walking = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
     expect(walking.getAttribute("data-service-tile-layout")).toBe("row");
     for (let i = 0; i < sample.walksPerWeek; i += 1) fireEvent.click(within(walking).getByRole("button", { name: "More Dog walking jobs" }));

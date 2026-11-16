@@ -208,7 +208,12 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     expect(add.disabled).toBe(true);
     fireEvent.change(screen.getByRole("textbox", { name: "My goal" }), { target: { value: "TEST half typed" } });
     expect((screen.getByRole("button", { name: "Add this goal" }) as HTMLButtonElement).disabled).toBe(false);
-    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+    const skip = screen.getByRole("button", { name: "Skip for now" });
+    expect(skip.className).toContain("text-[16px]");
+    expect(skip.className).toContain("text-[#0A8FA8]");
+    expect(skip.className).toContain("bg-[#E7F8FC]");
+    expect(skip.className).not.toContain("text-[15px]");
+    fireEvent.click(skip);
     expect(document.querySelector('[data-handbook-page="l1-s2"]')).toBeTruthy();
     // Skip saved nothing for the extra goal.
     expect(localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "").not.toContain("TEST half typed");

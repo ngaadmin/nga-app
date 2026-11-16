@@ -329,7 +329,7 @@ export function PosterTemplatePage({
   );
 }
 
-function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
+function OrderTrackerLedger({ page, identity = true }: { page: WorkbookTemplatePage; identity?: boolean }) {
   const ctx = useLaunchpadAnswers();
   const key = page.answerKey ?? "";
   const rows = orderTrackerOf(ctx?.answers, key)?.rows ?? [];
@@ -347,25 +347,25 @@ function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
   const head = (
     <tr>
       {columns.map((column) => (
-        <th key={column.id} className="px-1 text-left font-sans text-[16px] font-semibold leading-[23px] text-[#19347D]">{column.label}</th>
+        <th key={column.id} className="break-words px-0.5 align-bottom text-left font-sans text-[16px] font-semibold leading-[20px] text-[#19347D]">{column.label}</th>
       ))}
     </tr>
   );
   return (
     <article data-handbook-page="templates" data-workbook-templates="" data-template-page={page.id} data-order-tracker="" aria-label={page.title}>
-      <MiniIdentity />
+      {identity ? <MiniIdentity /> : null}
       <AccentLabel as="h2">{page.title}</AccentLabel>
       {page.intro ? <p className={TEMPLATE_HINT}>{page.intro}</p> : null}
       {page.tip ? <p className={`mt-2 ${TEMPLATE_HINT}`}>{page.tip}</p> : null}
       <p className={`mt-3 ${WORKBOOK_SUB}`} data-example-label="">{page.exampleLabel}</p>
-      <div className="mt-1 overflow-x-auto">
-        <table className="w-max min-w-full border-collapse">
+      <div className="mt-1 overflow-x-hidden">
+        <table className="w-full table-fixed border-collapse">
           <thead>{head}</thead>
           <tbody>
             {(page.exampleRows ?? []).map((row, index) => (
               <tr key={index} data-example-row="">
                 {(page.fields ?? []).map((field) => (
-                  <td key={field.id} className="px-1 font-sans text-[16px] leading-[23px] text-[#19347D]">{row.values[field.id] ?? ""}</td>
+                  <td key={field.id} className="break-words px-0.5 font-sans text-[16px] leading-[20px] text-[#19347D]">{row.values[field.id] ?? ""}</td>
                 ))}
                 {(page.ticks ?? []).map((tick) => (
                   <td key={tick.id} className="px-1 text-center font-sans text-[16px] text-[#19347D]" data-example-tick={row.ticks?.[tick.id] === "yes" ? "yes" : "no"}>{row.ticks?.[tick.id] === "yes" ? "✓" : ""}</td>
@@ -375,8 +375,8 @@ function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
           </tbody>
         </table>
       </div>
-      <div className="mt-3 overflow-x-auto" data-learner-rows="">
-        <table className="w-max min-w-full border-collapse">
+      <div className="mt-3 overflow-x-hidden" data-learner-rows="">
+        <table className="w-full table-fixed border-collapse">
           <thead>{head}</thead>
           <tbody>
             {rows.map((row, index) => (
@@ -390,7 +390,7 @@ function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
                         const values = { ...row.values, [field.id]: event.target.value };
                         save(rows.map((item) => (item.id === row.id ? { ...item, values } : item)));
                       }}
-                      className="w-24 bg-transparent font-sans text-[16px] leading-[23px] text-[#19347D] outline-none"
+                      className="w-full min-w-0 bg-transparent font-sans text-[16px] leading-[23px] text-[#19347D] outline-none"
                     />
                   </td>
                 ))}
@@ -422,10 +422,10 @@ function OrderTrackerLedger({ page }: { page: WorkbookTemplatePage }) {
 }
 
 /** One paperclip page. Strings, fields, and ticks come from the payload. */
-export function WorkbookTemplatePage({ page }: { page: WorkbookTemplatePage }) {
+export function WorkbookTemplatePage({ page, identity = true }: { page: WorkbookTemplatePage; identity?: boolean }) {
   const templates = useSurfaceCopy().templates;
   const ctx = useLaunchpadAnswers();
-  if (page.ledger) return <OrderTrackerLedger page={page} />;
+  if (page.ledger) return <OrderTrackerLedger page={page} identity={identity} />;
   const saved = fieldsOf(ctx?.answers, templates.answerKey)?.values ?? {};
   const text = (id: string) => {
     const value = saved[id];
@@ -673,7 +673,7 @@ function OrderLine({ before, pick, after }: { before: string; pick?: string | nu
 
 function OrderTrackerFromCopy() {
   const page = useSurfaceCopy().templates.pages.find((item) => item.id === "order-tracker");
-  return page ? <WorkbookTemplatePage page={page} /> : null;
+  return page ? <WorkbookTemplatePage page={page} identity={false} /> : null;
 }
 
 function OrderSystemWorkbook({ silver }: { silver: HandbookPageView["silver"] }) {

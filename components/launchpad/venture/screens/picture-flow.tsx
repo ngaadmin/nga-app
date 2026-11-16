@@ -89,7 +89,8 @@ export function PictureFlow({
         title={current.split ? s.price.splitTitle : screen.title}
         onBack={() => (page === 0 ? leave(onExit) : show(page - 1))}
         progress={total > 1 ? { index: page + 1, total } : undefined}
-        progressClassName={current.split ? "mt-8" : undefined}
+        progressClassName={current.split ? "mt-3.5" : undefined}
+        air={current.split ? "fitted" : "standard"}
         showMute={screen.voice === true}
         creditSlot={screen.pages.some((item) => pageCredit(item))}
         aboveFooter={pageAudio(current) ? <StoryAudioPlayer inline clip={pageAudio(current)} preloadSrc={pageAudio(screen.pages[page + 1])?.src} /> : null}

@@ -5,8 +5,12 @@ import { useMemo, useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/content/types";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
-import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type OrderSystemAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
+import { findCustomersOf, identityAnswerOf, marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type OrderSystemAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
+import { FIND_CUSTOMERS_KEY } from "@/lib/launchpad/content/getting-ready/copy";
+import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { OrderSystemFlow } from "@/components/launchpad/venture/screens/order-system-flow";
+import { SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { marketingLines, marketingPieceHeading, type MarketingPieceId } from "@/lib/launchpad/content/sales/workbook-sheets";
 import { OWN_LABEL, SALES_CHANNELS_KEY, pairedIds } from "@/lib/launchpad/content/sales/copy";
 import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
@@ -54,19 +58,27 @@ function ChannelsStep({
   const s = useSurfaceCopy();
   const saved = salesChannelsOf(answers, screen.answerKey);
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<string[]>(saved ? [...saved.selected] : []);
   const [where, setWhere] = useState<Record<string, string[]>>(
     Object.fromEntries(Object.entries(saved?.where ?? {}).map(([key, ids]) => [key, [...ids]])),
   );
   const [extra, setExtra] = useState<Record<string, string>>({ ...(saved?.whereExtra ?? {}) });
   const groups = screen.whereGroups ?? [];
-  const pages = useMemo(() => [[] as string[], ...(screen.wherePages ?? []).map((ids) => [...ids])], [screen.wherePages]);
-  const total = pages.length;
-  const current = (pages[Math.min(page, total - 1)] ?? []).filter((id) => selected.includes(id));
-  const known = new Set((screen.channels ?? []).map((channel) => channel.id));
-  const liveSelected = selected.filter((id) => known.has(id));
+  const known = useMemo(() => new Set((screen.channels ?? []).map((channel) => channel.id)), [screen.channels]);
+  const playback = useMemo(() => {
+    const kept = (saved?.selected ?? []).filter((id) => known.has(id));
+    if (kept.length) return kept;
+    const earlier = (findCustomersOf(answers, FIND_CUSTOMERS_KEY)?.channels ?? []).filter((id) => known.has(id));
+    if (earlier.length) return earlier;
+    return [...known];
+  }, [answers, known, saved?.selected]);
+  const wherePages = useMemo(
+    () => (screen.wherePages ?? []).map((ids) => ids.filter((id) => playback.includes(id))).filter((ids) => ids.length > 0),
+    [playback, screen.wherePages],
+  );
+  const total = 1 + wherePages.length;
+  const current = page === 0 ? [] : (wherePages[page - 1] ?? []);
   const ready = page === 0
-    ? liveSelected.length > 0
+    ? playback.length > 0
     : current.every((id) => (where[id] ?? []).length > 0 || extra[id]?.trim());
   const finish = () => {
     if (!ready) return;
@@ -74,9 +86,9 @@ function ChannelsStep({
       setPage(page + 1);
       return;
     }
-    const keptWhere = Object.fromEntries(Object.entries(where).filter(([id]) => known.has(id)));
-    const keptExtra = Object.fromEntries(Object.entries(extra).filter(([id]) => known.has(id) && extra[id]?.trim()));
-    onFinish({ kind: "sales-channels", version: 1, selected: liveSelected, where: keptWhere, ...(Object.keys(keptExtra).length ? { whereExtra: keptExtra } : {}) });
+    const keptWhere = Object.fromEntries(Object.entries(where).filter(([id]) => playback.includes(id)));
+    const keptExtra = Object.fromEntries(Object.entries(extra).filter(([id]) => playback.includes(id) && extra[id]?.trim()));
+    onFinish({ kind: "sales-channels", version: 1, selected: playback, where: keptWhere, ...(Object.keys(keptExtra).length ? { whereExtra: keptExtra } : {}) });
   };
   return (
     <LessonSurface
@@ -87,27 +99,34 @@ function ChannelsStep({
     >
       <div data-task-screen="sales-channels">
         {page === 0 ? (
-          <>
-            {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+          <div data-channel-playback="">
+            <img src={SCRIBBLE_SRC.heart} alt="" data-channel-art="heart" className="mx-auto mt-5 block h-[92px] w-auto" />
+            {screen.question ? <ScreenPrompt tone="question" flush className="!mt-5">{screen.question}</ScreenPrompt> : null}
             {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
             {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
-            <div className="mt-4">
-              {(screen.channels ?? []).map((channel) => (
-                <Chip key={channel.id} variant="lined" label={channel.label} selected={selected.includes(channel.id)} onClick={() => setSelected(toggle(selected, channel.id))} />
-              ))}
-            </div>
-          </>
+            <ul className="m-0 mt-4 list-none p-0">
+              {playback.map((id) => {
+                const channel = (screen.channels ?? []).find((row) => row.id === id);
+                if (!channel) return null;
+                return (
+                  <li key={id} className={`relative py-0.5 pl-4 before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-[''] ${LESSON_BODY}`}>
+                    {channel.label}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ) : (
           <>
             {page === 1 && screen.wherePrompt ? <ScreenPrompt tone="section" flush>{screen.wherePrompt}</ScreenPrompt> : null}
-            {current.map((id) => {
+            {current.map((id, index) => {
               const group = groups.find((item) => item.channelId === id);
               if (!group) return null;
               const picked = where[id] ?? [];
               return (
-                <div key={id} className="mt-4">
-                  <ScreenPrompt tone="section" flush>{group.heading}</ScreenPrompt>
-                  <ScreenPrompt tone="sub" flush>{group.label}</ScreenPrompt>
+                <div key={id} className={index === 0 ? "mt-4" : "mt-7"} data-channel-group={id}>
+                  <ScreenPrompt tone="question" flush>{group.heading}</ScreenPrompt>
+                  <p className={`mt-1 ${LESSON_BODY}`}>{group.label}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {group.options.map((option) => (
                       <Chip key={option.id} label={option.label} selected={picked.includes(option.id)} onClick={() => setWhere({ ...where, [id]: toggle(picked, option.id) })} />
@@ -174,33 +193,53 @@ function MaterialsStep({
   };
   const selected = new Set(sales?.selected ?? []);
   const friends = sales?.where.friends ?? [];
-  const fields = (screen.pieceFields ?? []).filter((field) => {
-    if (field.channelId === "flyers") return selected.has("flyers");
-    if (field.channelId === "verbal") return selected.has("friends") && friends.includes("see");
-    if (field.channelId === "message") return selected.has("friends") && friends.includes("message");
-    if (field.channelId === "online") return selected.has("online");
-    return false;
+  const catalog: { id: MarketingPieceId; ids: readonly string[] }[] = [
+    { id: "flyer", ids: ["flyer-book", "flyer-extra"] },
+    { id: "verbal", ids: ["verbal-close"] },
+    { id: "message", ids: ["message-close"] },
+    { id: "online", ids: ["online-close"] },
+    { id: "card", ids: [] },
+  ];
+  const sequence = catalog.filter((piece) => {
+    if (piece.id === "flyer") return selected.has("flyers");
+    if (piece.id === "verbal") return selected.has("friends") && friends.includes("see");
+    if (piece.id === "message") return selected.has("friends") && friends.includes("message");
+    if (piece.id === "online") return selected.has("online");
+    return selected.has("cards");
   });
-  const total = 2;
-  const required = fields.filter((field) => !field.optional);
-  const ready = page === 0 ? Boolean(mainService && hook && proof) : required.every((field) => pieces[field.id]);
+  const steps = sequence.length
+    ? sequence.flatMap((piece) => [
+        { kind: "ask" as const, piece },
+        { kind: "show" as const, piece },
+      ])
+    : [{ kind: "ask" as const, piece: null }];
+  const total = steps.length;
+  const step = steps[Math.min(page, total - 1)] ?? steps[0]!;
+  const stepFields = (step.piece?.ids ?? []).flatMap((id) => {
+    const field = (screen.pieceFields ?? []).find((item) => item.id === id);
+    return field ? [field] : [];
+  });
+  const required = stepFields.filter((field) => !field.optional);
+  const ready = step.kind === "show" || (Boolean(mainService && hook && proof) && required.every((field) => pieces[field.id]));
+  const answer: MarketingMaterialsAnswer = {
+    kind: "marketing-materials",
+    version: 1,
+    mainService,
+    ...(secondService ? { secondService } : {}),
+    hook,
+    proof,
+    pieces,
+  };
   const finish = () => {
     if (!ready) return;
-    const answer: MarketingMaterialsAnswer = {
-      kind: "marketing-materials",
-      version: 1,
-      mainService,
-      ...(secondService ? { secondService } : {}),
-      hook,
-      proof,
-      pieces,
-    };
-    if (page === 0 && total > 1) {
-      setPage(1);
+    if (page < total - 1) {
+      setPage(page + 1);
       return;
     }
     onFinish(answer);
   };
+  const businessName = identityAnswerOf(answers, IDENTITY_ANSWER_KEY)?.name || s.workbook.fallbackName;
+  const preview = step.kind === "show" && step.piece ? marketingLines({ ...answers, [screen.answerKey]: answer }, step.piece.id, businessName).lines : [];
   const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void, blocked: ReadonlySet<string> = new Set()) => {
     const field: LaunchpadTextField = {
       name: label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "") || "pick",
@@ -218,33 +257,39 @@ function MaterialsStep({
   return (
     <LessonSurface
       title={screen.title}
-      onBack={() => (page === 0 ? onExit() : setPage(0))}
+      onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
       progress={{ index: page + 1, total }}
       footer={<LessonContinue disabled={!ready} onClick={finish} />}
     >
-      <div data-task-screen="sales-materials">
-        {page === 0 ? (
+      <div data-task-screen="sales-materials" data-material-step={step.kind} data-material-piece={step.piece?.id ?? ""}>
+        {step.kind === "ask" ? (
           <>
-            {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
-            {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
-            {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+            {page === 0 && screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+            {page === 0 && screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
+            {page === 0 && screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
             {select(screen.serviceLabels?.main ?? s.sales.mainService, mainService, services.map((row) => ({ id: row.id, label: row.label })), setMain)}
             {select(screen.serviceLabels?.second ?? s.sales.secondService, secondService, services.filter((row) => row.id !== mainService).map((row) => ({ id: row.id, label: row.label })), setSecond)}
             {select(s.sales.hook, hook, screen.hooks ?? [], setHook)}
             {select(s.sales.proof, proof, screen.proofs ?? [], chooseProof, new Set(pairedIds(pairs, "flyer-extra", pieces["flyer-extra"] ?? "")))}
+            {stepFields.map((field) => (
+              <div key={field.id}>
+                {select(
+                  field.label,
+                  pieces[field.id] ?? "",
+                  field.options,
+                  (id) => choosePiece(field.id, id),
+                  field.id === "flyer-extra" ? new Set(pairedIds(pairs, "proof", proof)) : new Set(),
+                )}
+              </div>
+            ))}
           </>
         ) : (
-          fields.map((field) => (
-            <div key={field.id}>
-              {select(
-                field.label,
-                pieces[field.id] ?? "",
-                field.options,
-                (id) => choosePiece(field.id, id),
-                field.id === "flyer-extra" ? new Set(pairedIds(pairs, "proof", proof)) : new Set(),
-              )}
-            </div>
-          ))
+          <>
+            {step.piece ? <ScreenPrompt tone="question" flush>{marketingPieceHeading(step.piece.id)}</ScreenPrompt> : null}
+            {preview.map((line, index) => (
+              <p key={`${index}-${line}`} className={`mt-3 ${LESSON_BODY}`}>{line}</p>
+            ))}
+          </>
         )}
       </div>
     </LessonSurface>

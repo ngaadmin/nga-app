@@ -163,7 +163,14 @@ const PIECE_META = [
   { id: "card" as const, channelId: "cards", subhead: "What my business card will say", underline: "business card", needs: "" },
 ];
 
-function activePieces(answers: LaunchpadAnswers | undefined): ("flyer" | "verbal" | "message" | "online" | "card")[] {
+export type MarketingPieceId = (typeof PIECE_META)[number]["id"];
+
+/** Heading on the result screen for one channel. The same line is the workbook subhead. */
+export function marketingPieceHeading(id: MarketingPieceId): string {
+  return PIECE_META.find((row) => row.id === id)?.subhead ?? "";
+}
+
+function activePieces(answers: LaunchpadAnswers | undefined): MarketingPieceId[] {
   const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
   const marketing = marketingOf(answers, MARKETING_MATERIALS_KEY);
   const selected = new Set(sales?.selected ?? []);

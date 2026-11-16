@@ -90,6 +90,32 @@ describe("Know your cost flow", () => {
     expect(finished.current?.ongoing.find((service) => service.serviceId === "dog-walking")?.lines.find((line) => line.id === "treats")?.amount).toBe(0);
   });
 
+  it("reads the ongoing intro from the payload", () => {
+    render(
+      <KnowYourCostFlow
+        screen={costScreen}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking"]) }}
+        initialStep={{ name: "ongoing" }}
+      />,
+    );
+    expect(screen.getByText(costScreen.copy.ongoingIntro)).toBeTruthy();
+    expect(screen.queryByText(/Tap Calculate the cost for each service/)).toBeNull();
+    cleanup();
+    const edited = structuredClone(costScreen);
+    edited.copy.ongoingIntro = "A payload ongoing intro.";
+    render(
+      <KnowYourCostFlow
+        screen={edited}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking"]) }}
+        initialStep={{ name: "ongoing" }}
+      />,
+    );
+    expect(screen.getByText("A payload ongoing intro.")).toBeTruthy();
+    expect(screen.queryByText(costScreen.copy.ongoingIntro)).toBeNull();
+  });
+
   it("lists the chosen services, then opens each one in order", () => {
     render(
       <KnowYourCostFlow

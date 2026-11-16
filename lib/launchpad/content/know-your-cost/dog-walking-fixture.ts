@@ -30,7 +30,7 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       marketingLabel: "Marketing & setup",
       starterLabel: "Starter gear",
       starterNote: "Buy once to get started. You will keep using these on jobs.",
-      ongoingIntro: "These costs repeat each job. Tap Calculate the cost for each service. Put 0 for anything you already have.",
+      ongoingIntro: "These costs repeat each job. Work out the ongoing costs for each service, one at a time. Put 0 for anything you already have.",
       serviceIntro:
         "What do you restock each time you do this job? Amounts are small. Change any you need. Put 0 if you already have it, or remove a row you don't need.",
       totalsIntro: "Quick check before your handbook. Start-up is what you spend to open; ongoing costs repeat each job.",

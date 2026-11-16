@@ -11,6 +11,7 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
 import { LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
 import { TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
@@ -131,6 +132,7 @@ export function FundingFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="funding-start" data-funding-step={step}>
+      {step === "intro" ? <MasterMuteButton /> : null}
       <nav aria-label={s.chrome.breadcrumb} className="mx-5 mt-2 text-[16px] text-[#9AA3B5]">{s.funding.crumb}</nav>
       <div className="mx-5 mt-2 flex items-center gap-1">
         <button type="button" aria-label={s.chrome.back} onClick={() => (step === "intro" ? onExit() : step === "choose" ? setStep("intro") : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">

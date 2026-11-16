@@ -69,13 +69,14 @@ describe("goal sentences: no line starts with a full stop", () => {
     expect(nextText.trimStart()).toMatch(/^I'll know I've done it when I can/);
   });
 
-  it("Help others (row 7): ... in [number] [weeks|months], weeks preset", () => {
+  it("Help others: weeks and a customer count, both empty", () => {
     const help = goalScreens.find((s) => s.answerKey === "l1-goal-help-others")!;
     const { container } = renderGoal(help);
     const sentence = container.querySelector("[data-sentence]")!;
-    expect(sentence.querySelector("[data-field='benefit']")).toBeTruthy();
-    expect(sentence.textContent).toMatch(/ in /);
-    expect((sentence.querySelector("select[aria-label='Weeks or months']") as HTMLSelectElement).value).toBe("weeks");
-    expect(sentence.querySelector("input[aria-label='Number']")).toBeTruthy();
+    expect(sentence.querySelector("[data-field='benefit']")).toBeNull();
+    expect(sentence.textContent).toMatch(/In .* weeks, I want .* customers to have used my services\./);
+    expect(sentence.querySelector("select[aria-label='Weeks or months']")).toBeNull();
+    expect((sentence.querySelector("input[aria-label='Number of weeks']") as HTMLInputElement).value).toBe("");
+    expect((sentence.querySelector("input[aria-label='Number of customers']") as HTMLInputElement).value).toBe("");
   });
 });

@@ -21,7 +21,7 @@ describe("Funding bronze", () => {
     const { unmount } = render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} onFinish={(answer) => (finished.current = JSON.stringify(answer))} />);
     expect(screen.getByText("$80")).toBeTruthy();
     expect(screen.queryByText(/parent|bronze|gold|silver/i)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "From my own cash or savings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fully pay from my own cash or savings" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByText(/from your own cash or savings/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
@@ -30,7 +30,7 @@ describe("Funding bronze", () => {
     unmount();
 
     render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} />);
-    fireEvent.click(screen.getByRole("button", { name: "Borrow it" }));
+    fireEvent.click(screen.getByRole("button", { name: "Borrow all the start-up money" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     fireEvent.click(screen.getByRole("button", { name: /Same amount over a set time/ }));
     for (let i = 0; i < 7; i += 1) fireEvent.click(screen.getByRole("button", { name: "More periods" }));

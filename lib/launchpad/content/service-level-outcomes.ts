@@ -67,11 +67,11 @@ export const SERVICE_FLOOR_STRUCTURE: Readonly<
   3: [
     {
       title: "Learn the customer journey",
-      bronzes: ["Attract the customer", "Agree the job", "How to deliver the job", "Wrap-up"],
+      bronzes: ["Attract the customer", "Agree the job", "How to deliver the job", "Finishing up a job"],
     },
     {
       title: "Test & Tweak",
-      bronzes: ["Do the practice run", "Polish your service"],
+      bronzes: ["Do the practice run", "Finetune your service before your first paying customer."],
     },
   ],
   4: [

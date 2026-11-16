@@ -12,7 +12,7 @@ import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { currencySymbol } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { LESSON_HINT, LessonContinue, LessonCredit, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
@@ -87,9 +87,10 @@ export function SetPriceFlow({
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price">
       <LessonTopBar title={s.price.title} onBack={() => onExit(answer)} />
       <div className={`mx-5 mt-1 ${SCROLL}`}>
-        <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
+        <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.eyebrow}</p>
         <p className={`mt-1 ${LESSON_HINT}`}>{screen.copy.context}</p>
         <p className={`mt-2 ${LESSON_HINT}`}>{screen.copy.guidance}</p>
+        {screen.copy.credit ? <LessonCredit credit={screen.copy.credit} /> : null}
         <div className="mt-4 flex flex-col gap-2">
           {services.length === 0 && <p className="text-[16px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
           {services.map((service) => {
@@ -151,6 +152,7 @@ export function SetPriceFlow({
             );
           })}
         </div>
+        {screen.copy.howTo ? <p className={`mt-3 ${LESSON_HINT}`}>{screen.copy.howTo}</p> : null}
       </div>
       <div className="flex flex-none justify-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
         <LessonContinue disabled={!ready} onClick={() => ready && onFinish(answer)}>

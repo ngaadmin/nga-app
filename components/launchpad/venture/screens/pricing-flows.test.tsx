@@ -62,7 +62,7 @@ describe("Jobs to cover costs", () => {
     );
     expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("text");
     expect(screen.getByText(/Your start-up gear has to be paid for/)).toBeTruthy();
-    expect(screen.getByText(/Each job leaves you a little after job costs/)).toBeTruthy();
+    expect(screen.getByText(/As we've just seen, each job costs a little/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("week");
     const walking = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;

@@ -525,23 +525,7 @@
                               "parts": [
                                 {
                                   "kind": "text",
-                                  "text": "I want "
-                                },
-                                {
-                                  "kind": "field",
-                                  "field": "customerCount"
-                                },
-                                {
-                                  "kind": "text",
-                                  "text": " customers to "
-                                },
-                                {
-                                  "kind": "field",
-                                  "field": "benefit"
-                                },
-                                {
-                                  "kind": "text",
-                                  "text": " in "
+                                  "text": "In "
                                 },
                                 {
                                   "kind": "field",
@@ -549,18 +533,26 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": " "
+                                  "text": " weeks, I want "
                                 },
                                 {
                                   "kind": "field",
-                                  "field": "timeframeUnit"
+                                  "field": "customerCount"
                                 },
                                 {
                                   "kind": "text",
-                                  "text": "."
+                                  "text": " customers to have used my services."
                                 }
                               ],
                               "fields": [
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number of weeks",
+                                  "hint": "1-99",
+                                  "min": 1,
+                                  "max": 99
+                                },
                                 {
                                   "name": "customerCount",
                                   "input": "integer",
@@ -568,54 +560,6 @@
                                   "hint": "number",
                                   "min": 1,
                                   "max": 99
-                                },
-                                {
-                                  "name": "benefit",
-                                  "input": "choice",
-                                  "label": "What your customers get",
-                                  "hint": "pick one",
-                                  "options": [
-                                    {
-                                      "id": "come-home-to-a-happy-well-looked-after-dog",
-                                      "label": "come home to a happy, well looked-after dog"
-                                    },
-                                    {
-                                      "id": "have-a-washed-and-groomed-dog",
-                                      "label": "have the dog washed while you're out"
-                                    },
-                                    {
-                                      "id": "manage-their-dog-s-behavior-problems",
-                                      "label": "manage the dog's behavior problems"
-                                    },
-                                    {
-                                      "id": "go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
-                                      "label": "go away for the weekend or holidays without having to worry about their pet"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "name": "timeframeNumber",
-                                  "input": "integer",
-                                  "label": "Number",
-                                  "hint": "1–99",
-                                  "min": 1,
-                                  "max": 99
-                                },
-                                {
-                                  "name": "timeframeUnit",
-                                  "input": "choice",
-                                  "label": "Weeks or months",
-                                  "options": [
-                                    {
-                                      "id": "weeks",
-                                      "label": "weeks"
-                                    },
-                                    {
-                                      "id": "months",
-                                      "label": "months"
-                                    }
-                                  ],
-                                  "defaultValue": "weeks"
                                 }
                               ]
                             }
@@ -966,10 +910,8 @@
                     {
                       "sourceRow": 7,
                       "validation": [
-                        "customerCount: whole number 1 to 99",
-                        "benefit: one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
                         "timeframeNumber: whole number 1 to 99",
-                        "timeframeUnit: one of weeks | months"
+                        "customerCount: whole number 1 to 99"
                       ],
                       "feeds": [
                         {
@@ -981,8 +923,7 @@
                       "flags": [
                         "D12",
                         "D23",
-                        "D15",
-                        "D31"
+                        "D15"
                       ],
                       "screenId": "l1-s2-b1-t1-goal-help-others",
                       "index": "2.2",
@@ -994,28 +935,16 @@
                         "version": 1,
                         "fields": [
                           {
-                            "name": "customerCount",
-                            "type": "integer",
-                            "required": true,
-                            "limits": "whole number 1 to 99"
-                          },
-                          {
-                            "name": "benefit",
-                            "type": "choice",
-                            "required": true,
-                            "limits": "one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
-                          },
-                          {
                             "name": "timeframeNumber",
                             "type": "integer",
                             "required": true,
                             "limits": "whole number 1 to 99"
                           },
                           {
-                            "name": "timeframeUnit",
-                            "type": "choice",
+                            "name": "customerCount",
+                            "type": "integer",
                             "required": true,
-                            "limits": "one of weeks | months"
+                            "limits": "whole number 1 to 99"
                           }
                         ]
                       },
@@ -1344,7 +1273,7 @@
             "handbookSections": [
               {
                 "id": "our-vision",
-                "label": "Our vision",
+                "label": "My Business Vision",
                 "display": "list",
                 "sources": [
                   {
@@ -1354,7 +1283,7 @@
               }
             ],
             "vision": {
-              "label": "Our vision",
+              "label": "My Business Vision",
               "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}. [[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
               "businessType": "dog walking",
               "offerKey": "l1-offer",

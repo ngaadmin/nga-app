@@ -277,7 +277,6 @@ const goalField = (key: string, name: string) =>
   GOAL_SCREENS.flatMap((sc) => (sc.type === "goal-loop" ? sc.goals.map((g) => g.screen) : []))
     .flatMap((g) => (g.type === "short-text" && g.answerKey === key ? g.fields : []))
     .find((f) => f.name === name)!;
-const GOAL_BENEFIT = goalField("l1-goal-help-others", "benefit").options![0]!.id;
 const SKILL_PREFILL = goalField("l1-goal-learn-new-skills", "skill").options![0]!.prefill!;
 
 describe("<Handbook>", () => {
@@ -328,7 +327,7 @@ describe("<Handbook>", () => {
     expect(parseFloat(name.style.fontSize)).toBe(21);
     const vision = dialog.querySelector("[data-vision]")!;
     expect(name.compareDocumentPosition(vision) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(dialog).getByRole("heading", { name: "Our vision" })).toBeTruthy();
+    expect(within(dialog).getByRole("heading", { name: "My Business Vision" })).toBeTruthy();
     expect(dialog.querySelector("[data-font-label]")).toBeNull();
     expect(dialog.textContent).not.toMatch(/Font:|Your identity/);
     expect(dialog.querySelectorAll("[data-sample]")).toHaveLength(0);
@@ -467,7 +466,7 @@ describe("<Handbook>", () => {
   it("plays the saved goals back with no pencil or editor", () => {
     const goals = [
       ["l1-goal-make-money", fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 8, timeframeUnit: "weeks", savingFor: "a bike" })],
-      ["l1-goal-help-others", fieldsAnswer({ customerCount: 5, benefit: GOAL_BENEFIT, timeframeNumber: 6, timeframeUnit: "months" })],
+      ["l1-goal-help-others", fieldsAnswer({ timeframeNumber: 6, customerCount: 5 })],
       ["l1-goal-learn-new-skills", fieldsAnswer({ skill: "talking-to-customers", achievement: SKILL_PREFILL, timeframeNumber: 6, timeframeUnit: "weeks" })],
     ] as const;
     const initial = goals.reduce<VentureTestProgress>((p, [k, a]) => setProgressAnswer(p, k, a), through("l1-s2"));

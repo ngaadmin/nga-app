@@ -181,17 +181,10 @@ describe("Budgeting picture screens", () => {
     expect(editor.textContent).not.toMatch(/rule of thumb/i);
   });
 
-  it("puts the Grok credit above Continue on screen 1 only, and keeps the mute control on every screen", () => {
+  it("keeps the Grok credit off every Budgeting story screen", () => {
     if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
     render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
-    const story = document.querySelector("[data-picture-page='s1'] p")!;
-    expect(story.textContent).toContain("Your business is starting to make money");
-    expect(story.textContent).not.toContain("Voice created with Grok");
-    const credit = screen.getByText("Voice created with Grok");
-    expect(credit.getAttribute("data-lesson-credit")).toBe("");
-    expect(credit.className).toContain("text-[16px]");
-    expect(credit.className).toContain("font-medium");
-    expect(credit.compareDocumentPosition(screen.getByRole("button", { name: "Continue" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
     const mute = screen.getByRole("button", { name: "Mute sound" });
     expect(mute.getAttribute("aria-pressed")).toBe("false");
 

@@ -75,7 +75,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
   if (step === "wrap-job") {
     return {
       ...base,
-      title: "Wrap-up",
+      title: "Finishing up a job",
       question: "How will you wrap up a job?",
       hint: WRAP_JOB_HINT,
       payment: { heading: "Taking payment, select all that apply", options: PAYMENT_HOW.map((row) => ({ ...row })) },
@@ -106,7 +106,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
   }
   return {
     ...base,
-    title: "Polish your service",
+    title: "Finetune your service before your first paying customer.",
     eyebrow: "Test & Tweak",
     question: "What feedback did your trial customer give you?",
     hint: POLISH_LEAD,
@@ -135,7 +135,7 @@ export function learnJourneySilver(): LaunchpadSilver {
       door("l3-s1-b1", "Attract the customer", "find", FIND_CUSTOMERS_KEY),
       door("l3-s1-b2", "Agree the job", "agree", AGREE_JOB_KEY),
       door("l3-s1-b3", "How to deliver the job", "deliver", DELIVER_JOB_KEY),
-      door("l3-s1-b4", "Wrap-up", "wrap-job", WRAP_JOB_KEY),
+      door("l3-s1-b4", "Finishing up a job", "wrap-job", WRAP_JOB_KEY),
     ],
   };
 }
@@ -148,7 +148,7 @@ export function testTweakSilver(): LaunchpadSilver {
     placeholder: false,
     bronzes: [
       door("l3-s3-b1", "Do the practice run", "practice", PRACTICE_RUN_KEY),
-      door("l3-s3-b2", "Polish your service", "polish", POLISH_SERVICE_KEY),
+      door("l3-s3-b2", "Finetune your service before your first paying customer.", "polish", POLISH_SERVICE_KEY),
     ],
   };
 }

@@ -20,7 +20,7 @@ const example: LaunchpadAnswers = {
   "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["learn-new-skills", "be-my-own-boss"]),
   "l1-cause": selectionAnswer(["animals"]),
   "l1-goal-make-money": fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 3, timeframeUnit: "months", savingFor: "a new bike" }, false),
-  "l1-goal-help-others": fieldsAnswer({ customerCount: 10, benefit: "come-home-to-a-happy-well-looked-after-dog", timeframeNumber: 6, timeframeUnit: "months" }, false),
+  "l1-goal-help-others": fieldsAnswer({ timeframeNumber: 5, customerCount: 10 }, false),
   "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false),
 };
 const without = (a: LaunchpadAnswers, ...keys: string[]) => Object.fromEntries(Object.entries(a).filter(([k]) => !keys.includes(k))) as LaunchpadAnswers;
@@ -28,7 +28,7 @@ const without = (a: LaunchpadAnswers, ...keys: string[]) => Object.fromEntries(O
 describe("vision template (H19)", () => {
   it("comes from the tracker through the load onto the identity wrap-up", () => {
     expect(spec).toBeTruthy();
-    expect(spec.label).toBe("Our vision");
+    expect(spec.label).toBe("My Business Vision");
     expect(spec.template).toMatch(/^I am starting a \{business-type\} business\./);
     expect(spec.template).toContain("[[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]]");
     expect(spec.businessType).toBe("dog walking");
@@ -62,9 +62,9 @@ describe("vision tokens", () => {
     expect(tokens["cause-percent"]).toBe("10");
   });
   it("goal list joins each filled goal sentence, ranked order, no cause goal, Add another goal last", () => {
-    expect(tokens["goal-list"]).toMatch(/^I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog in 6 months\.$/);
+    expect(tokens["goal-list"]).toMatch(/^I want to earn 200 .* in 3 months\. I'm saving for a new bike\. In 5 weeks, I want 10 customers to have used my services\.$/);
     const t = visionTokens(spec, { ...example, "l1-goal-other": fieldsAnswer({ goalText: "save up" }, false) }, catalog);
-    expect(t["goal-list"]).toMatch(/looked-after dog in 6 months\. My goal is to save up\.$/);
+    expect(t["goal-list"]).toMatch(/have used my services\. My goal is to save up\.$/);
   });
   it("single items read alone", () => {
     const one = { ...example, "l1-offer": selectionAnswer(["grooming"]), "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["help-others", "learn-new-skills", "be-my-own-boss"]) };
@@ -83,7 +83,7 @@ describe("vision tokens", () => {
 describe("compiled vision sentence", () => {
   it("renders the dog walking example", () => {
     const s = compileVision(spec, example, catalog)!;
-    expect(s).toMatch(/^I am starting a dog walking business\. I will offer dog walk.+\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .+ in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog in 6 months\.$/);
+    expect(s).toMatch(/^I am starting a dog walking business\. I will offer dog walk.+\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .+ in 3 months\. I'm saving for a new bike\. In 5 weeks, I want 10 customers to have used my services\.$/);
   });
   it("drops the cause clause whole when no cause is picked or no percent is set", () => {
     for (const a of [without(example, "l1-cause"), without(example, "l1-goal-support-a-cause"), { ...example, "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 0 }, false) }]) {

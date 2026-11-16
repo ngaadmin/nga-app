@@ -497,7 +497,7 @@ describe("Level Up screens", () => {
     expect(screen.getByText("Section 1 of 2")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Start a referral program" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Checking in every three months shows you how your business is going. Set a reminder so you don't forget.")).toBeTruthy();
+    expect(screen.getByText("The goals you just set each have their own timeline. It's also good practice to review your whole business every three months. This review is separate from those goal check-ins.")).toBeTruthy();
     expect(screen.queryByText("Select at least one.")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish.mock.calls[0]?.[0].ideas).toEqual(["referral"]);

@@ -200,7 +200,7 @@ function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFl
  */
 export const GOAL_INLINE_EDITS: Readonly<Record<string, readonly string[]>> = {
   "l1-goal-make-money": ["savingFor"], // AA6
-  "l1-goal-help-others": ["customerCount", "benefit"], // AA7
+  "l1-goal-help-others": ["timeframeNumber", "customerCount"],
   "l1-goal-learn-new-skills": ["skill", "achievement"], // AA8
 };
 

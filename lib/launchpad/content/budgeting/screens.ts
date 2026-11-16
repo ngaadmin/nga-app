@@ -1,5 +1,5 @@
 import type { LaunchpadBronze, LaunchpadPictureScreen, LaunchpadSilver, LaunchpadTask } from "@/lib/launchpad/content/types";
-import { BUDGETING_SCREEN_1, BUDGETING_SCREEN_2, BUDGETING_SCREEN_3, BUDGETING_TITLE, BUDGETING_VOICE_CREDIT } from "@/lib/launchpad/content/budgeting/copy";
+import { BUDGETING_SCREEN_1, BUDGETING_SCREEN_2, BUDGETING_SCREEN_3, BUDGETING_TITLE } from "@/lib/launchpad/content/budgeting/copy";
 
 const PAGES: LaunchpadPictureScreen["pages"] = [
   {
@@ -7,7 +7,6 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
     image: "/launchpad/budgeting/l6-s1-lars-cashbox.webp",
     alt: "Lars dropping a coin into a cash box",
     body: BUDGETING_SCREEN_1,
-    credit: BUDGETING_VOICE_CREDIT,
     audio: { src: "/launchpad/budgeting/l6-s1-vo.mp3", durationMs: 15073 },
   },
   {

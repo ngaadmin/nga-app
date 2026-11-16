@@ -177,7 +177,7 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     expect(screen.getByText("Step 1 of 5")).toBeTruthy();
     expect(screen.getByText("Goal 1 of 5")).toBeTruthy();
     expect(document.querySelector("[data-screen-intro] [data-guidance]")?.textContent).toBe(loop.guidance);
-    expect(document.querySelector("[data-sentence]")?.textContent).toMatch(/^I want .*customers to/);
+    expect(document.querySelector("[data-sentence]")?.textContent).toMatch(/^In .* weeks, I want .* customers to have used my services\./);
     expect(screen.queryByRole("button", { name: "Not applicable" })).toBeNull();
     expect((screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement).disabled).toBe(true);
     fillGoalBlanks();

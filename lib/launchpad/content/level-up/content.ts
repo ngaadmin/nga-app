@@ -65,7 +65,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
         { id: "three-months", label: "three months", months: 3, period: "three months" },
       ],
       closerHeadline: "See you in {period}.",
-      closerContext: "Checking in every three months shows you how your business is going. Set a reminder so you don't forget.",
+      closerContext: "The goals you just set each have their own timeline. It's also good practice to review your whole business every three months. This review is separate from those goal check-ins.",
       calendarNote: "NextGenAchiever$ check-in: review what worked, what to fix, and where to grow.",
       checkIn: "Your next check-in: {date}",
       copyLabel: "Copy",

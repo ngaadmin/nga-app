@@ -124,9 +124,9 @@ describe("bronze first screens: question, then context, then guidance", () => {
   it.each([
     "Attract the customer",
     "How to deliver the job",
-    "Wrap-up",
+    "Finishing up a job",
     "Do the practice run",
-    "Polish your service",
+    "Finetune your service before your first paying customer.",
   ])("L3 %s stays question, then guidance", (title) => {
     const spec = firstScreen(title) as LaunchpadGettingReadyScreen;
     render(<GettingReadyFlow screen={spec} floors={[]} businessName="Paws" onExit={() => {}} onFinish={() => {}} />);

@@ -11,7 +11,6 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
-import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
@@ -113,35 +112,20 @@ export function JobsCoverFlow({
     answer = { kind: "jobs", version: 1, mode: "multi", startupTotal: startup, typicalWeek: typical, weeklyKeep: weekly, weeksNeeded: multiWeeks };
   }
   const ready = answer !== null;
-
   const save = (next: JobsAnswer) => persist(screen.answerKey, next);
-
-  const bullets = guidanceBullets(screen.copy.guidance);
-  const frame = { left: 0, top: 0 };
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
       <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} />
       {page === 1 ? (
         <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
-          <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">Pricing</p>
+          <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.eyebrow}</p>
           <p className={`mt-3 ${LESSON_HINT}`}>{screen.copy.context}</p>
-          <ul className="mt-4 flex flex-col gap-3 pr-8 font-sans text-[18px] leading-[26px] text-[#19347D]">
-            {bullets.map((line) => (
-              <li key={line} className="flex gap-2">
-                <span aria-hidden="true" className="mt-2 size-1.5 flex-none rounded-full bg-[#19347D]" />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-          <ScribbleMark name="heart" x={2} y={86} w={22} frame={frame} />
-          <ScribbleMark name="sparkle" x={324} y={4} w={22} frame={frame} />
-          <ScribbleMark name="bulb" x={324} y={176} w={22} h={29} frame={frame} />
-          <ScribbleMark name="star" x={2} y={400} w={22} frame={frame} />
-          <ScribbleMark name="smiley" x={318} y={438} w={26} h={26} frame={frame} />
+          <p className={`mt-3 font-sans text-[18px] leading-[26px] text-[#19347D]`}>{screen.copy.guidance}</p>
         </div>
       ) : (
       <div className={`mx-5 mt-4 ${SCROLL}`}>
+        {screen.copy.weekIntro ? <p className={`mb-3 ${LESSON_HINT}`}>{screen.copy.weekIntro}</p> : null}
         {!pricesReady && <p className="mt-4 font-sans text-[18px] leading-[26px] text-[#19347D]">{screen.copy.needPrice}</p>}
         {pricesReady && startup <= 0 && <p className="mt-4 font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.covered}</p>}
         {pricesReady && mode === "single" && single && needed !== null && (
@@ -269,15 +253,4 @@ export function JobsCoverFlow({
       </div>
     </section>
   );
-}
-
-/** The four teaching lines already in `guidance`, kept as bullets. */
-function guidanceBullets(guidance: string): string[] {
-  const parts = [
-    "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up.",
-    "For example, start-up costs of $80 with $14.70 kept per walk takes 6 walks.",
-    "With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.55 covers $80 in about 2 weeks.",
-    "Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
-  ];
-  return parts.join(" ") === guidance ? parts : [guidance];
 }

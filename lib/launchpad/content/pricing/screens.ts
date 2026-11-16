@@ -31,10 +31,14 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
     servicesFrom: "l1-offer",
     copy: {
       context:
-        "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job.",
+        "The price you charge must cover your job costs and still leave something for you as profit. A fair price also has to make sense compared to what others charge for the same kind of job.",
       guidance:
-        "Start with the range you found for that job. Pick the service this price is for if you offer more than one (or fill a card per service). Type a price and watch the breakdown. For example, a 30-minute walk at $15: restock for that walk is $0.30, so you keep $14.70. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
-      othersMissing: "What others charge isn't in yet.",
+        "Start with the prices you found other businesses charge for the services you researched and the tool will tell you how much you will have left after you cover the costs to do that job. Then adjust your prices to what you want to charge your customers. Later on, the tool will also help you calculate how many jobs you need to do at the prices you've set, in order to make back the money you invested to start your business.",
+      howTo:
+        "For example, a 30-minute walk at $15: restock for that walk is $0.30, so you keep $14.70. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
+      credit: "Voice created with Grok",
+      eyebrow: "Pricing",
+      othersMissing: "What others offer isn't in yet.",
       keepLabel: "You keep",
       costLabel: "Cost",
       lowKeep: "Your price doesn't cover your costs yet. Try a higher price.",
@@ -52,9 +56,12 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
     priceFrom: SET_PRICE_ANSWER_KEY,
     weekOptions: JOBS_PER_WEEK_OPTIONS,
     copy: {
-      context: "Your start-up gear has to be paid for before the business really starts making money. Knowing how many jobs that takes gives you a clear first target.",
+      context: "Your start-up gear has to be paid for before the business really starts making money. Knowing how many jobs that takes gives you a clear target for when you can pay off those costs.",
       guidance:
-        "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up. For example, start-up costs of $80 with $14.70 kept per walk takes 6 walks. With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.55 covers $80 in about 2 weeks. Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
+        "As we've just seen, each job costs a little. What's left after those costs are covered is what you can use to pay off your start-up costs. You can repay yourself, or someone else if you choose to borrow some money, as soon as possible, or pay it off over time, so there is also money left for other things.",
+      weekIntro:
+        "Let's calculate how many jobs you need to do, to cover your start-up costs. First, set how many jobs you hope to do in a good week. The tool then tells you how many weeks it would take to fully repay the start-up costs, if you put all the money you made towards paying it off.",
+      eyebrow: "Pricing",
       singlePrompt: "How many jobs can you do each week?",
       multiPrompt: "Build a typical week. How many of each job will you do?",
       covered: "Your start-up costs are already covered.",

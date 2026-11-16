@@ -26,7 +26,7 @@ describe("Budgeting voice-overs", () => {
       const page = screen.pages.find((item) => item.id === id);
       return page && "credit" in page ? page.credit : undefined;
     };
-    expect(credit("s1")).toBe("Voice created with Grok");
+    expect(credit("s1")).toBeUndefined();
     expect(credit("s2")).toBeUndefined();
     expect(credit("s3")).toBeUndefined();
   });

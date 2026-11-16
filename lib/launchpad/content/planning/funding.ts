@@ -31,10 +31,12 @@ export function fundingScreen(): LaunchpadFundingScreen {
       context:
         "You know what it costs to start and what you will charge. Before you buy the gear, decide how you will cover that start-up total, from money you already have or by borrowing and paying it back.",
       guidance:
-        "Look at your start-up total. If you already have that amount, you can fund it yourself. If you need to borrow, pick a payback plan you can keep. You can repay a set amount over a number of weeks or months, or pick a weekly amount (for example $5 a week) and see how long it takes to pay back the whole start-up total. These sums do not add interest.",
+        "Look at your start-up total. If you already have that amount, you can fund it yourself. If you need to borrow, pick a payback plan you can keep. You can repay a set amount over a number of weeks or months, or pick a weekly amount (for example $5 a week) and see how long it takes to pay back the whole start-up total. To keep things simple, these sums leave out interest.",
       prompt: "How will you cover it?",
-      ownCash: "From my own cash or savings",
-      borrow: "Borrow it",
+      ownCash: "Fully pay from my own cash or savings",
+      borrow: "Borrow all the start-up money",
+      combination: "A combination of both",
+      borrowFootnote: "Whenever you borrow money, be clear on the arrangements. You may also have to pay interest.",
       ownCashConfirm: "You'll cover your start-up cost of {startup-total} {currency} from your own cash or savings.",
       paybackTitle: "How will you pay it back?",
       fixedMode: "Same amount over a set time",

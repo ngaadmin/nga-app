@@ -115,7 +115,7 @@ describe("Getting Ready bronze task surfaces", () => {
     expect(document.querySelector("[data-workbook-frame]")).toBeNull();
     cleanup();
     open("wrap-job", "wrap_up");
-    expect(screen.getByRole("heading", { name: "Wrap-up", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Finishing up a job", level: 1 })).toBeTruthy();
     expect(screen.getByText("Thinking about wrap-up now means you're ready when the job ends. Select all the ways you'll wrap up a job.")).toBeTruthy();
     expect(screen.getByText("Taking payment, select all that apply")).toBeTruthy();
     expect(screen.queryByText("I will collect payment by:")).toBeNull();
@@ -173,7 +173,7 @@ describe("Getting Ready bronze task surfaces", () => {
         onFinish={finishPolish}
       />,
     );
-    expect(screen.getByRole("heading", { name: "Polish your service", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Finetune your service before your first paying customer.", level: 1 })).toBeTruthy();
     expect(screen.getByText("Was the service explained clearly?")).toBeTruthy();
     expect(screen.getByText("Did the proof of completion show the work well?")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);

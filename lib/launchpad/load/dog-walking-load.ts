@@ -423,20 +423,13 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         flags.push("D11");
         position = "after-ranked";
       } else if (item === "help-others") {
-        // I7/V7: customer count 1–99 + one benefit from N7–Q7 (lower case, it sits mid-sentence), then the
-        // timeframe (number 1–99 + weeks|months, weeks preset; Cath, 5 Nov 5:20pm: timeframe back in).
-        const benefits = (row.options ?? []).map((o) => {
-          const id = kebab(o);
-          return { id, label: HELP_OTHERS_BENEFIT_LABELS[id] ?? o.trim() };
-        });
-        if (benefits.length < 2) issue(ctx, row.row, "Help others has no benefit options (N7 to Q7).");
+        // C004: weeks and customer count only. Benefit picks and weeks/months are retired.
         fields = [
-          { name: "customerCount", input: "integer", label: "Number of customers", hint: hints[0], min: 1, max: LIMITS.customerCountMax },
-          { name: "benefit", input: "choice", label: "What your customers get", hint: "pick one", options: benefits },
-          ...timeframeFields(),
+          { name: "timeframeNumber", input: "integer", label: "Number of weeks", hint: "1-99", min: 1, max: 99 },
+          { name: "customerCount", input: "integer", label: "Number of customers", hint: "number", min: 1, max: LIMITS.customerCountMax },
         ];
-        slots = [{ field: "customerCount" }, { field: "benefit" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
-        flags.push("D15", "D31");
+        slots = [{ field: "timeframeNumber" }, { field: "customerCount" }];
+        flags.push("D15");
       } else if (item === "learn-new-skills") {
         // I8/J8/V8: skill pick (text before the bar in N8–R8), success line prefilled from the text after the bar, then the timeframe.
         const skills = (row.options ?? []).map((o) => {
@@ -459,7 +452,18 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         slots = timed ? [{ field: name }, { field: "timeframeNumber" }, { field: "timeframeUnit" }] : [{ field: name }];
         flags.push("D13", ...(timed ? ["D15"] : []));
       }
-      const { prompt, parts } = sentenceParts(ctx, row, question, slots);
+      const built = item === "help-others"
+        ? {
+            parts: [
+              { kind: "text" as const, text: "In " },
+              { kind: "field" as const, field: "timeframeNumber" },
+              { kind: "text" as const, text: " weeks, I want " },
+              { kind: "field" as const, field: "customerCount" },
+              { kind: "text" as const, text: " customers to have used my services." },
+            ],
+          }
+        : sentenceParts(ctx, row, question, slots);
+      const { prompt, parts } = "prompt" in built ? built : { prompt: undefined, parts: built.parts };
       screen = {
         id: sid,
         type: "short-text",
@@ -864,13 +868,13 @@ function identity(ctx: Ctx, rows: readonly TrackerRow[], visionTemplateFromHandb
   // Row 14 gold wrap — handbook validation source; used for vision template only.
   const rIdWrap = need(ctx, rows, 1, "Gold", /^Wrap-up/);
   const handbookSections: LaunchpadSummarySection[] = [
-    { id: "our-vision", label: "Our vision", display: "list", sources: [{ answerKey: KEYS.offer }] },
+    { id: "our-vision", label: "My Business Vision", display: "list", sources: [{ answerKey: KEYS.offer }] },
   ];
   const fromWrap = rIdWrap.question.trim().replace(/^["\u201c]|["\u201d]$/g, "").trim();
   const visionTemplate = (visionTemplateFromHandbook && visionTemplateFromHandbook.trim()) || fromWrap || DEFAULT_VISION_TEMPLATE;
   if (!/\{business-type\}/.test(visionTemplate)) issue(ctx, rIdWrap.row, "Vision template has no {business-type}.");
   const vision: LaunchpadVisionSpec = {
-    label: "Our vision",
+    label: "My Business Vision",
     template: visionTemplate,
     businessType: DOG_WALKING_BUSINESS_TYPE,
     offerKey: KEYS.offer,

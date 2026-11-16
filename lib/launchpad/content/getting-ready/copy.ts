@@ -148,7 +148,7 @@ export const DELIVER_PLAYBACK = "This is my plan for delivering the service.";
 export const WRAP_JOB_HINT = "Thinking about wrap-up now means you're ready when the job ends. Select all the ways you'll wrap up a job.";
 export const WRAP_JOB_PLAYBACK = "This is my plan for wrapping up the job.";
 export const PRACTICE_TIP = "Pick who you will practice with and what you want to get better at. This is not a paid job. Keep it simple, and ask a parent before you start.";
-export const POLISH_LEAD = "Straight after you've delivered your trial run, ask your customer these questions.";
+export const POLISH_LEAD = "Straight after you've delivered your trial run, ask for feedback so you can make your service even better:";
 export const SUGGESTION_PROMPT = "what was the customer's suggestion or feedback?";
 
 export function channelById(id: string) {

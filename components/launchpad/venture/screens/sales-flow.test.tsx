@@ -66,7 +66,7 @@ describe("Level 4 sales bronzes", () => {
         onFinish={() => {}}
       />,
     );
-    const proof = screen.getByRole("combobox", { name: "What's your proof?" });
+    const proof = screen.getByRole("combobox", { name: "What is a strength that sets you apart from your competition?" });
     expect((within(proof).getByRole("option", { name: "Clear price before I start, so no surprises" }) as HTMLOptionElement).disabled).toBe(true);
     expect((within(proof).getByRole("option", { name: "I send a photo after every walk" }) as HTMLOptionElement).disabled).toBe(false);
   });

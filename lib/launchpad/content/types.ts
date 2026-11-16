@@ -332,6 +332,11 @@ export type LaunchpadSetPriceScreen = TaskScreenBase & {
   copy: {
     context: string;
     guidance: string;
+    /** Worked example kept under the price fields. */
+    howTo?: string;
+    /** Shown once, on the first voice-over in the kit. */
+    credit?: string;
+    eyebrow?: string;
     othersMissing: string;
     keepLabel: string;
     costLabel: string;
@@ -361,6 +366,10 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
   copy: {
     context: string;
     guidance: string;
+    /** Lead shown above the week picker. */
+    weekIntro?: string;
+    /** Small label above the story, such as Pricing. */
+    eyebrow?: string;
     singlePrompt: string;
     multiPrompt: string;
     covered: string;
@@ -707,6 +716,10 @@ export type LaunchpadFundingScreen = TaskScreenBase & {
     prompt: string;
     ownCash: string;
     borrow: string;
+    /** Third funding choice. Opens the split step. */
+    combination?: string;
+    /** Footnote for the borrow option. The asterisk is UI, not part of this string. */
+    borrowFootnote?: string;
     ownCashConfirm: string;
     paybackTitle: string;
     fixedMode: string;

@@ -123,7 +123,6 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
 function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], templates = false): HandbookPageView[] {
   const out: HandbookPageView[] = [];
   for (const page of pages) {
-    if (page.silver.id === "l3-s1") continue;
     if (page.done && page.kind === "placeholder") {
       const entries = levelUpWorkbookPages(page.silver);
       if (entries.length) {
@@ -155,9 +154,10 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       const sheets = salesWorkbookSheets(progress.answers, name);
       if (sheets.length === 0 || (!templates && !salesChannelsOf(progress.answers, SALES_CHANNELS_KEY))) out.push(page);
       else for (const sheet of sheets) out.push({ ...page, kind: "summary", sheet: sheet.id });
+    } else if (page.silver.id === "l3-s1") {
+      out.push({ ...page, kind: "summary", sheet: "ready-a" });
+      out.push({ ...page, kind: "summary", sheet: "ready-b" });
     } else if (page.silver.id === "l3-s3") {
-      out.push({ ...page, sheet: "ready-a" });
-      out.push({ ...page, sheet: "ready-b" });
       out.push({ ...page, sheet: "ready-c" });
     } else out.push(page);
   }

@@ -49,7 +49,7 @@ function InlinePick({
   return (
     <p className={`mb-[18px] ${LESSON_BODY}`}>
       {before}
-      <span className="relative inline">
+      <span className="relative inline-block">
         <span className={picked ? LESSON_PICK : "font-sans text-[18px] font-semibold leading-[26px] text-[#8A94A8] underline decoration-[#8A94A8] decoration-[1.5px] underline-offset-[3px]"}>
           {picked?.label || emptyLabel}
           <Chevron />
@@ -58,7 +58,7 @@ function InlinePick({
           aria-label={before.trim()}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="absolute inset-0 cursor-pointer opacity-0"
+          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
         >
           <option value="">{emptyLabel}</option>
           {options.map((option) => (

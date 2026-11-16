@@ -128,8 +128,8 @@ describe("handbook pages", () => {
     expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Set your goals" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
     const allPages = handbookPages(ALL, FLOORS);
-    expect(allPages.some((p) => p.silver.id === "l3-s1")).toBe(false);
-    expect(allPages.some((p) => p.sheet === "ready-a")).toBe(true);
+    expect(allPages.some((p) => p.silver.id === "l3-s1" && p.sheet === "ready-a")).toBe(true);
+    expect(allPages.some((p) => p.silver.id === "l3-s3" && p.sheet === "ready-c")).toBe(true);
   });
 
   it("is editable only from the building and only for a completed silver", () => {

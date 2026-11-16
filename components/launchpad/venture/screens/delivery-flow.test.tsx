@@ -160,6 +160,27 @@ describe("Level 5 Delivery", () => {
     expect(show("how-went").endsWith("'")).toBe(true);
   });
 
+  it("lets the order-tracker choice be changed or cleared before Continue", () => {
+    const spec = deliveryScreen("Wrap up the job");
+    render(<DeliveryFlow screen={spec} answers={answers} floors={floors} onExit={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByRole("combobox", { name: spec.wrap!.askPayBefore.trim() }), { target: { value: spec.wrap!.askPayOptions[0]!.id } });
+    fireEvent.change(screen.getByRole("combobox", { name: spec.wrap!.askBefore.trim() }), { target: { value: spec.wrap!.askOptions[0]!.id } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const box = screen.getByRole("combobox", { name: spec.wrap!.whenBefore.trim() }) as HTMLSelectElement;
+    const values = [...box.options].map((option) => option.value);
+    expect(values).toEqual(["", ...spec.wrap!.whenOptions.map((option) => option.id)]);
+    fireEvent.change(box, { target: { value: spec.wrap!.whenOptions[0]!.id } });
+    expect(box.value).toBe(spec.wrap!.whenOptions[0]!.id);
+    expect([...box.options].map((option) => option.value)).toEqual(values);
+    fireEvent.change(box, { target: { value: spec.wrap!.whenOptions[1]!.id } });
+    expect(box.value).toBe(spec.wrap!.whenOptions[1]!.id);
+    fireEvent.change(box, { target: { value: "" } });
+    expect(box.value).toBe("");
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(box.parentElement?.className).toContain("inline-block");
+  });
+
   it("works out what was kept and can record another job", () => {
     const spec = deliveryScreen("Record the job and see what's left");
     const edited = structuredClone(spec);

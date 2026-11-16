@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
-import type { VentureTestShortcut } from "@/lib/launchpad/venture-test/venture-test-progress";
+import { applyVentureTestShortcut, EMPTY_VENTURE_TEST_PROGRESS, type VentureTestShortcut } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
 import { markVentureTestOnboardingSeen, saveVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 
@@ -267,6 +267,54 @@ async function finishSilver(silver: (typeof PAYLOAD.floors)[number]["silvers"][n
     }
   }
 }
+
+describe("workbook after a silver", () => {
+  function openLastBronze(bronzeId: string, doneThrough: string, dropTask: string) {
+    const applied = applyVentureTestShortcut({ kind: "through-silver", silverId: doneThrough }, PAYLOAD.floors, EMPTY_VENTURE_TEST_PROGRESS)!;
+    saveVentureTestProgress("dog-walking", {
+      ...applied.progress,
+      completedTaskIds: applied.progress.completedTaskIds.filter((id) => id !== dropTask),
+    });
+    markVentureTestOnboardingSeen("dog-walking");
+    render(
+      <VentureFlow
+        initialVentureId="dog-walking"
+        ventureTitles={{ "dog-walking": "Dog walking" }}
+        ventures={VENTURES}
+        reset={false}
+        openBronze={bronzeId}
+      />,
+    );
+  }
+
+  it("opens the Level 3 journey pages after the silver's last bronze", () => {
+    openLastBronze("l3-s1-b4", "l3-s1", "l3-s1-b4-t1");
+    const wrap = PAYLOAD.floors[2]!.silvers[0]!.bronzes[3]!.tasks[0]!.screens[0]!;
+    if (wrap.type !== "getting-ready" || !wrap.payment || !wrap.feedback) throw new Error("wrap screen missing");
+    fireEvent.click(screen.getByRole("button", { name: wrap.payment.options[0]!.label }));
+    fireEvent.click(screen.getByRole("button", { name: wrap.feedback.options[0]!.label }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-handbook-page='ready-a']")).toBeTruthy();
+    expect(document.querySelector("[data-handbook-page]")?.getAttribute("data-handbook-page")).toBe("ready-a");
+  });
+
+  it("opens My budget split after the Budgeting lesson", () => {
+    vi.useFakeTimers();
+    openLastBronze("l6-s1-b1", "l5-s3", "l6-s1-b1-t1");
+    for (let page = 0; page < 3; page += 1) {
+      act(() => {
+        vi.advanceTimersByTime(2100);
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    }
+    act(() => {
+      vi.advanceTimersByTime(2100);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Lock in my split" }));
+    expect(document.querySelector("[data-handbook-page='budget-split']")).toBeTruthy();
+    vi.useRealTimers();
+  });
+});
 
 describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44pm)", () => {
   const FOUR = ["make-money", "help-others", "learn-new-skills", "be-my-own-boss"];

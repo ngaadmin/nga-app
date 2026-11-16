@@ -644,7 +644,8 @@ export function VentureFlow({
         const justSilver = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
         if (justSilver) {
           const grow = bronze.tasks.some((task) => task.screens.some((item) => item.type === "level-up" && item.step === "grow"));
-          go({ screen: "corridor", level: floor.level, entering: false });
+          setView({ screen: "corridor", level: floor.level, entering: false });
+          window.scrollTo({ top: 0 });
           setHandbook({
             ventureId,
             entry: "building",

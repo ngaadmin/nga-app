@@ -6,7 +6,7 @@ export type ScriptedBlock =
   | { kind: "sub"; text: string; /** Channel short name to underline inside the subhead. */ underline?: string }
   | { kind: "paragraph"; parts: readonly ScriptedPart[] }
   | { kind: "list"; items: readonly string[] }
-  | { kind: "budget"; heading: string; earnedLabel: string };
+  | { kind: "budget"; heading: string };
 
 export type ScriptedSheet = {
   id: string;

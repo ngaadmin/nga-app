@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { BudgetSplit } from "@/components/launchpad/venture/handbook/budget-split";
+import { SurfaceCopyProvider } from "@/components/launchpad/venture/surface-copy";
+import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import { writeBudgetMoneyMade, writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 
 afterEach(() => {
@@ -9,64 +11,35 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
-function field() {
-  return screen.getByRole("textbox", { name: "Money I earned" }) as HTMLInputElement;
-}
+describe("My budget split", () => {
+  it("has no Money I earned box", () => {
+    writeBudgetMoneyMade("200");
+    render(<BudgetSplit percents={[10, 15, 35, 40]} />);
+    expect(screen.queryByRole("textbox", { name: "Money I earned" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit money I earned" })).toBeNull();
+    expect(document.querySelector("#budget-earned")).toBeNull();
+    expect(screen.queryByText("Money I earned")).toBeNull();
+    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("Money made");
+    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$200");
+    expect(document.querySelector("[data-budget-amount='giving']")?.textContent).toBe("$20");
+    expect(document.querySelector("[data-budget-amount='emergencies']")?.textContent).toBe("$30");
+    expect(document.querySelector("[data-budget-amount='pay']")?.textContent).toBe("$70");
+    expect(document.querySelector("[data-budget-amount='grow']")?.textContent).toBe("$80");
+  });
 
-describe("My budget split field", () => {
-  it("starts at 100 and recalculates the dollar column on each keystroke", () => {
+  it("keeps the jar dollars on Money made", () => {
+    writeBudgetMoneyMade("80");
     render(<BudgetSplit percents={[5, 15, 40, 40]} />);
-    const earned = field();
-    expect(earned.value).toBe("100");
-    expect(screen.getByText("5%")).toBeTruthy();
-    expect(screen.getByText("15%")).toBeTruthy();
-    expect(screen.getAllByText("40%")).toHaveLength(2);
-    expect(screen.getByText("$5")).toBeTruthy();
-    expect(screen.getByText("$15")).toBeTruthy();
-    expect(screen.getAllByText("$40")).toHaveLength(2);
-
-    fireEvent.change(earned, { target: { value: "250" } });
-    expect(earned.value).toBe("250");
+    expect(screen.getByText("$4")).toBeTruthy();
     expect(screen.getByText("$12")).toBeTruthy();
-    expect(screen.getByText("$38")).toBeTruthy();
-    expect(screen.getAllByText("$100")).toHaveLength(2);
-    expect(screen.getByText("5%")).toBeTruthy();
-    expect(screen.getByText("15%")).toBeTruthy();
-    expect(screen.getAllByText("40%")).toHaveLength(2);
-    expect(window.localStorage.getItem("lp-venture-test:budget-earned")).toBe("250");
+    expect(screen.getAllByText("$32")).toHaveLength(2);
+    expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("80");
   });
 
-  it("keeps the field visible when empty, shows the 100 placeholder, and still splits 100", () => {
-    render(<BudgetSplit percents={[5, 15, 40, 40]} />);
-    fireEvent.change(field(), { target: { value: "" } });
-    const earned = field();
-    expect(earned.value).toBe("");
-    expect(earned.placeholder).toBe("100");
-    expect(screen.getByText("$5")).toBeTruthy();
-    expect(screen.getByText("$15")).toBeTruthy();
-    expect(screen.getAllByText("$40")).toHaveLength(2);
-    expect(screen.getByRole("button", { name: "Edit money I earned" })).toBeTruthy();
-  });
-
-  it("keeps only digits and restores a saved total", () => {
-    window.localStorage.setItem("lp-venture-test:budget-earned", "250");
-    render(<BudgetSplit percents={[5, 15, 40, 40]} />);
-    const earned = field();
-    expect(earned.value).toBe("250");
-    expect(screen.getAllByText("$100")).toHaveLength(2);
-    fireEvent.change(earned, { target: { value: "12a" } });
-    expect(earned.value).toBe("12");
-    expect(window.localStorage.getItem("lp-venture-test:budget-earned")).toBe("12");
-  });
-
-  it("leaves the bronze percents alone when the typed total changes", () => {
+  it("leaves the bronze percents on the jars", () => {
     writeBudgetSplit([10, 20, 30, 40]);
+    writeBudgetMoneyMade("200");
     render(<BudgetSplit />);
-    expect(screen.getByText("10%")).toBeTruthy();
-    expect(screen.getByText("20%")).toBeTruthy();
-    expect(screen.getByText("30%")).toBeTruthy();
-    expect(screen.getByText("40%")).toBeTruthy();
-    fireEvent.change(field(), { target: { value: "200" } });
     expect(screen.getByText("10%")).toBeTruthy();
     expect(screen.getByText("20%")).toBeTruthy();
     expect(screen.getByText("30%")).toBeTruthy();
@@ -77,31 +50,18 @@ describe("My budget split field", () => {
     expect(screen.getByText("$80")).toBeTruthy();
   });
 
-  it("plays the lesson Money made total back without changing Money I earned", () => {
+  it("shows a payload edit of Money made", () => {
     writeBudgetMoneyMade("80");
-    render(<BudgetSplit percents={[5, 15, 40, 40]} />);
-    expect(field().value).toBe("100");
-    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("Money made");
-    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
-    expect(screen.getByText("$4")).toBeTruthy();
-    expect(screen.getByText("$12")).toBeTruthy();
-    expect(screen.getAllByText("$32")).toHaveLength(2);
-    fireEvent.change(field(), { target: { value: "250" } });
-    expect(field().value).toBe("250");
-    expect(document.querySelector("[data-money-made-playback]")?.textContent).toContain("$80");
-    expect(screen.getByText("$4")).toBeTruthy();
-    expect(screen.queryByText("$12.50") ?? screen.queryByText("$13")).toBeNull();
-    expect(window.localStorage.getItem("lp-venture-test:budget-earned")).toBe("250");
-    expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("80");
-  });
-
-  it("works the jar dollars from Money made when that total is saved", () => {
-    writeBudgetMoneyMade("200");
-    render(<BudgetSplit percents={[10, 15, 35, 40]} />);
-    expect(field().value).toBe("100");
-    expect(document.querySelector("[data-budget-amount='giving']")?.textContent).toBe("$20");
-    expect(document.querySelector("[data-budget-amount='emergencies']")?.textContent).toBe("$30");
-    expect(document.querySelector("[data-budget-amount='pay']")?.textContent).toBe("$70");
-    expect(document.querySelector("[data-budget-amount='grow']")?.textContent).toBe("$80");
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      workbook: { ...LAUNCHPAD_SURFACE_COPY.workbook, moneyMade: "A payload money total" },
+    };
+    render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <BudgetSplit percents={[5, 15, 40, 40]} />
+      </SurfaceCopyProvider>,
+    );
+    expect(screen.getByText(/A payload money total/)).toBeTruthy();
+    expect(screen.queryByText("Money made")).toBeNull();
   });
 });

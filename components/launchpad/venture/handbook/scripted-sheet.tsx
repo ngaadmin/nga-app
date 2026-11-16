@@ -42,7 +42,7 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
           );
         }
         if (block.kind === "budget") {
-          return <BudgetSplit key={index} heading={block.heading} earnedLabel={block.earnedLabel} />;
+          return <BudgetSplit key={index} heading={block.heading} />;
         }
         if (block.kind === "list") {
           return (

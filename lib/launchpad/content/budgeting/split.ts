@@ -40,7 +40,7 @@ export function writeBudgetSplit(percents: readonly number[]): void {
   window.localStorage.setItem(SPLIT_KEY, JSON.stringify(percents));
 }
 
-/** Lesson "Money made" on Set your own split. Separate from the workbook Money I earned field. */
+/** Lesson "Money made" on Set your own split. The workbook jars use this total. */
 export function readBudgetMoneyMade(): string | null {
   if (typeof window === "undefined") return null;
   try {

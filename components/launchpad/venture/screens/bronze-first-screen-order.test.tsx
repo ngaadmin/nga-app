@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { CostsAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
@@ -100,9 +100,12 @@ describe("bronze first screens: question, then context, then guidance", () => {
     const spec = firstScreen("Get the money you need to start") as LaunchpadFundingScreen;
     render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} />);
     expect(screen.getByRole("heading", { name: spec.copy.header })).toBeTruthy();
+    expect(screen.getByText(spec.copy.context)).toBeTruthy();
     expect(screen.queryByText(spec.copy.prompt)).toBeNull();
     expect(screen.queryByText("From Know your cost")).toBeNull();
     expect(screen.getByText(`Your start-up cost is $80`)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: spec.copy.combination })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("button", { name: spec.copy.combination })).toBeTruthy();
   });
 

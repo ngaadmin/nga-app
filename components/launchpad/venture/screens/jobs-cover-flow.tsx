@@ -10,7 +10,9 @@ import { jobsNeeded, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep } from "@/li
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
+import { SCRIBBLE_SRC } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
@@ -116,12 +118,14 @@ export function JobsCoverFlow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
-      <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} />
+      {page === 1 ? <MasterMuteButton /> : null}
+      <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} progress={{ index: page === 1 ? 1 : 2, total: 2 }} />
       {page === 1 ? (
-        <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
+        <div className={`relative mx-5 mt-5 ${SCROLL}`}>
+          <img src={SCRIBBLE_SRC.coins} alt="" data-jobs-art="coins" className="mx-auto mb-5 block h-[120px] w-auto" />
           <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.eyebrow}</p>
-          <p className={`mt-3 ${LESSON_HINT}`}>{screen.copy.context}</p>
-          <p className={`mt-3 font-sans text-[18px] leading-[26px] text-[#19347D]`}>{screen.copy.guidance}</p>
+          <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.context}</p>
+          <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.guidance}</p>
         </div>
       ) : (
       <div className={`mx-5 mt-4 ${SCROLL}`}>

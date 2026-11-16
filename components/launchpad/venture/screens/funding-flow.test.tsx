@@ -22,6 +22,9 @@ describe("Funding bronze", () => {
     const finished = { current: "" };
     const { unmount } = render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} onFinish={(answer) => (finished.current = JSON.stringify(answer))} />);
     expect(screen.getByText("Your start-up cost is $80")).toBeTruthy();
+    expect(screen.getByText(/Before you buy the gear/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Fully pay from my own cash or savings" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByText("How will you cover it?")).toBeNull();
     expect(screen.queryByText("From Know your cost")).toBeNull();
     expect(screen.queryByText("That's more than your start-up cost.")).toBeNull();
@@ -35,6 +38,7 @@ describe("Funding bronze", () => {
     unmount();
 
     render(<FundingFlow screen={fundingScreen()} answers={{ "l2-costs": costs }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: /Borrow all the start-up money/ }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: /Same amount over a set time/ }));
@@ -54,6 +58,7 @@ describe("Funding bronze", () => {
     const spec = fundingScreen();
     const finished = { current: null as FundingAnswer | null };
     const { unmount } = render(<FundingFlow screen={spec} answers={{ "l2-costs": costs }} onFinish={(answer) => (finished.current = answer)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: spec.copy.combination }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 2 of 2")).toBeTruthy();
@@ -74,6 +79,7 @@ describe("Funding bronze", () => {
     const edited = fundingScreen();
     edited.copy.overWarning = "A payload warning line.";
     const editedView = render(<FundingFlow screen={edited} answers={{ "l2-costs": costs }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: edited.copy.combination }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.change(screen.getByRole("textbox", { name: edited.copy.ownMoney }), { target: { value: "90" } });

@@ -166,7 +166,6 @@ describe("Level 5 Delivery", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.change(screen.getByRole("combobox", { name: spec.wrap!.askPayBefore.trim() }), { target: { value: spec.wrap!.askPayOptions[0]!.id } });
     fireEvent.change(screen.getByRole("combobox", { name: spec.wrap!.askBefore.trim() }), { target: { value: spec.wrap!.askOptions[0]!.id } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     const box = screen.getByRole("combobox", { name: spec.wrap!.whenBefore.trim() }) as HTMLSelectElement;
     const values = [...box.options].map((option) => option.value);
     expect(values).toEqual(["", ...spec.wrap!.whenOptions.map((option) => option.id)]);
@@ -191,7 +190,6 @@ describe("Level 5 Delivery", () => {
     expect(screen.queryByText(spec.question)).toBeNull();
     expect(screen.getByText("Dog walking").className).toContain("font-semibold");
     expect(screen.getByText("$15").className).toContain("font-semibold");
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("A$")).toBeTruthy();
     expect(screen.queryByText(spec.record!.paidPrefix)).toBeNull();
     const paid = screen.getByRole("textbox", { name: edited.record!.paidBefore.trim() }) as HTMLInputElement;
@@ -203,12 +201,9 @@ describe("Level 5 Delivery", () => {
     fireEvent.change(paid, { target: { value: "0" } });
     expect(screen.getByText(edited.record!.lowKeep)).toBeTruthy();
     fireEvent.change(paid, { target: { value: "15" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: edited.record!.addJob }));
     expect(screen.getByText("What did this job leave you?")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.change(screen.getByRole("textbox", { name: edited.record!.paidBefore.trim() }), { target: { value: "20" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish.mock.calls[0]?.[0]).toEqual({
       kind: "record-job",

@@ -70,6 +70,8 @@ describe("Jobs to cover costs", () => {
       <JobsCoverFlow screen={dogWalkingJobsCoverScreen()} floors={floors} answers={{ "l2-costs": costs, "l2-price": price }} />,
     );
     expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("text");
+    expect(document.querySelector("[data-jobs-art='coins']")).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
     expect(screen.getByText(/Your start-up gear has to be paid for/)).toBeTruthy();
     expect(screen.getByText(/As we've just seen, each job costs a little/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

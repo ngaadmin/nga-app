@@ -218,17 +218,18 @@ function WrapScreens({
   const [askPay, setAskPay] = useState(saved?.paymentWhen ?? "");
   const [ask, setAsk] = useState(saved?.feedbackQuestion ?? "");
   const [when, setWhen] = useState(saved?.trackerWhen ?? "");
-  const ready = page === 1 ? copy.askPayOptions.some((row) => row.id === askPay) && copy.askOptions.some((row) => row.id === ask) : page === 2 ? copy.whenOptions.some((row) => row.id === when) : true;
+  const asksReady = copy.askPayOptions.some((row) => row.id === askPay) && copy.askOptions.some((row) => row.id === ask) && copy.whenOptions.some((row) => row.id === when);
+  const ready = page === 0 || asksReady;
   const finish = () => {
     if (!ready) return;
-    if (page < 2) {
+    if (page < 1) {
       setPage(page + 1);
       return;
     }
     onFinish({ kind: "wrap-up-job", version: 1, paymentWhen: askPay, feedbackQuestion: ask, trackerWhen: when });
   };
   return (
-    <Shell screen={screen} page={page} ready={ready} onBack={() => (page === 0 ? onExit() : setPage(page - 1))} onNext={finish}>
+    <Shell screen={screen} page={page} pages={2} doodle={page === 0 ? screen.doodles[0] : screen.doodles[1]} ready={ready} onBack={() => (page === 0 ? onExit() : setPage(0))} onNext={finish}>
       {page === 0 ? (
         <>
           <BronzeFirstLead flush question={screen.question} context={screen.context} guidance={screen.guidance} />
@@ -241,10 +242,6 @@ function WrapScreens({
         <>
           <InlinePick before={copy.askPayBefore} after={copy.askPayAfter} value={askPay} emptyLabel={copy.emptyLabel} options={copy.askPayOptions} onChange={setAskPay} />
           <InlinePick before={copy.askBefore} after={copy.askAfter} value={ask} emptyLabel={copy.emptyLabel} options={copy.askOptions} onChange={setAsk} />
-        </>
-      ) : null}
-      {page === 2 ? (
-        <>
           <Replay before={copy.trackerLine} value="" after="" />
           <InlinePick before={copy.whenBefore} after={copy.whenAfter} value={when} emptyLabel={copy.emptyLabel} options={copy.whenOptions} onChange={setWhen} />
           <p className={LESSON_HINT}>{copy.note}</p>
@@ -273,7 +270,6 @@ function RecordScreens({
 }) {
   const saved = recordJobOf(answers, screen.answerKey);
   const only = lookups.services.length === 1 ? lookups.services[0] : undefined;
-  const [page, setPage] = useState(0);
   const [jobAt, setJobAt] = useState(0);
   const [jobs, setJobs] = useState<DraftJob[]>(() => {
     const rows = saved?.jobs.map((job) => ({ serviceId: job.serviceId, paid: String(job.paid) }));
@@ -287,14 +283,10 @@ function RecordScreens({
   const price = serviceId ? lookups.priceFor(serviceId) : null;
   const kept = paid !== null ? keptAmount(paid, cost ?? 0) : null;
   const complete = (row: DraftJob) => Boolean((row.serviceId || only?.id) && parsePaid(row.paid, copy.paidMax) !== null);
-  const ready = page === 0 ? Boolean(serviceId) : page === 1 ? paid !== null : jobs.every(complete);
+  const ready = jobs.every(complete);
   const update = (next: DraftJob) => setJobs((rows) => rows.map((row, index) => (index === jobAt ? next : row)));
   const finish = () => {
     if (!ready) return;
-    if (page < 2) {
-      setPage(page + 1);
-      return;
-    }
     onFinish({
       kind: "record-job",
       version: 1,
@@ -309,30 +301,18 @@ function RecordScreens({
     if (!jobs.every(complete)) return;
     setJobs((rows) => [...rows, { serviceId: only?.id ?? "", paid: "" }]);
     setJobAt(jobs.length);
-    setPage(0);
   };
   const back = () => {
-    if (page > 0) {
-      setPage(page - 1);
-      return;
-    }
-    if (jobAt > 0 && !job.paid.trim() && !job.serviceId) {
-      setJobs((rows) => rows.slice(0, -1));
-      setJobAt(jobAt - 1);
-      setPage(2);
-      return;
-    }
     if (jobAt > 0) {
+      if (!job.paid.trim()) setJobs((rows) => rows.slice(0, -1));
       setJobAt(jobAt - 1);
-      setPage(2);
       return;
     }
     onExit();
   };
   return (
-    <Shell screen={screen} page={page} ready={ready} onBack={back} onNext={finish}>
-      {page === 0 ? (
-        <>
+    <Shell screen={screen} page={0} pages={1} doodle={screen.doodles[2]} ready={ready} onBack={back} onNext={finish}>
+      <>
           <BronzeFirstLead flush question={screen.question} context={screen.context} guidance={screen.guidance} />
           {only ? (
             <Replay before={copy.serviceBefore} value={only.label} after={copy.serviceAfter} />
@@ -340,10 +320,6 @@ function RecordScreens({
             <InlinePick before={copy.serviceBefore} after={copy.serviceAfter} value={job.serviceId} emptyLabel={copy.emptyLabel} options={lookups.services} onChange={(id) => update({ ...job, serviceId: id })} />
           )}
           <Replay before={copy.priceBefore} value={price === null ? "" : moneyText(price)} after={copy.priceAfter} />
-        </>
-      ) : null}
-      {page === 1 ? (
-        <>
           <p className={`mb-[18px] ${LESSON_BODY}`}>
             {copy.paidBefore}
             <span className="mx-1 inline-flex h-8 w-[4.75rem] items-center gap-0 rounded-lg border-[1.5px] border-[#D5DAE3] bg-white pl-1.5">
@@ -362,17 +338,12 @@ function RecordScreens({
           <Replay before={copy.costBefore} value={cost === null ? "" : moneyText(cost)} after={copy.costAfter} />
           <Replay before={copy.keptBefore} value={kept === null ? "" : moneyText(kept)} after={copy.keptAfter} />
           {kept !== null && kept <= 0 ? <p className={LESSON_HINT}>{copy.lowKeep}</p> : null}
-        </>
-      ) : null}
-      {page === 2 ? (
-        <>
           <Replay before={copy.trackerLine} value="" after="" />
           <button type="button" onClick={addJob} className="mb-3.5 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">
             {copy.addJob}
           </button>
           <p className={LESSON_HINT}>{copy.note}</p>
-        </>
-      ) : null}
+      </>
     </Shell>
   );
 }
@@ -380,6 +351,8 @@ function RecordScreens({
 function Shell({
   screen,
   page,
+  pages = 3,
+  doodle,
   ready,
   onBack,
   onNext,
@@ -387,18 +360,22 @@ function Shell({
 }: {
   screen: LaunchpadDeliveryScreen;
   page: number;
+  pages?: number;
+  doodle?: string;
   ready: boolean;
   onBack: () => void;
   onNext: () => void;
   children: ReactNode;
 }) {
+  const art = doodle ?? screen.doodles[page] ?? "";
+  const size = screen.step === "ready" && page === 1 ? 136 : screen.step === "ready" && page === 0 ? 80 : screen.step === "wrap" && page === 0 ? 80 : 56;
   return (
     <LessonSurface
       title={screen.title}
       onBack={onBack}
-      progress={{ index: page + 1, total: 3 }}
+      progress={pages > 1 ? { index: page + 1, total: pages } : undefined}
       footer={<LessonContinue disabled={!ready} onClick={onNext} />}
-      decoration={<Doodle name={screen.doodles[page] ?? ""} size={screen.step === "ready" && page === 1 ? 136 : 56} />}
+      decoration={<Doodle name={art} size={size} />}
     >
       <div data-task-screen="delivery" data-delivery-step={screen.step} data-order-page={page + 1}>
         {children}

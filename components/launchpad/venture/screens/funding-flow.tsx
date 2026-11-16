@@ -72,8 +72,8 @@ export function FundingFlow({
   const money = known ? formatStartupMoney(startup, currency) : "";
   const saved = fundingOf(answers, screen.answerKey);
   const [source, setSource] = useState<"own_cash" | "borrow" | "combination" | null>(saved?.fundingSource ?? null);
-  const [step, setStep] = useState<"choose" | "confirm" | "payback" | "split">(
-    saved?.fundingSource === "own_cash" ? "confirm" : saved?.fundingSource === "borrow" ? "payback" : "choose",
+  const [step, setStep] = useState<"intro" | "choose" | "confirm" | "payback" | "split">(
+    saved?.fundingSource === "own_cash" ? "confirm" : saved?.fundingSource === "borrow" ? "payback" : saved?.fundingSource ? "choose" : "intro",
   );
   const [ownText, setOwnText] = useState(saved?.ownAmount !== undefined ? String(saved.ownAmount) : "0");
   const [borrowedText, setBorrowedText] = useState(saved?.borrowedAmount !== undefined ? String(saved.borrowedAmount) : "0");
@@ -133,13 +133,28 @@ export function FundingFlow({
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="funding-start" data-funding-step={step}>
       <nav aria-label={s.chrome.breadcrumb} className="mx-5 mt-2 text-[16px] text-[#9AA3B5]">{s.funding.crumb}</nav>
       <div className="mx-5 mt-2 flex items-center gap-1">
-        <button type="button" aria-label={s.chrome.back} onClick={() => (step === "choose" ? onExit() : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
+        <button type="button" aria-label={s.chrome.back} onClick={() => (step === "intro" ? onExit() : step === "choose" ? setStep("intro") : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
         <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{screen.copy.header}</h1>
       </div>
-      {(step === "choose" || step === "split") && <SectionMark index={2} total={2} />}
+      {(step === "intro" || step === "choose" || step === "split") && <SectionMark index={step === "intro" ? 1 : 2} total={2} />}
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
+        {step === "intro" && (
+          <>
+            <p className="mt-5 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.context}</p>
+            <p className="mt-3 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.guidance}</p>
+            {known ? (
+              <div className="mt-5 flex justify-center" data-startup-total="">
+                <p className="inline-flex rounded-full bg-[#E7F8FC] px-3 py-1 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">
+                  {s.funding.startupIs} {money}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-5 font-sans text-[16px] leading-[23px] text-[#4A5568]">{screen.copy.missing}</p>
+            )}
+          </>
+        )}
         {step === "choose" && (
           <>
             {known ? (
@@ -297,7 +312,9 @@ export function FundingFlow({
         )}
       </div>
       <div className="px-5 pb-[18px]">
-        {step === "choose" ? (
+        {step === "intro" ? (
+          <LessonContinue onClick={() => setStep("choose")} />
+        ) : step === "choose" ? (
           <LessonContinue
             disabled={!known || !source}
             onClick={() => source && setStep(source === "own_cash" ? "confirm" : source === "borrow" ? "payback" : "split")}

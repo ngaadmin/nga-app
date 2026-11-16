@@ -1,6 +1,7 @@
 "use client";
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
+import { AnchorDoodle } from "@/components/launchpad/venture/screens/screen-ui";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { CostLine, CostsAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor, LaunchpadKnowYourCostScreen } from "@/lib/launchpad/content/types";
@@ -263,7 +264,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         <BackTitle title={s.costs.startupTitle} onBack={() => setStep({ name: "hub" })} />
-        <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
+        <div className={`mx-5 mt-5 ${SCROLL} pb-2`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
           <h2 className="mb-0.5 mt-3 font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.marketingLabel}</h2>
@@ -343,7 +344,7 @@ export function KnowYourCostFlow({
             const prev = at > 0 ? list[at - 1] : undefined;
             setStep(prev ? { name: "service", serviceId: prev.serviceId } : { name: "startup" });
           }} />
-          <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
+          <div className={`mx-5 mt-5 ${SCROLL} pb-2`}>
             <p className="text-[16px] leading-snug text-[#6B7280]">{intro}</p>
             <div className="mt-2">
               {lineRows(
@@ -412,7 +413,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         <BackTitle title={s.costs.ongoingTitle} onBack={() => setStep({ name: "hub" })} />
-        <div className={`mx-5 mt-1 ${SCROLL}`}>
+        <div className={`mx-5 mt-10 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
           <div className="mt-4 flex flex-col gap-2">
@@ -475,7 +476,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         {crumb}
-        <div className={`mx-5 mt-6 ${SCROLL}`}>
+        <div className={`mx-5 mt-5 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.costs.yourCosts}</h1>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
@@ -570,7 +571,7 @@ export function KnowYourCostFlow({
             ✕ Exit
           </button>
         </div>
-        <div className={`mx-5 mt-4 ${SCROLL}`}>
+        <div className={`mx-5 mt-5 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className={`mt-0.5 ${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{s.costs.knowYourCost}</h1>
           <p className="mt-1 text-[16px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
@@ -619,7 +620,8 @@ export function KnowYourCostFlow({
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-cost-step={step.name} data-task-screen="know-your-cost">
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-cost-step={step.name} data-task-screen="know-your-cost">
+      {step.name === "ongoing" ? <AnchorDoodle name="coins" size={136} /> : null}
       {body}
     </section>
   );

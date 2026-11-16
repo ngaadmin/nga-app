@@ -43,7 +43,7 @@ export function SplitEditor({ copy, onChange }: { copy: SplitCopy; onChange: (pe
   return (
     <div data-budget-editor="">
       <p className={`mt-3 ${LESSON_BODY}`} data-split-copy="context">{copy.context}</p>
-      <p className={`mt-1.5 ${LESSON_HINT}`} data-split-copy="guidance">{copy.guidance}</p>
+      <p className={`mt-3 ${LESSON_HINT}`} data-split-copy="guidance">{copy.guidance}</p>
       <div className="mt-3" data-money-made="">
         <p className={LESSON_BODY}>{copy.madeAsk}</p>
         <div className="mt-3 flex items-center justify-between gap-3">

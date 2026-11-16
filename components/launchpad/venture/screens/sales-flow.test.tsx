@@ -43,6 +43,7 @@ describe("Level 4 sales bronzes", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-channel-playback]")).toBeNull();
     expect(screen.getByText("An online post or online community group").className).toContain("text-[21px]");
+    expect((document.querySelector("[data-scribble-large='heart']") as HTMLElement).style.width).toBe("80px");
     expect(screen.getByText("Where would you share it?").className).toContain("text-[#19347D]");
     fireEvent.click(screen.getByRole("button", { name: "On an online community page" }));
     fireEvent.click(screen.getByRole("button", { name: "At a local shop or cafe" }));

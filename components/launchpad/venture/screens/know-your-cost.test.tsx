@@ -85,6 +85,7 @@ describe("Know your cost flow", () => {
     render(<Harness />);
     fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[1]!);
     expect(screen.getAllByRole("heading", { name: "Ongoing costs" })).toHaveLength(1);
+    expect((document.querySelector("[data-scribble-large='coins']") as HTMLElement).style.width).toBe("136px");
     const tile = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
     expect(tile.getAttribute("data-service-tile-layout")).toBe("wrap");
     expect(tile.className).toContain("flex-col");

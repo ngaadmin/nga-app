@@ -128,7 +128,7 @@ export function JobsCoverFlow({
           <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.guidance}</p>
         </div>
       ) : (
-      <div className={`mx-5 mt-4 ${SCROLL}`}>
+      <div className={`mx-5 mt-5 ${SCROLL}`}>
         {screen.copy.weekIntro ? <p className={`mb-3 ${LESSON_HINT}`}>{screen.copy.weekIntro}</p> : null}
         {!pricesReady && <p className="mt-4 font-sans text-[18px] leading-[26px] text-[#19347D]">{screen.copy.needPrice}</p>}
         {pricesReady && startup <= 0 && <p className="mt-4 font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">{screen.copy.covered}</p>}

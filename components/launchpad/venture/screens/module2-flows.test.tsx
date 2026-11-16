@@ -100,6 +100,7 @@ describe("Research what competitors offer", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("option", { name: "Walk one dog only" })).toBeTruthy();
+    expect((document.querySelector("[data-scribble-large='paw']") as HTMLElement).style.width).toBe("128px");
     expect(screen.queryByRole("option", { name: "Solo walk (one dog only)" })).toBeNull();
     expect(screen.getByRole("button", { name: "Walk one dog at a time" })).toBeTruthy();
     const edited = structuredClone(competitorScreen());

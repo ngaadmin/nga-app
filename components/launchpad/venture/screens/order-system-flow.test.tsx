@@ -48,6 +48,7 @@ describe("Set up your order system", () => {
     const onFinish = vi.fn();
     render(<OrderSystemFlow screen={spec} onExit={() => {}} onFinish={onFinish} />);
     expect(screen.queryByRole("textbox")).toBeNull();
+    expect((document.querySelector("[data-scribble-large='calendar']") as HTMLElement).className).toContain("w-24");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByRole("combobox", { name: copy.trackerLead }), { target: { value: "notebook" } });
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);

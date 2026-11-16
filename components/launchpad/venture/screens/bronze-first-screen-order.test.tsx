@@ -50,7 +50,7 @@ function assertContextFirst(context: string, guidance: string, question: string,
   expect(c.className).toContain("mt-3");
   expect(c.className).toContain("text-[18px]");
   expect(c.className).toContain("text-[#19347D]");
-  expect(g.className).toContain("mt-1.5");
+  expect(g.className).toContain("mt-3");
   expect(g.className).toContain("text-[#4A5568]");
   expect(q.className).toContain("mt-1");
   expect(q.className).toContain("text-[#0CC1E0]");
@@ -72,7 +72,7 @@ function assertLead(question: string, context?: string, guidance?: string) {
   if (guidance) {
     const g = screen.getByText(guidance);
     expect(follows(previous, g)).toBe(true);
-    expect(g.className).toContain("mt-1.5");
+    expect(g.className).toContain("mt-3");
     expect(g.className).toContain("text-[#4A5568]");
   }
 }

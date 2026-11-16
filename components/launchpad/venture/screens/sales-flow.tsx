@@ -15,7 +15,7 @@ import { OWN_LABEL, SALES_CHANNELS_KEY, pairedIds } from "@/lib/launchpad/conten
 import type { LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
-import { LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { AnchorDoodle, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 import { LESSON_BODY, LESSON_HINT } from "@/components/launchpad/venture/screens/screen-ui";
 
 type ReadyAnswer = SalesChannelsAnswer | MarketingMaterialsAnswer | TellPeopleAnswer | OrderSystemAnswer;
@@ -96,11 +96,12 @@ function ChannelsStep({
       onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
       progress={{ index: page + 1, total }}
       footer={<LessonContinue disabled={!ready} onClick={finish} />}
+      decoration={page > 0 && page === total - 1 ? <AnchorDoodle name="heart" size={80} /> : undefined}
     >
       <div data-task-screen="sales-channels">
         {page === 0 ? (
           <div data-channel-playback="">
-            <img src={SCRIBBLE_SRC.heart} alt="" data-channel-art="heart" className="mx-auto mt-5 block h-[92px] w-auto" />
+            <img src={SCRIBBLE_SRC.heart} alt="" data-channel-art="heart" className="mx-auto block h-[92px] w-auto" />
             {screen.question ? <ScreenPrompt tone="question" flush className="!mt-5">{screen.question}</ScreenPrompt> : null}
             {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
             {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
@@ -124,7 +125,7 @@ function ChannelsStep({
               if (!group) return null;
               const picked = where[id] ?? [];
               return (
-                <div key={id} className={index === 0 ? "mt-4" : "mt-7"} data-channel-group={id}>
+                <div key={id} className={index === 0 ? "mt-5" : "mt-7"} data-channel-group={id}>
                   <ScreenPrompt tone="question" flush>{group.heading}</ScreenPrompt>
                   <p className={`mt-1 ${LESSON_BODY}`}>{group.label}</p>
                   <div className="mt-2 flex flex-wrap gap-2">

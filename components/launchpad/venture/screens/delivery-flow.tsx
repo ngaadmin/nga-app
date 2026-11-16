@@ -374,6 +374,7 @@ function Shell({
       title={screen.title}
       onBack={onBack}
       progress={pages > 1 ? { index: page + 1, total: pages } : undefined}
+      air={screen.step === "ready" && page === 1 ? "roomy" : "standard"}
       footer={<LessonContinue disabled={!ready} onClick={onNext} />}
       decoration={<Doodle name={art} size={size} />}
     >

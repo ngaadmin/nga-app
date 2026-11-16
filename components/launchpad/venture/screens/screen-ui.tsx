@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { StoryCreditSlotContext } from "@/components/academy/lesson/academy-lesson-shell";
 import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { SCRIBBLE_SRC, type ScribbleName } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 
 /** Navy Inter 400, 18px, line-height 1.44. Body, context, statements, and playback. */
@@ -99,9 +100,25 @@ export function ScreenPrompt({
   );
 }
 
-/** How-to line under the prompt. */
-export function ScreenGuidance({ children, flush = false }: { children: ReactNode; flush?: boolean }) {
-  return <p className={`${flush ? "" : "mx-5"} mt-1.5 ${LESSON_HINT}`}>{children}</p>;
+/** How-to line under the prompt. 12px under the line above it. */
+export function ScreenGuidance({ children, flush = false, className = "" }: { children: ReactNode; flush?: boolean; className?: string }) {
+  return <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_HINT} ${className}`}>{children}</p>;
+}
+
+/** Corner illustration. Bottom 100px, right 28px, clear of the Continue pill. */
+export function AnchorDoodle({ name, size }: { name: ScribbleName; size: number }) {
+  return (
+    <img
+      src={SCRIBBLE_SRC[name]}
+      alt=""
+      width={size}
+      height={size}
+      draggable={false}
+      data-scribble-large={name}
+      className="pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto mix-blend-multiply"
+      style={{ width: size }}
+    />
+  );
 }
 
 /**
@@ -109,8 +126,9 @@ export function ScreenGuidance({ children, flush = false }: { children: ReactNod
  * context, gray guidance. Find the why and Know your impact use
  * `context-first`: navy context, gray guidance, aqua question, with the
  * interaction directly under the question. Spacing stays 4px above the
- * question, 12px above the context, and 6px above the guidance. `flush`
- * drops the side margin inside an already padded lesson.
+ * question, 12px above the context, and 12px above the guidance. A
+ * question-first screen leaves 20px under the guidance before the
+ * interaction. `flush` drops the side margin inside an already padded lesson.
  */
 export function BronzeFirstLead({
   question,
@@ -130,12 +148,12 @@ export function BronzeFirstLead({
   order?: "question-first" | "context-first";
 }) {
   const questionNode = question ? (
-    <ScreenPrompt id={questionId} tone="question" flush={flush} className={questionClassName}>
+    <ScreenPrompt id={questionId} tone="question" flush={flush} className={`${order === "context-first" ? "mb-5" : ""} ${questionClassName}`.trim()}>
       {question}
     </ScreenPrompt>
   ) : null;
   const contextNode = context ? <p className={`${flush ? "" : "mx-5"} mt-3 ${LESSON_BODY}`}>{context}</p> : null;
-  const guidanceNode = guidance ? <ScreenGuidance flush={flush}>{guidance}</ScreenGuidance> : null;
+  const guidanceNode = guidance ? <ScreenGuidance flush={flush} className={order === "question-first" ? "mb-5" : ""}>{guidance}</ScreenGuidance> : null;
   if (order === "context-first") {
     return (
       <>
@@ -207,6 +225,7 @@ export function LessonSurface({
   aboveFooter,
   progressClassName,
   decoration,
+  air = "standard",
 }: {
   title: string;
   onBack: () => void;
@@ -223,13 +242,15 @@ export function LessonSurface({
   progressClassName?: string;
   /** Art pinned to the lesson frame, outside the scrolling copy. */
   decoration?: ReactNode;
+  /** 20px under the progress row. Light screens use 40px. */
+  air?: "standard" | "roomy";
 }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const frame = (
     <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-lesson-surface="">
       {showMute ? <MasterMuteButton /> : null}
       <LessonTopBar title={title} onBack={onBack} progress={progress} progressClassName={progressClassName} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
+      <div className={`min-h-0 flex-1 overflow-y-auto px-5 pb-4 [&>:first-child]:mt-0 [&>:first-child>:first-child]:mt-0 ${air === "roomy" ? "pt-10" : "pt-5"}`} data-lesson-air={air}>{children}</div>
       <div className="px-5 pb-[18px]">
         {aboveFooter}
         {creditSlot ? <div ref={setSlot} className="w-full" data-lesson-credit-slot="" /> : null}

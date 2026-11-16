@@ -141,10 +141,10 @@ export function FundingFlow({
         <h1 className={`${FREDOKA_CLASS} text-[24px] font-semibold leading-[34px] text-[#19347D]`}>{screen.copy.header}</h1>
       </div>
       {(step === "intro" || step === "choose" || step === "split") && <SectionMark index={step === "intro" ? 1 : 2} total={2} />}
-      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
+      <div className="mx-5 mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
         {step === "intro" && (
           <>
-            <p className="mt-5 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.context}</p>
+            <p className="font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.context}</p>
             <p className="mt-3 font-sans text-[18px] font-normal leading-[26px] text-[#19347D]">{screen.copy.guidance}</p>
             {known ? (
               <div className="mt-5 flex justify-center" data-startup-total="">
@@ -160,13 +160,13 @@ export function FundingFlow({
         {step === "choose" && (
           <>
             {known ? (
-              <div className="mt-3 flex justify-center" data-startup-total="">
+              <div className="flex justify-center" data-startup-total="">
                 <p className="inline-flex rounded-full bg-[#E7F8FC] px-3 py-1 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">
                   {s.funding.startupIs} {money}
                 </p>
               </div>
             ) : (
-              <div className="mt-4 rounded-2xl border border-dashed border-[#D9DEE8] px-4 py-6 text-center">
+              <div className="rounded-2xl border border-dashed border-[#D9DEE8] px-4 py-6 text-center">
                 <p className="font-heading text-3xl text-[#C5CDD8]">$?</p>
                 <p className="mt-2 text-[16px] leading-snug text-[#6B7280]">{screen.copy.missing}</p>
                 {onGoToCosts && (
@@ -207,7 +207,7 @@ export function FundingFlow({
         )}
         {step === "split" && (
           <>
-            <div className="mt-3 flex justify-center" data-startup-total="">
+            <div className="flex justify-center" data-startup-total="">
               <p className="inline-flex rounded-full bg-[#E7F8FC] px-3 py-1 text-center font-sans text-[18px] font-semibold leading-[26px] text-[#19347D]">
                 {s.funding.startupIs} {money}
               </p>

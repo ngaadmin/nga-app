@@ -110,11 +110,11 @@ function OrderSystemScreens({
         <img
           src={page === 0 ? SCRIBBLE_SRC.calendar : SCRIBBLE_SRC.star}
           alt=""
-          width={page === 0 ? 80 : 64}
-          height={page === 0 ? 80 : 64}
+          width={page === 0 ? 96 : 64}
+          height={page === 0 ? 96 : 64}
           draggable={false}
           data-scribble-large={page === 0 ? "calendar" : "star"}
-          className={`pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto mix-blend-multiply ${page === 0 ? "w-20" : "w-16"}`}
+          className={`pointer-events-none absolute bottom-[100px] right-7 z-raised h-auto mix-blend-multiply ${page === 0 ? "w-24" : "w-16"}`}
         />
       }
     >

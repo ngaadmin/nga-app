@@ -22,7 +22,7 @@ import type { LaunchpadChip, LaunchpadCompetitorScreen, LaunchpadCustomerScreen,
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { AvailabilityTable, Chip as OfferChip } from "@/components/launchpad/venture/screens/lesson-controls";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
-import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, LessonTopBar, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { AnchorDoodle, LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, LessonTopBar, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 import { BTN_PRIMARY } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function Chip({
@@ -127,7 +127,7 @@ export function OfferLoopFlow({
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
       <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
-      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-3">
+      <div className="mx-5 mt-5 min-h-0 flex-1 overflow-y-auto pb-3">
         <p className={LESSON_HINT}>
           {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? s.offer.thisService)}
         </p>
@@ -459,13 +459,14 @@ export function CompetitorFlow({
   const ideaReady = !blockedIdeas.has(draft.doDifferently) && (draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim());
   const ready = extras ? ideaReady : priceReady(row);
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={extras ? "extras" : service?.serviceId}>
+    <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={extras ? "extras" : service?.serviceId}>
+      {extras ? <AnchorDoodle name="paw" size={128} /> : null}
       <LessonTopBar
         title={s.competitor.title}
         onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
         trailing={<span className="text-[18px] font-semibold text-[#0A8FA8]">{page + 1} of {total}</span>}
       />
-      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-5 mt-5 min-h-0 flex-1 overflow-y-auto">
         {!extras && service && row ? (
           <>
             {page === 0 ? <p className={LESSON_HINT}>{screen.copy.pricesIntro}</p> : null}
@@ -512,7 +513,7 @@ export function CompetitorFlow({
         ) : (
           <>
             <p className={LESSON_HINT}>{screen.copy.extrasIntro}</p>
-            <h2 className={`mb-2 mt-4 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{s.competitor.oftenInclude}</h2>
+            <h2 className={`mb-2 mt-5 ${FREDOKA_CLASS} text-[18px] font-semibold leading-[26px] text-[#0CC1E0]`}>{s.competitor.oftenInclude}</h2>
             <StackedMulti
               label={s.competitor.oftenInclude}
               options={screen.addons}

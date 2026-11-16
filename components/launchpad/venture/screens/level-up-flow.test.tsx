@@ -305,7 +305,7 @@ describe("Level Up screens", () => {
     expect(question!.className).toContain("mt-1");
     expect(question!.className).toContain("text-[#0CC1E0]");
     expect(context.className).toContain("mt-3");
-    expect(guidance.className).toContain("mt-1.5");
+    expect(guidance.className).toContain("mt-3");
     expect(guidance.className).toContain("text-[#4A5568]");
   });
 

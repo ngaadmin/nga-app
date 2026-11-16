@@ -103,7 +103,7 @@ export function SetPriceFlow({
         footer={<LessonContinue onClick={() => setIntro(false)} />}
       >
         <div data-task-screen="set-price" data-price-page="intro">
-          <img src={SCRIBBLE_SRC.wallet} alt="" data-price-art="wallet" className="mx-auto mt-5 block h-[120px] w-auto" />
+          <img src={SCRIBBLE_SRC.wallet} alt="" data-price-art="wallet" className="mx-auto block h-20 w-auto" />
           <p className={`mt-5 ${LESSON_BODY}`}>{screen.copy.context}</p>
           <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.guidance}</p>
           {screen.copy.later ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.copy.later}</p> : null}
@@ -116,7 +116,7 @@ export function SetPriceFlow({
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price" data-price-page="fields">
       <LessonTopBar title={s.price.title} onBack={() => setIntro(true)} progress={{ index: 2, total: 2 }} />
-      <div className={`mx-5 mt-1 ${SCROLL}`}>
+      <div className={`mx-5 mt-5 ${SCROLL}`}>
         <p className="font-sans text-[16px] font-semibold leading-[23px] text-[#4A5568]">{screen.copy.eyebrow}</p>
         <div className="mt-4 flex flex-col gap-2">
           {services.length === 0 && <p className="text-[16px] text-[#6B7280]">{screen.copy.emptyServices}</p>}

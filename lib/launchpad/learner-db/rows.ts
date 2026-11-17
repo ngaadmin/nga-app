@@ -1,7 +1,9 @@
-import type { LaunchpadAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import { parseLaunchpadAnswers, type LaunchpadAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { isVersionId } from "@/lib/launchpad/content/content-sources";
 import type { LaunchpadFloor, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
+import { parseVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 import { currentLevel, isSilverDone, type VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";
+import type { LaunchpadLearnerSnapshot } from "@/lib/launchpad/learner-db/merge";
 
 /** App answer key to the Level 1 column value. Keys absent here cannot be stored yet. */
 const APP_TO_DB: Readonly<Record<string, string>> = {
@@ -27,7 +29,22 @@ export type LearnerVentureWrite = {
   current_level?: number;
   current_silver_id?: string | null;
   onboarding_seen_at?: string | null;
+  /** Full-flow columns. Omitted when the migration has not been applied. */
+  content_hash?: string | null;
+  completed_task_ids?: string[];
+  task_state?: VentureTestProgress["tasks"];
+  answers?: LaunchpadAnswers;
+  rooftop_completed_at?: string | null;
 };
+
+const FULL_PROGRESS_COLUMNS = ["content_hash", "completed_task_ids", "task_state", "answers", "rooftop_completed_at"] as const;
+
+/** PostgREST or Postgres saying a full-progress column is not on the table yet. */
+export function isMissingProgressColumn(message: string): boolean {
+  const text = message.toLowerCase();
+  const names = FULL_PROGRESS_COLUMNS.some((name) => text.includes(name));
+  return names && (text.includes("does not exist") || text.includes("schema cache") || text.includes("pgrst204") || text.includes("could not find"));
+}
 
 export type LearnerAnswerWrite = {
   learner_venture_id: string;
@@ -187,6 +204,7 @@ export function ventureRowForSave(input: {
   userId: string;
   ventureId: string;
   versionId: string | null;
+  contentHash: string | null;
   progress: VentureTestProgress;
   floors: readonly LaunchpadFloor[];
   onboardingSeen: boolean;
@@ -199,11 +217,31 @@ export function ventureRowForSave(input: {
     user_id: input.userId,
     venture_id: input.ventureId,
     content_version_id: input.versionId && isVersionId(input.versionId) ? input.versionId : null,
+    content_hash: input.contentHash,
+    completed_task_ids: [...input.progress.completedTaskIds],
+    task_state: input.progress.tasks ?? {},
+    answers: { ...(input.progress.answers ?? {}) },
+    rooftop_completed_at: input.progress.complete ? input.seenAt : null,
   };
-  if (level >= 1 && level <= 6) row.current_level = level;
-  if (silver && SILVER_RE.test(silver.id) && level >= 1 && level <= 6) row.current_silver_id = silver.id;
+  if (level >= 1 && level <= 7) row.current_level = level;
+  if (silver && SILVER_RE.test(silver.id) && level >= 1 && level <= 7) row.current_silver_id = silver.id;
   if (input.onboardingSeen) row.onboarding_seen_at = input.seenAt;
   return row;
+}
+
+/** The row the current production table can accept: no full-progress columns, level at most 6. */
+export function ventureRowWithoutFullProgress(row: LearnerVentureWrite): LearnerVentureWrite {
+  const next: LearnerVentureWrite = {
+    user_id: row.user_id,
+    venture_id: row.venture_id,
+    content_version_id: row.content_version_id,
+  };
+  if (row.current_level !== undefined && row.current_level >= 1 && row.current_level <= 6) {
+    next.current_level = row.current_level;
+    if (row.current_silver_id !== undefined) next.current_silver_id = row.current_silver_id;
+  }
+  if (row.onboarding_seen_at) next.onboarding_seen_at = row.onboarding_seen_at;
+  return next;
 }
 
 export function answerRowsForSave(input: {
@@ -238,6 +276,97 @@ export function answerRowsForSave(input: {
     });
   }
   return rows;
+}
+
+export type StoredVentureProgress = {
+  id: string;
+  updated_at: string;
+  onboarding_seen_at: string | null;
+  /** False when the full-progress columns are not on the table. */
+  hasProgressDocument: boolean;
+  completed_task_ids?: unknown;
+  task_state?: unknown;
+  answers?: unknown;
+  rooftop_completed_at?: string | null;
+};
+
+/** One remote snapshot: the venture document, then any newer Level 1 answer rows. */
+export function remoteSnapshotFromStore(
+  row: StoredVentureProgress | null,
+  levelOneRows: readonly StoredAnswerRow[],
+): LaunchpadLearnerSnapshot {
+  const stamp = row?.updated_at ?? "";
+  const documentProgress = row?.hasProgressDocument
+    ? parseVentureTestProgress(
+        JSON.stringify({
+          completedTaskIds: row.completed_task_ids ?? [],
+          answers: row.answers ?? {},
+          tasks: row.task_state ?? {},
+          complete: Boolean(row.rooftop_completed_at),
+        }),
+      )
+    : { completedTaskIds: [] as string[] };
+  const parsedAnswers = row?.hasProgressDocument ? parseLaunchpadAnswers(row.answers) : {};
+  const progress: VentureTestProgress = {
+    ...documentProgress,
+    ...(Object.keys(parsedAnswers).length ? { answers: parsedAnswers } : {}),
+  };
+  const answerUpdatedAt: Record<string, string> = {};
+  if (row?.hasProgressDocument && stamp) {
+    for (const key of Object.keys(progress.answers ?? {})) answerUpdatedAt[key] = stamp;
+  }
+  const taskUpdatedAt: Record<string, string> = {};
+  if (row?.hasProgressDocument && stamp) {
+    for (const id of Object.keys(progress.tasks ?? {})) taskUpdatedAt[id] = stamp;
+  }
+  const levelOne = answersFromStoredRows(levelOneRows);
+  const fromDocument: LaunchpadLearnerSnapshot = {
+    progress,
+    onboardingSeen: Boolean(row?.onboarding_seen_at),
+    answerUpdatedAt,
+    taskUpdatedAt,
+  };
+  const fromLevelOne: LaunchpadLearnerSnapshot = {
+    progress: {
+      completedTaskIds: [],
+      ...(Object.keys(levelOne.answers).length ? { answers: levelOne.answers } : {}),
+    },
+    onboardingSeen: false,
+    answerUpdatedAt: levelOne.answerUpdatedAt,
+    taskUpdatedAt: {},
+  };
+  return mergeSnapshots(fromDocument, fromLevelOne);
+}
+
+function mergeSnapshots(left: LaunchpadLearnerSnapshot, right: LaunchpadLearnerSnapshot): LaunchpadLearnerSnapshot {
+  // Local import would cycle. The caller in save.ts merges again with the browser.
+  // This helper only folds the document and the Level 1 rows. Inlined to keep rows free of merge.ts runtime.
+  const completed = [...left.progress.completedTaskIds];
+  const seen = new Set(completed);
+  for (const id of right.progress.completedTaskIds) {
+    if (!seen.has(id)) completed.push(id);
+  }
+  const answers: Record<string, LaunchpadAnswer> = { ...(left.progress.answers ?? {}) };
+  const answerUpdatedAt = { ...left.answerUpdatedAt };
+  for (const [key, answer] of Object.entries(right.progress.answers ?? {})) {
+    const leftStamp = answerUpdatedAt[key];
+    const rightStamp = right.answerUpdatedAt[key];
+    if (!answers[key] || (rightStamp && (!leftStamp || rightStamp > leftStamp))) {
+      answers[key] = answer;
+      if (rightStamp) answerUpdatedAt[key] = rightStamp;
+    }
+  }
+  return {
+    progress: {
+      completedTaskIds: completed,
+      ...(Object.keys(answers).length ? { answers } : {}),
+      ...(left.progress.tasks ? { tasks: left.progress.tasks } : {}),
+      ...(left.progress.complete || right.progress.complete ? { complete: true as const } : {}),
+    },
+    onboardingSeen: left.onboardingSeen || right.onboardingSeen,
+    answerUpdatedAt,
+    taskUpdatedAt: left.taskUpdatedAt,
+  };
 }
 
 export function answersFromStoredRows(rows: readonly StoredAnswerRow[]): {

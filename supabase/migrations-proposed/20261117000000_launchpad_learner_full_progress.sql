@@ -1,20 +1,19 @@
 -- NOT APPLIED. Do not run this against production or the shared preview database.
--- The live save writes only columns that already exist on
--- launchpad_learner_ventures and launchpad_learner_answers
--- (migration 20261104104147). Those tables cannot hold the venture flow:
---   * current_level stops at 6, and the building has a 7th floor
---   * there is no column for the completed task list, open-task drafts, or the rooftop finish
---   * content_hash has no column (content_version_id is a uuid only)
---   * answer_key allows nine Level 1 keys, and goal_make_money, goal_help_others,
---     and goal_learn_skills cannot store the fields the app now saves
---     (savingFor, customerCount, achievement)
--- Until this file is applied, those values stay in the browser. The merge
--- keeps them. Nothing here is executed by the app.
+-- Additive columns so one launchpad_learner_ventures row can restore every
+-- answer and the learner's progress on a new device. The Level 1 answer
+-- table stays. The only objects replaced are two check constraints, both
+-- widened. Existing RLS policies are row-level (user_id = auth.uid()), not
+-- column policies, and the grants are table-level SELECT, INSERT, UPDATE.
+-- Those already cover columns added here. There are no column grants to extend.
+-- Idempotent. Wrapped in a transaction.
+
+begin;
 
 alter table public.launchpad_learner_ventures
   add column if not exists content_hash text,
   add column if not exists completed_task_ids jsonb not null default '[]'::jsonb,
   add column if not exists task_state jsonb not null default '{}'::jsonb,
+  add column if not exists answers jsonb not null default '{}'::jsonb,
   add column if not exists rooftop_completed_at timestamptz;
 
 alter table public.launchpad_learner_ventures
@@ -29,16 +28,33 @@ alter table public.launchpad_learner_ventures
 
 alter table public.launchpad_learner_ventures
   add constraint launchpad_learner_ventures_completed_tasks_array
-  check (jsonb_typeof(completed_task_ids) = 'array' and pg_column_size(completed_task_ids) <= 16384);
+  check (
+    jsonb_typeof(completed_task_ids) = 'array'
+    and pg_column_size(completed_task_ids) <= 65536
+  );
 
 alter table public.launchpad_learner_ventures
   drop constraint if exists launchpad_learner_ventures_task_state_object;
 
 alter table public.launchpad_learner_ventures
   add constraint launchpad_learner_ventures_task_state_object
-  check (jsonb_typeof(task_state) = 'object' and pg_column_size(task_state) <= 65536);
+  check (
+    jsonb_typeof(task_state) = 'object'
+    and pg_column_size(task_state) <= 65536
+  );
 
--- Allow the Level 1 fields the app saves today, without dropping the old ones.
+alter table public.launchpad_learner_ventures
+  drop constraint if exists launchpad_learner_ventures_answers_object;
+
+alter table public.launchpad_learner_ventures
+  add constraint launchpad_learner_ventures_answers_object
+  check (
+    jsonb_typeof(answers) = 'object'
+    and pg_column_size(answers) <= 262144
+  );
+
+-- Level 1 rows keep their keys. The check grows to allow the fields the app
+-- now saves (saving_for, customer_count, achievement) as well as the old ones.
 alter table public.launchpad_learner_answers
   drop constraint if exists launchpad_learner_answers_known_fields;
 
@@ -57,3 +73,10 @@ alter table public.launchpad_learner_answers
       else false
     end
   );
+
+-- Table grants, not column grants. Re-asserted so authenticated can read and
+-- write the new columns. Row-level policies are unchanged.
+grant select, insert, update on table public.launchpad_learner_ventures to authenticated;
+grant select, insert, update on table public.launchpad_learner_answers to authenticated;
+
+commit;

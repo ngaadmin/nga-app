@@ -2,12 +2,15 @@ import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import { launchpadLearnerSaveEnabled } from "@/lib/launchpad/learner-db/flag";
 import { mergeLaunchpadLearnerSnapshot, type LaunchpadLearnerSnapshot } from "@/lib/launchpad/learner-db/merge";
 import {
-  answersFromStoredRows,
   answerRowsForSave,
+  isMissingProgressColumn,
+  remoteSnapshotFromStore,
   ventureRowForSave,
+  ventureRowWithoutFullProgress,
   type LearnerAnswerWrite,
   type LearnerVentureWrite,
   type StoredAnswerRow,
+  type StoredVentureProgress,
 } from "@/lib/launchpad/learner-db/rows";
 import { readUserSession, type AccountRole } from "@/lib/onboarding/guest-session";
 import {
@@ -21,13 +24,10 @@ const STAMP_PREFIX = "lp-venture-test:v1:";
 const SAVE_DELAY_MS = 500;
 const RETRY_DELAY_MS = 8000;
 
-export type LearnerVentureRecord = {
-  id: string;
+export type LearnerVentureRecord = StoredVentureProgress & {
   content_version_id: string | null;
   current_level: number;
   current_silver_id: string | null;
-  onboarding_seen_at: string | null;
-  updated_at: string;
 };
 
 export type LaunchpadLearnerGateway = {
@@ -43,6 +43,7 @@ type SaveRequest = {
   route: "dashboard" | "test";
   ventureId: string;
   versionId: string | null;
+  contentHash: string | null;
   floors: readonly LaunchpadFloor[];
   progress: VentureTestProgress;
   onboardingSeen: boolean;
@@ -157,12 +158,16 @@ export async function flushLaunchpadLearnerSave(): Promise<"skipped" | "saved" |
       userId,
       ventureId: request.ventureId,
       versionId: request.versionId,
+      contentHash: request.contentHash,
       progress: request.progress,
       floors: request.floors,
       onboardingSeen: request.onboardingSeen,
       seenAt: deps.now(),
     });
-    const saved = await gateway.upsertVenture(venture);
+    let saved = await gateway.upsertVenture(venture);
+    if (saved.error && isMissingProgressColumn(saved.error)) {
+      saved = await gateway.upsertVenture(ventureRowWithoutFullProgress(venture));
+    }
     if (saved.error || !saved.id) return keep(request);
     const answers = answerRowsForSave({
       userId,
@@ -209,16 +214,7 @@ export async function hydrateLaunchpadLearnerProgress(request: SaveRequest): Pro
     if (venture.error) return null;
     const storedAnswers = venture.row ? await gateway.readAnswers(venture.row.id) : { rows: [], error: null };
     if (storedAnswers.error) return null;
-    const decoded = answersFromStoredRows(storedAnswers.rows);
-    const remote: LaunchpadLearnerSnapshot = {
-      progress: {
-        completedTaskIds: [],
-        ...(Object.keys(decoded.answers).length ? { answers: decoded.answers } : {}),
-      },
-      onboardingSeen: Boolean(venture.row?.onboarding_seen_at),
-      answerUpdatedAt: decoded.answerUpdatedAt,
-      taskUpdatedAt: {},
-    };
+    const remote = remoteSnapshotFromStore(venture.row, storedAnswers.rows);
     const localProgress = loadVentureTestProgress(request.ventureId);
     const merged = mergeLaunchpadLearnerSnapshot(
       localSnapshot(request.ventureId, localProgress, hasSeenVentureTestOnboarding(request.ventureId) || request.onboardingSeen),
@@ -253,13 +249,26 @@ async function browserGateway(): Promise<LaunchpadLearnerGateway> {
       return data.user?.id ?? null;
     },
     async readVenture(ventureId) {
-      const { data, error } = await supabase
+      const full = await supabase
         .from("launchpad_learner_ventures")
-        .select("id, content_version_id, current_level, current_silver_id, onboarding_seen_at, updated_at")
+        .select(
+          "id, content_version_id, current_level, current_silver_id, onboarding_seen_at, updated_at, content_hash, completed_task_ids, task_state, answers, rooftop_completed_at",
+        )
         .eq("venture_id", ventureId)
         .maybeSingle();
-      if (error) return { row: null, error: error.message };
-      return { row: (data as LearnerVentureRecord | null) ?? null, error: null };
+      if (full.error && isMissingProgressColumn(full.error.message)) {
+        const legacy = await supabase
+          .from("launchpad_learner_ventures")
+          .select("id, content_version_id, current_level, current_silver_id, onboarding_seen_at, updated_at")
+          .eq("venture_id", ventureId)
+          .maybeSingle();
+        if (legacy.error) return { row: null, error: legacy.error.message };
+        const row = legacy.data as Omit<LearnerVentureRecord, "hasProgressDocument"> | null;
+        return { row: row ? { ...row, hasProgressDocument: false } : null, error: null };
+      }
+      if (full.error) return { row: null, error: full.error.message };
+      const row = full.data as Omit<LearnerVentureRecord, "hasProgressDocument"> | null;
+      return { row: row ? { ...row, hasProgressDocument: true } : null, error: null };
     },
     async readAnswers(learnerVentureId) {
       const { data, error } = await supabase

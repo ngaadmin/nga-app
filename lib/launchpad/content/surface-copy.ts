@@ -305,7 +305,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     namePriceSep: " · ",
     eachLine: "Each line: price minus job cost equals what I keep. Costs and prices stay read-only here.",
     whatOthersCharge: "What others offer",
-    otherWalkers: "other walkers charge",
+    otherWalkers: "other dog walkers charge",
     theyIncludePeriod: ". They often include",
     mineIsStart: "Mine is",
     notCheckedShort: "Not checked yet.",

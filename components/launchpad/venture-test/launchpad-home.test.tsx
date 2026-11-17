@@ -140,19 +140,30 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     { taskId: "l2-s1-b2-t1", title: "Know who your customers are" },
   ];
 
-  it("with 0 open tasks the line shows 0 open and the tile keeps its compact layout (no list, no extra row)", () => {
-    render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [] }]} onOpenVenture={() => {}} />);
-    const tile = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
-    expect(tile.querySelector("[data-open-tasks-toggle]")?.textContent).toContain("0 open");
-    expect(tile.querySelector("[data-open-tasks-list]")).toBeNull();
-    // Same children as a tile from before the feature: the row and the progress bar.
-    expect(tile.children).toHaveLength(2);
+  it("hides the counter at 0 and shows the payload line for 1 and 3", () => {
+    const { unmount } = render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [] }]} onOpenVenture={() => {}} />);
+    const empty = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
+    expect(empty.querySelector("[data-open-tasks-toggle]")).toBeNull();
+    expect(empty.querySelector("[data-open-tasks-list]")).toBeNull();
+    expect(empty.children).toHaveLength(2);
+    unmount();
+
+    const one = [{ taskId: "l1-s2-b1-t1", title: "Set your goals" }];
+    const { unmount: unmountOne } = render(<LaunchpadHome inProgress={[{ ...L6, openTasks: one }]} onOpenVenture={() => {}} />);
+    expect(screen.getByRole("button", { name: "1 saved for later" }).className).toContain("whitespace-nowrap");
+    expect(screen.getByRole("button", { name: "1 saved for later" }).className).toContain("shrink-0");
+    unmountOne();
+
+    render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [...one, ...OPEN] }]} onOpenVenture={() => {}} />);
+    expect(screen.getByRole("button", { name: "3 saved for later" })).toBeTruthy();
+    expect(document.querySelector("[data-tile-level-name]")?.className).not.toContain("break-words");
+    expect(document.querySelector("[data-continue-button]")?.className).toContain("shrink-0");
   });
 
-  it("shows '2 open' under the level name, collapsed; tapping expands one row per task and flips the chevron", () => {
+  it("shows the saved-for-later line under the level name, collapsed; tapping expands one row per task and flips the chevron", () => {
     const onOpenTask = vi.fn();
     render(<LaunchpadHome inProgress={[{ ...L6, openTasks: OPEN }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} onOpenTask={onOpenTask} />);
-    const toggle = screen.getByRole("button", { name: "2 open" });
+    const toggle = screen.getByRole("button", { name: "2 saved for later" });
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     expect(toggle.className).toContain("text-nga-cta-hover");
     // Under the level name, in the same column.
@@ -196,8 +207,8 @@ describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasp
     expect(go.className).toContain("min-w-[84px]");
     expect([...actions.children]).toEqual([go, book]);
     expect(actions.className).toContain("gap-[14px]");
-    // Two-line label block: level name, then "1 open".
+    // Two-line label block: level name, then "1 saved for later".
     const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
-    expect(level.parentElement?.querySelector("[data-open-tasks-toggle]")?.textContent).toMatch(/^1 open/);
+    expect(level.parentElement?.querySelector("[data-open-tasks-toggle]")?.textContent).toMatch(/^1 saved for later/);
   });
 });

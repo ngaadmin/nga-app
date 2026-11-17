@@ -76,6 +76,7 @@ import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silve
 import { hydrateLaunchpadLearnerProgress, noteAnswerStamps, scheduleLaunchpadLearnerSave } from "@/lib/launchpad/learner-db/save";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { LAYER_CLASS } from "@/lib/ui/layers";
+import { useSetLaunchpadFrame } from "@/components/dashboard/launchpad-frame";
 
 
 /** A Budgeting-style picture door that has a narration file. */
@@ -264,6 +265,19 @@ export function VentureFlow({
   } | null>(null);
   const closeHandbook = useCallback(() => setHandbook(null), []);
   const visitRecorded = useRef(false);
+  const setLaunchpadFrame = useSetLaunchpadFrame();
+  const ventureFrame =
+    live &&
+    !handbook &&
+    (view.screen === "onboarding" ||
+      view.screen === "building" ||
+      view.screen === "corridor" ||
+      view.screen === "doors" ||
+      view.screen === "lift");
+  useEffect(() => {
+    setLaunchpadFrame(ventureFrame);
+    return () => setLaunchpadFrame(false);
+  }, [ventureFrame, setLaunchpadFrame]);
   const remember = useCallback(
     (id: string, next: VentureTestProgress, onboardingSeen = hasSeenVentureTestOnboarding(id)) => {
       if (live) noteAnswerStamps(id, loadVentureTestProgress(id), next);
@@ -286,13 +300,22 @@ export function VentureFlow({
   const served = (ventureId && ventures[ventureId]) || ventures["dog-walking"];
   const contentSource = served?.ok ? (served.source === "seed" ? "seed" : "db") : undefined;
   const contentHash = served?.ok ? served.contentHash : undefined;
-  const shell = (children: ReactNode, focus = false) => {
-    const frame = (
-      <VentureTestShell focus={focus} contentSource={contentSource} contentHash={contentHash}>
+  const focusOverlay = (children: ReactNode) => (
+    <div className={`fixed inset-0 overflow-hidden bg-white ${LAYER_CLASS.overlay}`} data-launchpad-focus="">
+      <VentureTestShell focus contentSource={contentSource} contentHash={contentHash}>
         {children}
       </VentureTestShell>
-    );
-    if (!live) return frame;
+    </div>
+  );
+  const shell = (children: ReactNode, focus = false) => {
+    if (!live) {
+      return (
+        <VentureTestShell focus={focus} contentSource={contentSource} contentHash={contentHash}>
+          {children}
+        </VentureTestShell>
+      );
+    }
+    if (focus) return focusOverlay(children);
     if (view.screen === "home") {
       return (
         <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white" data-launchpad-route="live">
@@ -300,10 +323,9 @@ export function VentureFlow({
         </div>
       );
     }
-    // Cover the dashboard header and nav. The venture uses the same shell as the test route.
     return (
-      <div className={`fixed inset-0 overflow-hidden bg-white ${LAYER_CLASS.overlay}`} data-launchpad-focus="">
-        {frame}
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white" data-launchpad-frame="">
+        {children}
       </div>
     );
   };
@@ -489,7 +511,7 @@ export function VentureFlow({
             onOpenTask={openTaskFromHome}
           />
         ) : null}
-        {handbook?.entry === "home" && ventures[handbook.ventureId]?.ok
+        {!live && handbook?.entry === "home" && ventures[handbook.ventureId]?.ok
           ? (() => {
               const id = handbook.ventureId;
               const c = ventures[id]!;
@@ -512,6 +534,27 @@ export function VentureFlow({
           : null}
         </>,
       )}
+      {live && handbook?.entry === "home" && ventures[handbook.ventureId]?.ok
+        ? (() => {
+            const id = handbook.ventureId;
+            const c = ventures[id]!;
+            if (!c.ok) return null;
+            const p = loadVentureTestProgress(id);
+            return focusOverlay(
+              <Handbook
+                entry="home"
+                businessName={handbookBusinessName(p, c.payload.floors, tileName(id) ?? ventureTitles[id] ?? id)}
+                floors={c.payload.floors}
+                progress={p}
+                iconVentureId={iconSetOverride ?? id}
+                scopeLevel={handbook.openLevel}
+                onBackToLift={closeHandbook}
+                backLabel={homeSurface.workbook.backToLaunchpad}
+                onClose={closeHandbook}
+              />,
+            );
+          })()
+        : null}
       </SurfaceCopyProvider>
     );
   }
@@ -578,20 +621,35 @@ export function VentureFlow({
       const cta = buildingCta(progress, floors);
       const level = currentLevel(progress, floors);
       body = (
-        <section className="flex flex-1 flex-col">
+        <section className={live ? "flex h-full min-h-0 flex-1 flex-col overflow-hidden" : "flex flex-1 flex-col"}>
           <BackCrumb label={surface.chrome.launchpad} onClick={toHome} />
           <Heading>{ventureTitle}</Heading>
-          <VentureBuilding
-            floors={buildingFloors(progress, floors)}
-            label={
-              cta.kind === "rooftop"
-                ? `${ventureTitle} building. Every floor is done. Tap a floor to look inside.`
-                : `${ventureTitle} building. Level ${level} is open. Tap a floor to look inside.`
-            }
-            // Any floor can be tapped; floors above the current one open as a preview.
-            onSelectFloor={(l) => go({ screen: "corridor", level: l, entering: true })}
-          />
-          <div className="mx-5 -mt-1.5 flex items-center gap-3 pb-4">
+          {live ? (
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+              <VentureBuilding
+                fit
+                floors={buildingFloors(progress, floors)}
+                label={
+                  cta.kind === "rooftop"
+                    ? `${ventureTitle} building. Every floor is done. Tap a floor to look inside.`
+                    : `${ventureTitle} building. Level ${level} is open. Tap a floor to look inside.`
+                }
+                onSelectFloor={(l) => go({ screen: "corridor", level: l, entering: true })}
+              />
+            </div>
+          ) : (
+            <VentureBuilding
+              floors={buildingFloors(progress, floors)}
+              label={
+                cta.kind === "rooftop"
+                  ? `${ventureTitle} building. Every floor is done. Tap a floor to look inside.`
+                  : `${ventureTitle} building. Level ${level} is open. Tap a floor to look inside.`
+              }
+              // Any floor can be tapped; floors above the current one open as a preview.
+              onSelectFloor={(l) => go({ screen: "corridor", level: l, entering: true })}
+            />
+          )}
+          <div className={live ? "mx-5 -mt-1.5 flex shrink-0 items-center gap-3 pb-4" : "mx-5 -mt-1.5 flex items-center gap-3 pb-4"}>
             <button
               type="button"
               className={`${BTN_PRIMARY} min-w-0`}
@@ -1036,7 +1094,7 @@ export function VentureFlow({
     {shell(
       <div className="flex min-h-0 flex-1 flex-col bg-white" data-content-source={content.source === "seed" ? "seed" : "db"} data-content-hash={content.contentHash}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
-        {handbook?.entry === "building" && handbook.ventureId === ventureId && (
+        {handbook?.entry === "building" && handbook.ventureId === ventureId && (live ? focusOverlay(
           <Handbook
             entry="building"
             businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
@@ -1069,7 +1127,39 @@ export function VentureFlow({
               go({ screen: "corridor", level, entering: false, ...(cue ? { workbookCue: cue } : {}) });
             }}
           />
-        )}
+        ) : (
+          <Handbook
+            entry="building"
+            businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+            floors={floors}
+            progress={progress}
+            iconVentureId={iconVentureId}
+            setAnswer={setAnswer}
+            onClose={closeHandbook}
+            initialSheet={handbook.openSheet}
+            initialSilverId={handbook.openSilverId}
+            initialLevel={handbook.openLevel}
+            initialTemplates={handbook.openTemplates}
+            onEditCosts={(step) => {
+              const found = findKnowYourCost(floors);
+              if (!found) return;
+              closeHandbook();
+              go({
+                screen: "workbook",
+                level: found.floor.level,
+                silverId: found.silver.id,
+                bronzeId: found.bronze.id,
+                index: found.taskIndex,
+                costStep: step,
+              });
+            }}
+            onBackToLift={() => {
+              const level = handbook.level ?? currentLevel(progress, floors);
+              const cue = handbook.openSilverId && view.screen === "corridor" && view.workbookCue ? { silverId: view.workbookCue.silverId, popIn: false } : undefined;
+              go({ screen: "corridor", level, entering: false, ...(cue ? { workbookCue: cue } : {}) });
+            }}
+          />
+        ))}
       </div>,
       view.screen === "workbook" || view.screen === "rooftop",
     )}

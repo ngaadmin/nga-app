@@ -363,10 +363,13 @@ export function VentureBuilding({
   floors,
   label,
   onSelectFloor,
+  fit = false,
 }: {
   floors: readonly BuildingFloorView[];
   label: string;
   onSelectFloor?: (level: number) => void;
+  /** Live tower: scale into the space between the dashboard header and nav. */
+  fit?: boolean;
 }) {
   const scale = Math.min(1, FRAME_H / buildingArtHeight(floors.length));
   return (
@@ -376,7 +379,7 @@ export function VentureBuilding({
       width="390"
       height="573"
       viewBox={`0 -44 390 ${FRAME_H}`}
-      className="mx-auto mt-1 block shrink-0"
+      className={fit ? "mx-auto block h-auto max-h-full w-auto max-w-full min-h-0" : "mx-auto mt-1 block shrink-0"}
     >
       <g transform={`translate(195 -44) scale(${scale.toFixed(6)}) translate(-195 44)`}>
         <VentureBuildingArt floors={floors} />

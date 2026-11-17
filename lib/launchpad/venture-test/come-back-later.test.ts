@@ -22,7 +22,7 @@ import {
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { parseVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
-import { OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
+import { savedForLaterLabel } from "@/lib/launchpad/venture-test/come-back-later";
 
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const L1 = FLOORS[0]!;
@@ -141,7 +141,7 @@ describe("home count", () => {
     const p = deferTask(deferTask(firstThree(), GOALS, { now: NOW }), DEMAND, { now: NOW });
     expect(openTaskCount(p, FLOORS)).toBe(2);
     expect(openTaskCount(completeTask(p, DEMAND.id), FLOORS)).toBe(1);
-    expect(OPEN_TASKS_LABEL(2)).toBe("2 open");
+    expect(savedForLaterLabel("{count} saved for later", 2)).toBe("2 saved for later");
   });
 });
 

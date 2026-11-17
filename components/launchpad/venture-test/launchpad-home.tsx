@@ -11,7 +11,7 @@ import {
 import { LiveShopFrontArt, LockBadgeArt } from "@/components/launchpad/venture-test/launchpad-home-art";
 import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
 import { WORKBOOK_FLOOR_LABEL } from "@/lib/launchpad/venture-test/handbook";
-import { COME_BACK_LATER_COPY, OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
+import { COME_BACK_LATER_COPY, savedForLaterLabel } from "@/lib/launchpad/venture-test/come-back-later";
 
 export type InProgressVenture = {
   ventureId: string;
@@ -156,6 +156,7 @@ function InProgressTile({
   onOpenTask?: (ventureId: string, taskId: string) => void;
 }) {
   const open = v.openTasks ?? [];
+  const savedForLater = useSurfaceCopy().home.savedForLater;
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
   const pct = Math.round((v.done / Math.max(1, v.total)) * 100);
@@ -170,31 +171,30 @@ function InProgressTile({
           </p>
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-start">
-          <p className="w-full whitespace-normal break-words font-heading text-[14px] font-bold leading-[18px] text-nga-ink" data-tile-level-name="">
+          <p className="min-w-0 w-full whitespace-normal font-heading text-[14px] font-bold leading-[18px] text-nga-ink" data-tile-level-name="">
             {v.floorName}
           </p>
-          {(
-            // Always shown (Cath 4 Nov 10:03pm), including "0 open". Orange line under the level name: "2 open" and a chevron; expands the tile to list them.
+          {open.length >= 1 && (
             <button
               type="button"
               aria-expanded={expanded}
               aria-controls={listId}
-              onClick={() => open.length > 0 && setExpanded((e) => !e)}
+              onClick={() => setExpanded((e) => !e)}
               className="-ml-1 flex h-6 shrink-0 items-center gap-0.5 whitespace-nowrap rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
               data-open-tasks-toggle=""
             >
-              {OPEN_TASKS_LABEL(open.length)}
+              {savedForLaterLabel(savedForLater, open.length)}
               <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className={expanded ? "rotate-180" : undefined} data-chevron="">
                 <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           )}
         </div>
-        <div className="flex flex-none items-center gap-[14px]" data-tile-actions="">
+        <div className="flex shrink-0 items-center gap-[14px]" data-tile-actions="">
           <button
             type="button"
             onClick={() => onOpenVenture(v.ventureId)}
-            className={`${TILE_BTN} min-w-[84px] flex-none border-nga-ink bg-nga-ink px-4 font-heading text-[14px] font-bold text-white`}
+            className={`${TILE_BTN} min-w-[84px] shrink-0 border-nga-ink bg-nga-ink px-4 font-heading text-[14px] font-bold text-white`}
             data-continue-button=""
           >
             Continue
@@ -325,18 +325,16 @@ export function LaunchpadHome({
           {inProgress.filter((v) => v.complete).map((v) => (
             <div key={v.ventureId} className="mb-2 rounded-2xl border border-nga-mist bg-white px-2 py-1.5" data-my-business={v.ventureId}>
               <div className="flex items-center gap-2">
-                <div className="flex w-[72px] flex-none flex-col items-center">
-                  <VentureThumb ventureId={v.ventureId} />
-                  <p className="mt-0.5 line-clamp-2 w-full whitespace-normal text-center font-heading text-[11px] font-bold leading-[13px] text-nga-ink">{v.name}</p>
+                <VentureThumb ventureId={v.ventureId} />
+                <div className="flex min-w-0 flex-1 flex-col items-start">
+                  <p className="min-w-0 w-full whitespace-normal font-heading text-[14px] font-bold leading-[18px] text-nga-ink">{v.name}</p>
+                  <p className="min-w-0 w-full whitespace-normal font-heading text-[14px] font-bold text-nga-ink">{home.complete}</p>
                 </div>
-                <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink">{home.complete}</p>
-              </div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <button type="button" onClick={() => onOpenVenture(v.ventureId)} className="font-heading text-[14px] font-bold text-nga-ink" data-reopen-business="">
+                <button type="button" onClick={() => onOpenVenture(v.ventureId)} className="shrink-0 font-heading text-[14px] font-bold text-nga-ink" data-reopen-business="">
                   {home.reopen}
                 </button>
                 {onOpenHandbook && (
-                  <button type="button" aria-label={WORKBOOK_FLOOR_LABEL} onClick={() => onOpenHandbook(v.ventureId, v.level)} className="flex size-11 items-center justify-center" data-handbook-button="">
+                  <button type="button" aria-label={WORKBOOK_FLOOR_LABEL} onClick={() => onOpenHandbook(v.ventureId, v.level)} className="flex size-11 shrink-0 items-center justify-center" data-handbook-button="">
                     <WorkbookMark />
                   </button>
                 )}

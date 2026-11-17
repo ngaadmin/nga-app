@@ -431,6 +431,8 @@ export const LAUNCHPAD_SURFACE_COPY = {
     myBusinesses: "My Businesses",
     complete: "Complete",
     reopen: "Open",
+    /** In Progress counter. Same wording for one or many. Hidden when the count is 0. */
+    savedForLater: "{count} saved for later",
   },
   lift: {
     goingUp: "Going up to Level",

@@ -542,7 +542,7 @@ describe("Come back to this later", () => {
     });
     markVentureTestOnboardingSeen("dog-walking");
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={VENTURES} reset={false} />);
-    fireEvent.click(await screen.findByRole("button", { name: "1 open" }));
+    fireEvent.click(await screen.findByRole("button", { name: "1 saved for later" }));
     fireEvent.click(screen.getByRole("button", { name: `Go: ${goals.title}` }));
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Level 1 corridor/ }));

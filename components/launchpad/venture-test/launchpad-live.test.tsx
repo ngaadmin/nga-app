@@ -60,10 +60,14 @@ describe("signed-in Launchpad route", () => {
     expect(document.querySelector("[data-launchpad-route='live']")).toBeTruthy();
     expect(document.querySelector("[data-launchpad-focus]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Dog walking. Open" }));
-    expect(document.querySelector("[data-launchpad-focus]")).toBeTruthy();
-    expect(document.querySelector("[data-launchpad-route='live']")).toBeNull();
+    expect(document.querySelector("[data-launchpad-frame]")).toBeTruthy();
+    expect(document.querySelector("[data-launchpad-focus]")).toBeNull();
     expect(document.querySelector("[data-focus-mode]")).toBeNull();
-    expect(screen.getByLabelText("3 day streak")).toBeTruthy();
+    expect(screen.queryByLabelText("3 day streak")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Subscription" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Start building" }));
+    expect(screen.getByRole("button", { name: "Go to Level 1" })).toBeTruthy();
+    expect(document.querySelector("[data-launchpad-frame]")?.className).toContain("overflow-hidden");
   });
 
   it("does not record a visit on the test route", async () => {

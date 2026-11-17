@@ -4,8 +4,10 @@
  * the home tile's wording can change in one place.
  */
 
-/** Home In Progress tile line under the level name: open tasks across the business, e.g. "2 open". Hidden at 0. */
-export const OPEN_TASKS_LABEL = (count: number): string => `${count} open`;
+/** Fills the payload counter. The words live on surface.home.savedForLater. */
+export function savedForLaterLabel(template: string, count: number): string {
+  return template.split("{count}").join(String(count));
+}
 
 export const COME_BACK_LATER_COPY = {
   /** Secondary button under the workbook's primary button. */

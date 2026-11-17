@@ -115,7 +115,7 @@ export function deliverySample(screen: LaunchpadDeliveryScreen): GetReadyAnswer 
   }
   if (screen.step === "wrap" && screen.wrap) {
     const copy = screen.wrap;
-    const paymentWhen = copy.askPayOptions[1]?.id ?? copy.askPayOptions[0]?.id;
+    const paymentWhen = copy.askPayOptions.find((row) => row.id === "with-proof")?.id ?? copy.askPayOptions[0]?.id;
     const feedbackQuestion = copy.askOptions[0]?.id;
     const trackerWhen = copy.whenOptions[1]?.id ?? copy.whenOptions[0]?.id;
     if (!paymentWhen || !feedbackQuestion || !trackerWhen) return null;

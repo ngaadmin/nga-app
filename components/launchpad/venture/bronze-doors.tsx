@@ -14,6 +14,27 @@ export function ComeBackMarker({ className = "" }: { className?: string }) {
   );
 }
 
+/** Done, Up next, or Locked. The same mark the Level Up doors use. */
+export function MilestoneMark({ state, comeBack = false }: { state: NodeState; comeBack?: boolean }) {
+  const s = useSurfaceCopy();
+  if (state === "done") {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-heading text-[13px] font-semibold text-nga-ink">
+        <TickBadge size={16} /> {s.chrome.done}
+      </span>
+    );
+  }
+  if (state === "current" && comeBack) return <ComeBackMarker />;
+  if (state === "current") {
+    return <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">{s.chrome.upNext}</span>;
+  }
+  return (
+    <span className="font-heading text-[13px] font-semibold text-[#8a9bb0]">
+      <LockIcon /> {s.chrome.locked}
+    </span>
+  );
+}
+
 function Door({
   label,
   subtitle,
@@ -28,7 +49,6 @@ function Door({
   comeBack?: boolean;
   onOpen: () => void;
 }) {
-  const s = useSurfaceCopy();
   const doorColor = state === "done" ? VT.panel : state === "current" ? VT.secondary : VT.lockDot;
   const knob = state === "current" ? VT.cta : "#fff";
   const surface =
@@ -52,16 +72,7 @@ function Door({
           <span className={`mt-0.5 block text-[13px] leading-snug ${state === "locked" ? "text-[#8a9bb0]" : "text-nga-slate"}`}>{subtitle}</span>
         )}
         <span className="mt-1.5 block">
-          {state === "done" && <span className="inline-flex items-center gap-1.5 font-heading text-[13px] font-semibold text-nga-ink"><TickBadge size={16} /> Done</span>}
-          {state === "current" && comeBack && <ComeBackMarker />}
-          {state === "current" && !comeBack && (
-            <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">{s.chrome.upNext}</span>
-          )}
-          {state === "locked" && (
-            <span className="font-heading text-[13px] font-semibold text-[#8a9bb0]">
-              <LockIcon /> Locked
-            </span>
-          )}
+          <MilestoneMark state={state} comeBack={comeBack} />
         </span>
       </span>
     </>

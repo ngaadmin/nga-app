@@ -25,7 +25,7 @@ export function offerLoopScreen(): LaunchpadOfferLoopScreen {
       whenIntro: "Pick when you can work. This is for your whole business, not each service.",
       whenNote: "The extra field is for specifics like days and hours.",
       whenSummary: "I am available {when}.",
-      packagesHeading: "Services",
+      packagesHeading: "{service}",
       extrasHeading: "Extras",
       packagesHint: "Pick at least 1",
       extrasHint: "Optional",

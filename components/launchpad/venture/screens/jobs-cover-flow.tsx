@@ -139,7 +139,7 @@ export function JobsCoverFlow({
   const save = (next: JobsAnswer) => persist(screen.answerKey, next);
 
   return (
-    <section className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"} data-screen-frame="">
       {page === 1 || screen.weekAudio?.src ? <MasterMuteButton /> : null}
       <LessonTopBar title={s.jobs.title} onBack={page === 1 ? onExit : () => setPage(1)} progress={{ index: page === 1 ? 1 : 2, total: 2 }} />
       {page === 1 ? (
@@ -262,7 +262,7 @@ export function JobsCoverFlow({
       </div>
       )}
       <div className="flex flex-none flex-col items-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
-        {narrating && clip ? <StoryAudioPlayer inline clip={clip} /> : null}
+        {narrating && clip ? <StoryAudioPlayer immediate inline clip={clip} /> : null}
         <LessonContinue
           disabled={!introReady || (page === 2 && !ready)}
           onClick={() => {

@@ -5,6 +5,7 @@ import { storyClipDurationLabel } from "@/lib/academy/lessons/story-audio/next-c
 import {
   installStoryAudioFallback,
   playStoryClipFromGesture,
+  playStoryClipOnMount,
   playStoryClipOnScreen,
   stopStoryAudio,
   storyAudioElement,
@@ -19,6 +20,8 @@ type StoryAudioPlayerProps = {
   aboveCredit?: boolean;
   /** In the lesson footer, on its own row. Academy beats keep the floating pill. */
   inline?: boolean;
+  /** Call play() as soon as this screen is showing, before a gesture. */
+  immediate?: boolean;
 };
 
 /**
@@ -26,7 +29,7 @@ type StoryAudioPlayerProps = {
  * A beat plays when it opens, after the lesson tap has unlocked sound.
  * Sound on or off is the master switch, not a control on this pill.
  */
-export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false, inline = false }: StoryAudioPlayerProps) {
+export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false, inline = false, immediate = false }: StoryAudioPlayerProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -40,9 +43,13 @@ export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false, inline
   }, []);
 
   useEffect(() => {
+    if (immediate) {
+      void playStoryClipOnMount(clip?.src);
+      return;
+    }
     if (!ready) return;
     void playStoryClipOnScreen(clip?.src);
-  }, [clip?.src, ready]);
+  }, [clip?.src, ready, immediate]);
 
   const replay = () => {
     if (!clip?.src) return;

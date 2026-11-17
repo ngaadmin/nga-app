@@ -24,7 +24,7 @@ import type { OrderSystemCopy } from "@/lib/launchpad/content/types";
 import { GrowthPlanSheet, WeeklyFocusSheet, WhatWentWellSheet } from "@/components/launchpad/venture/handbook/weekly-focus-sheet";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
-import { resolveNameColor } from "@/lib/launchpad/content/identity";
+import { resolveNameColor, resolvedNameFont } from "@/lib/launchpad/content/identity";
 import { FREDOKA_HEADING_CLASS, NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { costsOf, fieldsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
 import type { WorkbookTemplateField, WorkbookTemplatePage } from "@/lib/launchpad/content/surface-copy";
@@ -185,7 +185,7 @@ function CoverPageBody({
   const answerKey = wrapUp?.answerKey ?? "";
   const { answer } = useIdentityAnswer(answerKey);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
-  const nameFont = answer.font ?? "poppins-bold";
+  const nameFont = resolvedNameFont(answer.font);
 
   return (
     <div className="relative flex flex-col items-center" data-cover="" data-cover-dense="">
@@ -431,7 +431,7 @@ function MiniIdentity() {
   const { answer } = useIdentityAnswer(IDENTITY_ANSWER_KEY);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
   if (!hasLogo && !answer.name) return null;
-  const nameFont = answer.font ?? "poppins-bold";
+  const nameFont = resolvedNameFont(answer.font);
   return (
     <div className="mb-2 flex items-center gap-2" data-mini-identity="">
       {hasLogo && (

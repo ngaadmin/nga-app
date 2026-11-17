@@ -376,7 +376,7 @@ describe("Level Up screens", () => {
     expect(screen.getByText("That's December 10, 2026.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Section 3 of 3")).toBeTruthy();
-    expect(screen.getByText("See you in three months.")).toBeTruthy();
+    expect(screen.getByText("Your quarterly business review")).toBeTruthy();
     expect(screen.getByText("Your next check-in: February 10, 2027")).toBeTruthy();
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));

@@ -64,10 +64,9 @@ commit;
 }
 
 /**
- * Publish SQL for the ventures the loader asks for. Today that is dog-walking
- * only: it is the one live venture id, and the only id whose bundled seed has
- * all seven built levels. LAUNCHPAD_DB_VENTURES stays empty, so the app still
- * reads the seed until that list and the flag change.
+ * Publish SQL for the ventures the loader asks for. This branch writes
+ * dog-walking-r2 so a preview publish inserts a new row and does not move the
+ * dog-walking current pointer. Production still lists dog-walking.
  */
 export function launchpadPublishV4Sql(payloads: readonly LaunchpadVenturePayload[]): string {
   if (payloads.length === 0) throw new Error("Publish SQL needs at least one venture.");

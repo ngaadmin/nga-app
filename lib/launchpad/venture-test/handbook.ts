@@ -102,10 +102,35 @@ function withCostsPage(progress: VentureTestProgress, floors: readonly Launchpad
   return next.map((page, i) => ({ ...page, number: i + 1 }));
 }
 
+/**
+ * The order tracker (workbook p22) is part of Do the job. It also opens once
+ * Level 4's first silver is done, before that later silver is finished.
+ * A finished Do the job already includes the page, so this does not add a second one.
+ */
+function withOrderTrackerPreview(progress: VentureTestProgress, floors: readonly LaunchpadFloor[], pages: HandbookPageView[]): HandbookPageView[] {
+  if (pages.some((page) => page.sheet === "order-tracker")) return pages;
+  const sales = orderedSilvers(floors).find(({ silver }) => silver.id === "l4-s1");
+  if (!sales || !isSilverDone(progress, sales.silver)) return pages;
+  const job = orderedSilvers(floors).find(({ silver }) => silver.id === "l5-s2");
+  if (!job) return pages;
+  const tracker: HandbookPageView = {
+    number: 0,
+    level: job.floor.level,
+    floorName: job.floor.name,
+    silverNumber: job.silverNumber,
+    silver: job.silver,
+    kind: "summary",
+    sheet: "order-tracker",
+    bronzeTitles: [],
+    done: true,
+  };
+  return [...pages, tracker].map((page, index) => ({ ...page, number: index + 1 }));
+}
+
 export function handbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
   const pages = withCostsPage(progress, floors, silverPages(progress, floors));
   const id = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
-  if (!hasHandbook(progress, floors) || !id) return expandSheets(progress, pages);
+  if (!hasHandbook(progress, floors) || !id) return withOrderTrackerPreview(progress, floors, expandSheets(progress, pages));
   const cover: HandbookPageView = {
     number: 1,
     level: floors[0]!.level,
@@ -116,7 +141,7 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
     bronzeTitles: [],
     done: true,
   };
-  return expandSheets(progress, [cover, ...pages.map((p) => ({ ...p, number: p.number + 1 }))]);
+  return withOrderTrackerPreview(progress, floors, expandSheets(progress, [cover, ...pages.map((p) => ({ ...p, number: p.number + 1 }))]));
 }
 
 /** Split the busier workbook pages. Costs become 3 and 3b. Getting Ready becomes three pages. */

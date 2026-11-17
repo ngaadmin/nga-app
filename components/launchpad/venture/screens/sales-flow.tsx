@@ -290,6 +290,14 @@ function MaterialsStep({
             {preview.map((line, index) => (
               <p key={`${index}-${line}`} className={`mt-3 ${LESSON_BODY}`}>{line}</p>
             ))}
+            {step.piece?.id === "card" ? (
+              <div className="mt-4" data-card-touch="">
+                <p className="font-sans text-[16px] leading-[23px] text-[#4A5568]">{s.sales.cardTouchHeading}</p>
+                {[s.sales.cardTouchName, s.sales.cardTouchPhone, s.sales.cardTouchMessage].map((line) => (
+                  <p key={line} className="mt-2 border-b-[1.5px] border-[#8390AF] pb-1 font-sans text-[16px] leading-[23px] text-[#9AA3B5]">{line}</p>
+                ))}
+              </div>
+            ) : null}
           </>
         )}
       </div>

@@ -820,9 +820,11 @@ function checkDelivery(screen: Obj, where: string, answers: Answers): void {
     const block = screen.wrap;
     if (!isObj(block)) fail(`${where} wrap is missing.`);
     else {
-      for (const field of ["emptyLabel", "proofBefore", "proofAfter", "paymentBefore", "paymentAfter", "askPayBefore", "askPayAfter", "feedbackBefore", "feedbackAfter", "askBefore", "trackerLine", "whenBefore", "whenAfter", "note"] as const) {
+      for (const field of ["emptyLabel", "proofBefore", "proofAfter", "paymentBefore", "paymentAfter", "askPayBefore", "askPayAfter", "feedbackBefore", "feedbackAfter", "askBefore", "whenBefore", "whenAfter"] as const) {
         text(block[field], `${where} wrap ${field}`);
       }
+      if (block.trackerLine !== undefined) text(block.trackerLine, `${where} wrap trackerLine`);
+      if (block.note !== undefined) text(block.note, `${where} wrap note`);
       if (block.askAfter !== undefined && typeof block.askAfter !== "string") fail(`${where} wrap askAfter must be text.`);
       checkDeliveryOptions(block.askPayOptions, `${where} wrap askPayOptions`);
       checkFeedbackLines(block.feedbackLines, `${where} wrap feedbackLines`);

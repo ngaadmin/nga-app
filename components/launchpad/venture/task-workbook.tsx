@@ -115,11 +115,13 @@ export function TaskWorkbook(props: {
         <div className="mx-5 mb-2 flex justify-center">
           <button
             type="button"
-            onClick={props.onSkip}
-            className="inline-flex h-11 flex-none items-center justify-center rounded-full bg-[#E7F8FC] px-5 font-heading text-[16px] font-bold leading-none text-[#0A8FA8]"
-            data-skip-for-now=""
+            onClick={props.onNext}
+            disabled={props.nextDisabled}
+            aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
+            className={`${BTN_CYAN_COMPACT} text-[16px] disabled:opacity-50`}
+            data-workbook-next=""
           >
-            {s.chrome.skipForNow}
+            {forward}
           </button>
         </div>
       )}
@@ -130,16 +132,27 @@ export function TaskWorkbook(props: {
             ‹ Previous
           </button>
         )}
-        <button
-          type="button"
-          onClick={props.onNext}
-          disabled={props.nextDisabled}
-          aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
-          className={`${BTN_CYAN_COMPACT} ml-auto disabled:opacity-50`}
-          data-workbook-next=""
-        >
-          {forward}
-        </button>
+        {props.onSkip ? (
+          <button
+            type="button"
+            onClick={props.onSkip}
+            className="ml-auto inline-flex h-11 flex-none items-center justify-center rounded-full bg-[#E7F8FC] px-5 font-heading text-[16px] font-bold leading-none text-[#0A8FA8]"
+            data-skip-for-now=""
+          >
+            {s.chrome.skipForNow}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={props.onNext}
+            disabled={props.nextDisabled}
+            aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
+            className={`${BTN_CYAN_COMPACT} ml-auto disabled:opacity-50`}
+            data-workbook-next=""
+          >
+            {forward}
+          </button>
+        )}
       </div>
       {props.onComeBackLater && (
         <div className="mx-5 -mt-1 pb-4 text-center">

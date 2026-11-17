@@ -201,7 +201,7 @@ describe("shortcut sample answers (TEST-ONLY)", () => {
         shape: "circle",
         color: "#3FB7DA",
         icon: "paw",
-        font: "poppins-bold",
+        font: "alfa-slab-one",
         nameColor: "logo",
       });
       expect(handbookBusinessName(filled, FLOORS, "x")).toBe("Dog walking");
@@ -779,6 +779,21 @@ describe("L4 My order system workbook page", () => {
     expect(document.querySelector("[data-scribble-large='calendar']")).toBeTruthy();
     expect(screen.getByText(/^Page \d+$/)).toBeTruthy();
     expect(document.querySelector("[data-order-workbook]")?.textContent).not.toMatch(/best choice/);
+  });
+});
+
+describe("order tracker after Level 4", () => {
+  it("adds the tracker once Level 4's first silver is done and keeps a single page after Do the job", () => {
+    const early = applyVentureTestShortcut({ kind: "through-silver", silverId: "l4-s1" }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS);
+    if (!early) throw new Error("shortcut missing");
+    const opened = handbookPages(early.progress, FLOORS).filter((page) => page.sheet === "order-tracker");
+    expect(opened).toHaveLength(1);
+    expect(opened[0]?.silver.id).toBe("l5-s2");
+    const job = applyVentureTestShortcut({ kind: "through-silver", silverId: "l5-s2" }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS);
+    if (!job) throw new Error("shortcut missing");
+    const sheets = handbookPages(job.progress, FLOORS).filter((page) => page.level === 5).map((page) => page.sheet);
+    expect(sheets).toEqual(["ready-before", "ready-after", "order-tracker"]);
+    expect(handbookPages(job.progress, FLOORS).filter((page) => page.sheet === "order-tracker")).toHaveLength(1);
   });
 });
 

@@ -5,6 +5,8 @@ import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf 
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { chipLabel, joinMid, joinPhrase, lowerFirst, playedBackTimes, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
+import { joinList } from "@/lib/launchpad/content/level-up/model";
+import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import { weeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
 import { formatWorkbookMoney } from "@/lib/dashboard/currency/format-money";
@@ -27,6 +29,23 @@ function WeekBar({ label, width }: { label: string; width: number }) {
       </div>
     </div>
   );
+}
+
+function availabilitySentence(floors: readonly LaunchpadFloor[], when: string): string {
+  for (const floor of floors) {
+    for (const silver of floor.silvers) {
+      for (const bronze of silver.bronzes) {
+        for (const task of bronze.tasks) {
+          for (const screen of task.screens) {
+            if (screen.type === "offer-loop" && screen.copy.whenSummary.includes("{when}")) {
+              return screen.copy.whenSummary.split("{when}").join(when);
+            }
+          }
+        }
+      }
+    }
+  }
+  return when;
 }
 
 function nameFor(id: string, labels: readonly { id: string; label: string }[]): string {
@@ -273,14 +292,13 @@ export function SellingCustomersPage() {
       })}
       <AccentLabel>{s.sheets.whenWho}</AccentLabel>
       <p className={`mt-1 ${WORKBOOK_BODY}`}>
-        {offer ? (
-          <ChosenValue>{playedBackTimes(offer.availability, offer.availabilityExtra, s.list.comma, s.list.and)}</ChosenValue>
+        {offer && playedBackTimes(offer.availability, offer.availabilityExtra, s.list.comma, s.list.and) ? (
+          <ChosenValue>{availabilitySentence(ctx?.floors ?? [], playedBackTimes(offer.availability, offer.availabilityExtra, s.list.comma, s.list.and))}</ChosenValue>
         ) : templates ? (
           <BlankSlot />
         ) : (
           s.chrome.notAnswered
         )}
-        .
       </p>
       {customer && (
         <p className={`mt-1 ${WORKBOOK_BODY}`}>
@@ -342,7 +360,7 @@ export function PricingPlaybackPage() {
         {competitor
           ? (
             <>
-              <ChosenValue>{competitor.walkersChecked}</ChosenValue> {competitor.servicePrices?.length ? s.competitor.checkedWalkers : s.price.otherWalkers}{" "}
+              {s.competitor.iChecked} <ChosenValue>{competitor.walkersChecked}</ChosenValue> {competitor.servicePrices?.length ? s.competitor.checkedWalkers : s.price.otherWalkers}{" "}
               {competitor.servicePrices?.length
                 ? competitor.servicePrices.flatMap((row) => row.offers.map((id) => (
                     <span key={`${row.serviceId}-${id}`}>
@@ -396,21 +414,28 @@ export function TypicalWeekPage() {
     : jobs.jobsPerWeek
       ? [{ serviceId: labels[0]?.id ?? "", jobsPerWeek: jobs.jobsPerWeek, keptPerJob: jobs.keptPerJob ?? 0 }]
       : [];
-  const mix = rows.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`.trim()).join(" + ");
+  const mix = joinList(
+    rows.map((row) => {
+      const count = row.jobsPerWeek;
+      const word = count === 1 ? s.jobs.jobWord : s.jobs.jobsWord;
+      return `${count} ${nameFor(row.serviceId, labels)} ${word}`.trim();
+    }),
+    s.list.and,
+  );
   const keep = weeklyKeep(rows);
   const math = rows.map((row) => `${row.jobsPerWeek} × ${formatWorkbookMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
       <AccentLabel>{s.jobs.coverMine}</AccentLabel>
       <h3 className={`mt-2 ${WORKBOOK_SUB}`}>{s.jobs.typicalWeek}</h3>
-      <p className={`mt-1 max-w-[248px] ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> {s.jobs.aWeekPeriod}</p>
-      <p className={WORKBOOK_BODY}>{s.jobs.keep} <ChosenValue>{formatWorkbookMoney(keep, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
+      <p className={`mt-1 max-w-[248px] ${WORKBOOK_BODY}`}>{s.jobs.inATypicalWeek}<ChosenValue>{mix}</ChosenValue>.</p>
+      <p className={WORKBOOK_BODY}>{s.jobs.iKeep} <ChosenValue>{formatWorkbookMoney(keep, currency)}</ChosenValue> {s.jobs.aWeekPeriod}</p>
       {math && (
         <p className={WORKBOOK_HINT}>
           {math} = {formatWorkbookMoney(keep, currency)} {s.jobs.aWeekPeriod}
         </p>
       )}
-      <p className={`max-w-[248px] ${WORKBOOK_BODY}`}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> {s.jobs.weeksToCoverShort} <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
+      <p className={`max-w-[248px] ${WORKBOOK_BODY}`}>{s.jobs.weeksToCoverLead}<ChosenValue>{jobs.weeksNeeded}</ChosenValue>{s.jobs.weeksToCoverMid}<ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue>{s.jobs.weeksToCoverEnd}</p>
       <div className="mt-4 flex justify-end">
         <LargeScribble name="jar" />
       </div>

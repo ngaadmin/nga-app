@@ -93,7 +93,7 @@ export function PictureFlow({
         air={current.split ? "fitted" : "standard"}
         showMute={screen.voice === true}
         creditSlot={screen.pages.some((item) => pageCredit(item))}
-        aboveFooter={pageAudio(current) ? <StoryAudioPlayer inline clip={pageAudio(current)} preloadSrc={pageAudio(screen.pages[page + 1])?.src} /> : null}
+        aboveFooter={pageAudio(current) ? <StoryAudioPlayer immediate inline clip={pageAudio(current)} preloadSrc={pageAudio(screen.pages[page + 1])?.src} /> : null}
         footer={<LessonContinue disabled={!canContinue} onClick={() => (current.split ? finish() : last ? leave(onFinish) : show(page + 1))}>{current.split ? s.price.lockSplit : "Continue"}</LessonContinue>}
       >
         {pageCredit(current) ? <LessonCredit credit={pageCredit(current) ?? ""} /> : null}

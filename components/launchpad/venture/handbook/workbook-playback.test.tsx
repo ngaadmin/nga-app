@@ -59,9 +59,9 @@ describe("Typical week playback", () => {
       [JOBS_COVER_ANSWER_KEY]: jobs,
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain("3 Dog walking");
-    expect(text).toContain("a week.");
-    expect(text).toContain("Keep $43.80");
+    expect(text).toContain("In a typical week, I'll do 3 Dog walking jobs.");
+    expect(text).toContain("I keep $43.80 a week.");
+    expect(text).toContain("That's about 2 weeks to cover my $80 start-up costs.");
     expect(text).not.toContain("Keep $0");
   });
 
@@ -83,8 +83,8 @@ describe("Typical week playback", () => {
       [JOBS_COVER_ANSWER_KEY]: jobs,
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain("3 Dog walking + 1 Dog training");
-    expect(text).toContain("Keep $68.25");
+    expect(text).toContain("In a typical week, I'll do 3 Dog walking jobs and 1 Dog training job.");
+    expect(text).toContain("I keep $68.25 a week.");
     expect(text).not.toContain("Keep $0");
   });
 });

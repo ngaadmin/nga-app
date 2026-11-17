@@ -9,7 +9,7 @@ import {
   type LaunchpadContentSource,
   type LaunchpadVersionSelector,
 } from "@/lib/launchpad/content/content-sources";
-import { LAUNCHPAD_DB_VENTURES } from "@/lib/launchpad/content/schema-version";
+import { launchpadDbVentureIds } from "@/lib/launchpad/content/schema-version";
 import type { LaunchpadVenturePayload } from "@/lib/launchpad/content/types";
 
 export type LaunchpadVentureLoad =
@@ -57,7 +57,7 @@ export function launchpadContentSourceFor(
   ventureId: string,
   env: Record<string, string | undefined> = process.env,
 ): LaunchpadContentSource {
-  return launchpadContentDbEnabled(env) && LAUNCHPAD_DB_VENTURES.includes(ventureId) ? dbContentSource : seedContentSource;
+  return launchpadContentDbEnabled(env) && launchpadDbVentureIds(env).includes(ventureId) ? dbContentSource : seedContentSource;
 }
 
 /**

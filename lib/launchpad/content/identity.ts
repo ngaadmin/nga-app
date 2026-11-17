@@ -71,8 +71,17 @@ const LEGACY_ICONS: Readonly<Record<string, LogoIconId>> = {
 };
 
 /** Fonts the business name can be set in (loaded with next/font/google in identity-fonts.ts). */
-export const NAME_FONTS = ["poppins-bold", "fredoka-semibold", "pacifico"] as const;
+export const NAME_FONTS = ["alfa-slab-one", "fredoka-semibold", "pacifico"] as const;
 export type NameFontId = (typeof NAME_FONTS)[number];
+/** Saved answers from before Bold became Alfa Slab One. */
+const LEGACY_NAME_FONTS: Readonly<Record<string, NameFontId>> = { "poppins-bold": "alfa-slab-one" };
+
+/** The font to draw. Old Bold answers map to Alfa Slab One so the name is never blank. */
+export function resolvedNameFont(font: string | undefined | null): NameFontId {
+  if (typeof font === "string" && font in LEGACY_NAME_FONTS) return LEGACY_NAME_FONTS[font]!;
+  if (includes(NAME_FONTS, font)) return font;
+  return "alfa-slab-one";
+}
 
 /** Name color choices: the logo color from bronze 1, or dark ink. */
 export const NAME_COLOR_IDS = ["logo", "ink"] as const;
@@ -155,7 +164,8 @@ export function parseBusinessIdentityAnswer(value: unknown): BusinessIdentityAns
     const name = clampBusinessName(v.name).trim();
     if (name) out.name = name;
   }
-  if (includes(NAME_FONTS, v.font)) out.font = v.font;
+  const font = typeof v.font === "string" ? resolvedNameFont(v.font) : undefined;
+  if (font && (includes(NAME_FONTS, v.font) || v.font === "poppins-bold")) out.font = font;
   if (includes(NAME_COLOR_IDS, v.nameColor)) out.nameColor = v.nameColor;
   if (v.finalized === true) out.finalized = true;
   return out;

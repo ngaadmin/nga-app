@@ -12,6 +12,8 @@ import {
   resetLaunchpadContentCacheForTests,
 } from "@/lib/launchpad/content/fetch-published";
 import { movedTasks, publishLaunchpadDraft } from "@/lib/launchpad/content/publish";
+import { LAUNCHPAD_PREVIEW_DB_VENTURE_ID, launchpadServedVentureId } from "@/lib/launchpad/content/schema-version";
+import { LAUNCHPAD_VENTURE_ID_RE } from "@/lib/launchpad/content/check-payload";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { launchpadPublishV4Sql, launchpadSeedSql } from "@/lib/launchpad/content/seed/seed-sql";
 import type { LaunchpadVenturePayload } from "@/lib/launchpad/content/types";
@@ -142,7 +144,10 @@ describe("launchpad content flag and source", () => {
   it("reads dog-walking from the database only when the flag is on", () => {
     expect(launchpadContentSourceFor("dog-walking", {}).name).toBe("seed");
     expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "production" }).name).toBe("seed");
-    expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "preview" }).name).toBe("db");
+    expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "preview" }).name).toBe("seed");
+    expect(launchpadContentSourceFor("dog-walking-r2", { VERCEL_ENV: "preview" }).name).toBe("db");
+    expect(launchpadContentSourceFor("dog-walking-r2", { VERCEL_ENV: "production" }).name).toBe("seed");
+    expect(launchpadContentSourceFor("dog-walking-r2", { VERCEL_ENV: "production", LAUNCHPAD_CONTENT_DB: "1" }).name).toBe("seed");
     expect(launchpadContentSourceFor("dog-walking", { VERCEL_ENV: "preview", LAUNCHPAD_CONTENT_DB: "0" }).name).toBe("seed");
     expect(launchpadContentSourceFor("lemonade-stand", { VERCEL_ENV: "preview" }).name).toBe("seed");
   });
@@ -225,14 +230,27 @@ describe("launchpad publish", () => {
 });
 
 describe("launchpad seed SQL", () => {
+  const previewSeed = launchpadTestVentureSeed(LAUNCHPAD_PREVIEW_DB_VENTURE_ID);
+
+  it("accepts the preview venture id and serves it only on preview", () => {
+    expect(LAUNCHPAD_VENTURE_ID_RE.test(LAUNCHPAD_PREVIEW_DB_VENTURE_ID)).toBe(true);
+    expect(previewSeed.ventureId).toBe("dog-walking-r2");
+    expect(launchpadServedVentureId("dog-walking", { VERCEL_ENV: "preview" })).toBe("dog-walking-r2");
+    expect(launchpadServedVentureId("dog-walking", { VERCEL_ENV: "production" })).toBe("dog-walking");
+    expect(launchpadServedVentureId("dog-walking", {})).toBe("dog-walking");
+  });
+
   it("the checked-in seed file matches the generator", () => {
     const file = readFileSync(path.join(process.cwd(), "supabase/seeds/launchpad_test_venture_seed.sql"), "utf8");
-    expect(file).toBe(launchpadSeedSql(launchpadTestVentureSeed()));
+    expect(file).toBe(launchpadSeedSql(previewSeed));
+    expect(file).toMatch(/venture_id = 'dog-walking-r2'/);
+    expect(file).not.toMatch(/venture_id = 'dog-walking'/);
   });
 
   it("the checked-in v4 publish file matches the generator", () => {
     const file = readFileSync(path.join(process.cwd(), "supabase/seeds/launchpad_venture_publish_v4.sql"), "utf8");
-    expect(file).toBe(launchpadPublishV4Sql([launchpadTestVentureSeed()]));
+    expect(file).toBe(launchpadPublishV4Sql([previewSeed]));
+    expect(file).not.toMatch(/venture_id = 'dog-walking'/);
   });
 
   it("is idempotent and only touches the two new tables", () => {
@@ -248,7 +266,7 @@ describe("launchpad seed SQL", () => {
 
 describe("published v4 row loads as the bundled seed", () => {
   it("returns a payload deep-equal to the seed when the DB source serves that row", async () => {
-    const seed = launchpadTestVentureSeed();
+    const seed = launchpadTestVentureSeed(LAUNCHPAD_PREVIEW_DB_VENTURE_ID);
     const sql = readFileSync(path.join(process.cwd(), "supabase/seeds/launchpad_venture_publish_v4.sql"), "utf8");
     const stored = sql.match(/\$lp_seed\$([\s\S]*)\$lp_seed\$/)?.[1];
     expect(stored).toBeTruthy();
@@ -261,7 +279,7 @@ describe("published v4 row loads as the bundled seed", () => {
         payload,
       }),
     };
-    const load = await loadLaunchpadVenture("dog-walking", { source });
+    const load = await loadLaunchpadVenture("dog-walking-r2", { source });
     expect(load.ok).toBe(true);
     if (!load.ok) return;
     expect(load.source).toBe("current");

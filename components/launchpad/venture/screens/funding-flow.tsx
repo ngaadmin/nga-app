@@ -150,7 +150,7 @@ export function FundingFlow({
   const save = (next: FundingAnswer) => persist(screen.answerKey, next);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="funding-start" data-funding-step={step}>
+    <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-task-screen="funding-start" data-funding-step={step} data-screen-frame="">
       {step === "intro" ? <MasterMuteButton /> : null}
       <nav aria-label={s.chrome.breadcrumb} className="mx-5 mt-2 text-[16px] text-[#9AA3B5]">{s.funding.crumb}</nav>
       <div className="mx-5 mt-2 flex items-center gap-1">
@@ -335,7 +335,7 @@ export function FundingFlow({
       <div className="px-5 pb-[18px]">
         {step === "intro" ? (
           <>
-            {narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
+            {narrating && screen.audio ? <StoryAudioPlayer immediate inline clip={screen.audio} /> : null}
             <LessonContinue disabled={!introReady} onClick={() => { stopStoryAudio(); setStep("choose"); }} />
           </>
         ) : step === "choose" ? (

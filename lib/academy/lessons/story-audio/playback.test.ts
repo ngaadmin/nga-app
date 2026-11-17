@@ -189,6 +189,32 @@ describe("story beat autoplay", () => {
     expect(calls).toEqual(["play:/clips/intro.mp3:muted=false"]);
   });
 
+  it("tries play as soon as a screen opens, and a rejection can start on the next tap", async () => {
+    let tries = 0;
+    const { sink, calls } = fakeSink(() => {
+      tries += 1;
+      if (tries === 1) return Promise.reject(new Error("blocked"));
+      return Promise.resolve();
+    });
+    const playback = createStoryPlayback(sink);
+    const started = await playback.playOnMount("/clips/intro.mp3", false);
+    expect(started).toBe(false);
+    expect(playback.isBlocked()).toBe(true);
+    expect(calls[0]).toBe("play:/clips/intro.mp3:muted=false");
+    const resumed = await playback.resumeBlocked(false);
+    expect(resumed).toBe(true);
+    expect(playback.isUnlocked()).toBe(true);
+  });
+
+  it("plays immediately when the browser allows it before a gesture", async () => {
+    const { sink, calls } = fakeSink();
+    const playback = createStoryPlayback(sink);
+    const started = await playback.playOnMount("/clips/intro.mp3", false);
+    expect(started).toBe(true);
+    expect(calls).toEqual(["play:/clips/intro.mp3:muted=false"]);
+    expect(playback.isBlocked()).toBe(false);
+  });
+
   it("keeps the blocked clip when play is rejected", async () => {
     const { sink, calls } = fakeSink(() => Promise.reject(new Error("blocked")));
     const playback = createStoryPlayback(sink);

@@ -11,7 +11,7 @@ import {
   SEED_LOCKED_IDENTITY_SILVER,
   identitySilver,
 } from "@/lib/launchpad/content/seed/identity-silver";
-import { LAUNCHPAD_PAYLOAD_SCHEMA_VERSION } from "@/lib/launchpad/content/schema-version";
+import { LAUNCHPAD_PAYLOAD_SCHEMA_VERSION, LAUNCHPAD_PREVIEW_DB_VENTURE_ID } from "@/lib/launchpad/content/schema-version";
 import { LAUNCHPAD_SURFACE_COPY } from "@/lib/launchpad/content/surface-copy";
 import {
   BUDGETING_ROOFTOP_NOTE,
@@ -181,8 +181,9 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
 
 export function launchpadTestVentureSeed(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {
   const base = launchpadSeedBase(ventureId);
-  if (ventureId !== DOG_WALKING_LOAD.ventureId) return base;
-  return withPricingBuilds(overlayLoad(base, DOG_WALKING_LOAD));
+  const dogWalking = ventureId === DOG_WALKING_LOAD.ventureId || ventureId === LAUNCHPAD_PREVIEW_DB_VENTURE_ID;
+  if (!dogWalking) return base;
+  return { ...withPricingBuilds(overlayLoad(base, DOG_WALKING_LOAD)), ventureId };
 }
 
 export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {

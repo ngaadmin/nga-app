@@ -20,7 +20,10 @@ describe("Decide what to sell chips", () => {
       />,
     );
     expect(screen.getByRole("heading", { name: "Dog walking" })).toBeTruthy();
-    expect(screen.getByText("Services").className).toContain("text-[#0CC1E0]");
+    const serviceHeading = screen.getAllByText("Dog walking").find((node) => node.className.includes("text-[#0CC1E0]"));
+    expect(serviceHeading).toBeTruthy();
+    expect(screen.queryByText("Services")).toBeNull();
+    expect(screen.getByRole("button", { name: "Feeding" })).toBeTruthy();
     expect(screen.getByText("Pick at least 1").className).toContain("text-[#4A5568]");
     expect(screen.getByText("Extras").className).toContain("text-[18px]");
     expect(screen.getByText("Optional").className).toContain("text-[16px]");
@@ -99,8 +102,12 @@ describe("Research what competitors offer", () => {
         }}
       />,
     );
+    const counted = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    expect(counted.value).toBe("");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(counted, { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("option", { name: "Walk one dog only" })).toBeTruthy();
     expect((document.querySelector("[data-scribble-large='paw']") as HTMLElement).style.width).toBe("128px");
@@ -120,6 +127,7 @@ describe("Research what competitors offer", () => {
       },
     }} />);
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
+    fireEvent.change(screen.getByLabelText("Walkers checked"), { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("option", { name: "A payload addon label" })).toBeTruthy();
     expect(screen.queryByRole("option", { name: "Walk one dog only" })).toBeNull();
@@ -144,7 +152,10 @@ describe("Research what competitors offer", () => {
         onFinish={onFinish}
       />,
     );
-    expect(screen.getByLabelText("Walkers checked")).toBeTruthy();
+    const walkers = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    expect(walkers.value).toBe("");
+    fireEvent.change(walkers, { target: { value: "2" } });
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     const walks = screen.getByRole("combobox", { name: "My competitors all offer" });
     expect(within(walks).getByRole("option", { name: "15-minute walk" })).toBeTruthy();
     expect(within(walks).getByRole("option", { name: "30-minute walk" })).toBeTruthy();
@@ -188,8 +199,12 @@ describe("Know who your customers are", () => {
     expect(screen.getByRole("heading", { name: "Know who your customers are" })).toBeTruthy();
     expect(screen.getByText("From what you offer")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Weekdays" })).toBeNull();
+    const asked = screen.getByLabelText("Number of people asked") as HTMLInputElement;
+    expect(asked.value).toBe("");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "30-minute walk" }));
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(asked, { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("When did your customers want walks?")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);

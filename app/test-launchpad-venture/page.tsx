@@ -5,6 +5,7 @@ import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-
 import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { loadLaunchpadVenture } from "@/lib/launchpad/content/fetch-published";
+import { launchpadServedVentureId } from "@/lib/launchpad/content/schema-version";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import { LAUNCHPAD_VENTURE_ID_RE } from "@/lib/launchpad/content/check-payload";
 import {
@@ -77,7 +78,7 @@ export default async function TestLaunchpadVenturePage({
   if (ventureId && !VENTURE_BLUEPRINTS.some((v) => v.id === ventureId)) notFound();
   const ventureTitles = Object.fromEntries(VENTURE_BLUEPRINTS.map((v) => [v.id, v.title]));
   const ids = [...new Set([...liveVentureIds(), ...(ventureId ? [ventureId] : [])])];
-  const loads = await Promise.all(ids.map((id) => loadLaunchpadVenture(id, { draft: params.draft })));
+  const loads = await Promise.all(ids.map((id) => loadLaunchpadVenture(launchpadServedVentureId(id), { draft: params.draft })));
   const ventures: Record<string, LaunchpadVentureView> = Object.fromEntries(
     ids.map((id, i) => {
       const load = loads[i]!;

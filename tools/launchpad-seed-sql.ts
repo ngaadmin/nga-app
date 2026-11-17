@@ -9,10 +9,12 @@
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import { LAUNCHPAD_PREVIEW_DB_VENTURE_ID } from "@/lib/launchpad/content/schema-version";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { launchpadPublishV4Sql, launchpadSeedSql } from "@/lib/launchpad/content/seed/seed-sql";
 
-const seed = launchpadTestVentureSeed();
+// Preview publishes dog-walking-r2. The dog-walking current pointer stays put.
+const seed = launchpadTestVentureSeed(LAUNCHPAD_PREVIEW_DB_VENTURE_ID);
 const files = [
   ["supabase/seeds/launchpad_test_venture_seed.sql", launchpadSeedSql(seed)],
   ["supabase/seeds/launchpad_venture_publish_v4.sql", launchpadPublishV4Sql([seed])],

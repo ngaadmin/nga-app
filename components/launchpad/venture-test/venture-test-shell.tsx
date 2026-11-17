@@ -131,13 +131,13 @@ export function VentureTestShell({
   const marker = contentSource ? { "data-content-source": contentSource, "data-content-hash": contentHash ?? "" } : {};
   if (focus) {
     return (
-      <div className="mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-nga-ink" data-focus-mode="" {...marker}>
+      <div className="relative mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-nga-ink" data-focus-mode="" {...marker}>
         <main className="flex min-h-0 flex-1 flex-col">{children}</main>
       </div>
     );
   }
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink" {...marker}>
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink" {...marker}>
       <TopBar />
       <main className={`flex min-h-0 flex-1 flex-col ${TAB_BAR_CLEARANCE_CLASS}`} data-tab-bar-clearance="">{children}</main>
       <BottomBar />

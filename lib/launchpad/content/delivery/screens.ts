@@ -83,11 +83,9 @@ function wrapScreen(id: string): LaunchpadDeliveryScreen {
       askBefore: WRAP_UP_JOB.askBefore,
       askAfter: WRAP_UP_JOB.askAfter,
       askOptions: WRAP_UP_JOB.askOptions.map((row) => ({ ...row })),
-      trackerLine: WRAP_UP_JOB.trackerLine,
       whenBefore: WRAP_UP_JOB.whenBefore,
       whenAfter: WRAP_UP_JOB.whenAfter,
       whenOptions: WRAP_UP_JOB.whenOptions.map((row) => ({ ...row })),
-      note: WRAP_UP_JOB.note,
     },
   };
 }

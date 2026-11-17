@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
-import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
+import { playStoryClipFromGesture, playStoryClipOnMount } from "@/lib/academy/lessons/story-audio/playback";
 import { fieldsAnswer } from "@/lib/launchpad/content/answers";
 import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE, BUDGETING_SPLIT_MADE_ASK, BUDGETING_SPLIT_MADE_HELP, BUDGETING_SPLIT_MADE_LABEL } from "@/lib/launchpad/content/budgeting/copy";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
@@ -16,6 +16,7 @@ vi.mock("@/lib/academy/lessons/story-audio/playback", async (importOriginal) => 
   return {
     ...actual,
     playStoryClipOnScreen: vi.fn(() => Promise.resolve(false)),
+    playStoryClipOnMount: vi.fn(() => Promise.resolve(false)),
     playStoryClipFromGesture: vi.fn(),
     stopStoryAudio: vi.fn(),
     storyAudioElement: vi.fn(() => null),
@@ -213,8 +214,13 @@ describe("Budgeting picture screens", () => {
   it("keeps the Grok credit off every Budgeting story screen", () => {
     if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
     render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    expect(playStoryClipOnMount).toHaveBeenCalledWith("/launchpad/budgeting/l6-s1-vo.mp3");
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
     const mute = screen.getByRole("button", { name: "Mute sound" });
+    const frame = mute.closest("[data-screen-frame]");
+    expect(frame?.className).toContain("relative");
+    expect(mute.className).toContain("right-2");
+    expect(mute.className).toContain("top-2");
     expect(mute.getAttribute("aria-pressed")).toBe("false");
 
     releaseContinue();

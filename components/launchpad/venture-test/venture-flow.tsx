@@ -26,7 +26,6 @@ import {
   lockedDoorsNote,
   setProgressAnswer,
   silverStates,
-  ventureTestDoorsUnlocked,
   type VentureTestProgress,
   type VentureTestShortcut,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -75,14 +74,23 @@ import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
 
-/** A Budgeting-style picture door that has a narration file. */
-function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly { type: string; pages?: readonly unknown[] }[] }[] }): boolean {
-  return bronze.tasks.some((task) =>
-    task.screens.some((screen) => {
-      if (screen.type !== "picture" || !screen.pages) return false;
-      return screen.pages.some((page) => typeof page === "object" && page !== null && "audio" in page && Boolean((page as { audio?: { src?: string } }).audio?.src));
-    }),
-  );
+type NarratedScreen = {
+  type: string;
+  audio?: { src?: string };
+  weekAudio?: { src?: string };
+  pages?: readonly unknown[];
+};
+
+/** True when this screen plays an Ara clip as soon as it is showing. */
+export function screenHasNarration(screen: NarratedScreen): boolean {
+  if (screen.audio?.src || screen.weekAudio?.src) return true;
+  if (!screen.pages) return false;
+  return screen.pages.some((page) => typeof page === "object" && page !== null && "audio" in page && Boolean((page as { audio?: { src?: string } }).audio?.src));
+}
+
+/** A door whose first screen (or a later page) plays narration. The opening tap unlocks sound. */
+function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly NarratedScreen[] }[] }): boolean {
+  return bronze.tasks.some((task) => task.screens.some((screen) => screenHasNarration(screen)));
 }
 
 /** What the forward button is waiting for on a capture page. Words come from the payload. */
@@ -571,7 +579,7 @@ export function VentureFlow({
       const pricing = silver.title === "Pricing";
       const pricingBuilt = pricing && silver.bronzes.some((b) => !b.placeholder);
       const open = (pricing && !pricingBuilt ? false : silverStates(progress, floors, floor)[silverIndex] !== "locked");
-      const states = pricing ? pricingBronzeStates(progress, silver, open) : bronzeStates(progress, silver, open, ventureTestDoorsUnlocked(floor.level));
+      const states = pricing ? pricingBronzeStates(progress, silver, open) : bronzeStates(progress, silver, open);
       body = (
         <BronzeDoors
           level={floor.level}
@@ -644,6 +652,7 @@ export function VentureFlow({
         const justSilver = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
         if (justSilver) {
           const grow = bronze.tasks.some((task) => task.screens.some((item) => item.type === "level-up" && item.step === "grow"));
+          const openSheet = grow ? "growth-plan" : silver.id === "l4-s1" ? "order-tracker" : undefined;
           setView({ screen: "corridor", level: floor.level, entering: false });
           window.scrollTo({ top: 0 });
           setHandbook({
@@ -651,7 +660,7 @@ export function VentureFlow({
             entry: "building",
             level: floor.level,
             openSilverId: silver.id,
-            ...(grow ? { openSheet: "growth-plan" } : {}),
+            ...(openSheet ? { openSheet } : {}),
           });
           return;
         }

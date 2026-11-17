@@ -68,6 +68,7 @@ export const WRAP_UP_JOB = {
   askPayBefore: "I will ask for payment ",
   askPayAfter: ".",
   askPayOptions: [
+    { id: "up-front", label: "Up front (including prepaid)" },
     { id: "after-job", label: "straight after the job" },
     { id: "with-proof", label: "when I send the proof" },
     { id: "before-leave", label: "before I leave" },
@@ -87,7 +88,6 @@ export const WRAP_UP_JOB = {
     { id: "better", label: "Is there anything I could do better?" },
     { id: "book-again", label: "Would you book me again?" },
   ],
-  trackerLine: "Then I will tick Done?, Paid? and Feedback asked? for this job in My order tracker in my workbook.",
   whenBefore: "I will update my order tracker ",
   whenAfter: ".",
   whenOptions: [
@@ -95,7 +95,6 @@ export const WRAP_UP_JOB = {
     { id: "same-evening", label: "the same evening" },
     { id: "next-morning", label: "the next morning" },
   ],
-  note: "Take payment with a parent or trusted adult nearby, and keep customer details private.",
   doodles: ["sparkle", "heart", "bone"],
   playbackTitle: "My plan after the job",
 } as const;
@@ -121,7 +120,7 @@ export const RECORD_JOB = {
   keptBefore: "I kept ",
   keptAfter: ".",
   lowKeep: "This job cost more than you were paid. Check your price before your next job.",
-  trackerLine: "I will write what I was paid in the Price column and tick the Paid? column in My order tracker in my workbook.",
+  trackerLine: "I will write what I was paid in the Price column and tick the Paid? column in My order tracker.",
   addJob: "+ Record another job",
   note: "This is a record only. No real money is handled in the app.",
   doodles: ["paw", "coins", "growth"],

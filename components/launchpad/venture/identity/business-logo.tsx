@@ -5,6 +5,7 @@ import {
   LOGO_PREVIEW_BASE,
   logoLayerHex,
   resolveNameColor,
+  resolvedNameFont,
   type BusinessIdentityAnswer,
   type LogoIconId,
   type LogoShapeId,
@@ -203,7 +204,7 @@ export function BusinessLogo({
   namePlaceholder?: string;
 }) {
   const s = SIZES[size];
-  const font = answer.font ?? "poppins-bold";
+  const font = resolvedNameFont(answer.font);
   return (
     <div data-business-logo="" className="flex flex-col items-center gap-2">
       <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={s.mark} label={logoMarkLabel(answer)} />

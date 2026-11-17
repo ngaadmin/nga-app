@@ -79,9 +79,24 @@ describe("Launchpad home In Progress tile", () => {
     expect(book.parentElement?.className).toContain("gap-[14px]");
     expect(go.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const row = tile.querySelector("[data-tile-row]")!;
+    expect(row.className).toContain("gap-2");
+    expect(row.className).toContain("grid-cols-[auto_minmax(0,1fr)_auto]");
     expect(row.contains(tile.querySelector("[data-tile-level-name]"))).toBe(true);
-    expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("whitespace-normal");
-    expect(tile.querySelector("[data-tile-level-name]")!.className).not.toContain("truncate");
+    const level = tile.querySelector("[data-tile-level-name]")!;
+    expect(level.className).toContain("whitespace-normal");
+    expect(level.className).toContain("min-w-0");
+    expect(level.className).not.toContain("truncate");
+    expect(level.className).not.toContain("break-words");
+    const identity = tile.querySelector("[data-tile-identity]")!;
+    expect(identity.className).toContain("w-14");
+    expect(identity.className).not.toContain("w-[72px]");
+    const ventureName = tile.querySelector("[data-tile-venture-name]")!;
+    expect(ventureName.textContent).toBe("Dog walking");
+    expect(ventureName.className).toContain("whitespace-normal");
+    expect(ventureName.className).not.toContain("truncate");
+    expect(ventureName.className).not.toContain("line-clamp");
+    expect(tile.className).toContain("max-sm:-mx-[calc(var(--lp-home-inset,0px)+1.25rem)]");
+    expect(tile.className).toContain("max-sm:w-[calc(100%+(var(--lp-home-inset,0px)+1.25rem)*2)]");
     fireEvent.click(book);
     fireEvent.click(go);
     expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking", 6);
@@ -150,8 +165,10 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
 
     const one = [{ taskId: "l1-s2-b1-t1", title: "Set your goals" }];
     const { unmount: unmountOne } = render(<LaunchpadHome inProgress={[{ ...L6, openTasks: one }]} onOpenVenture={() => {}} />);
-    expect(screen.getByRole("button", { name: "1 saved for later" }).className).toContain("whitespace-nowrap");
-    expect(screen.getByRole("button", { name: "1 saved for later" }).className).toContain("shrink-0");
+    const counter = screen.getByRole("button", { name: "1 saved for later" });
+    expect(counter.className).toContain("whitespace-normal");
+    expect(counter.className).toContain("min-w-0");
+    expect(counter.className).not.toContain("whitespace-nowrap");
     unmountOne();
 
     render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [...one, ...OPEN] }]} onOpenVenture={() => {}} />);

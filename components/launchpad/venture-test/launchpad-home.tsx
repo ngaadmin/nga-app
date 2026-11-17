@@ -162,15 +162,18 @@ function InProgressTile({
   const pct = Math.round((v.done / Math.max(1, v.total)) * 100);
   const progressLabel = `${v.done} of ${v.total} milestones done`;
   return (
-    <div className="mb-2 rounded-2xl border border-nga-mist bg-white px-2 py-1.5" data-in-progress={v.ventureId}>
-      <div className="flex items-center gap-2" data-tile-row="">
-        <div className="flex w-[72px] flex-none flex-col items-center">
+    <div
+      className="mb-2 max-sm:-mx-[calc(var(--lp-home-inset,0px)+1.25rem)] max-sm:w-[calc(100%+(var(--lp-home-inset,0px)+1.25rem)*2)] rounded-2xl border border-nga-mist bg-white px-2 py-1.5"
+      data-in-progress={v.ventureId}
+    >
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2" data-tile-row="">
+        <div className="flex w-14 flex-none flex-col items-center" data-tile-identity="">
           <VentureThumb ventureId={v.ventureId} />
-          <p className="mt-0.5 w-full truncate text-center font-heading text-[11px] font-bold leading-[14px] text-nga-ink" title={v.name}>
+          <p className="mt-0.5 w-full whitespace-normal text-center font-heading text-[11px] font-bold leading-[13px] text-nga-ink" data-tile-venture-name="">
             {v.name}
           </p>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col items-start">
+        <div className="flex min-w-0 flex-col items-start">
           <p className="min-w-0 w-full whitespace-normal font-heading text-[14px] font-bold leading-[18px] text-nga-ink" data-tile-level-name="">
             {v.floorName}
           </p>
@@ -180,11 +183,11 @@ function InProgressTile({
               aria-expanded={expanded}
               aria-controls={listId}
               onClick={() => setExpanded((e) => !e)}
-              className="-ml-1 flex h-6 shrink-0 items-center gap-0.5 whitespace-nowrap rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
+              className="flex w-full min-w-0 max-w-full items-center gap-0.5 whitespace-normal rounded py-0.5 text-left font-heading text-[13px] font-bold text-nga-cta-hover"
               data-open-tasks-toggle=""
             >
-              {savedForLaterLabel(savedForLater, open.length)}
-              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className={expanded ? "rotate-180" : undefined} data-chevron="">
+              <span className="min-w-0 whitespace-normal">{savedForLaterLabel(savedForLater, open.length)}</span>
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className={`shrink-0 ${expanded ? "rotate-180" : ""}`} data-chevron="">
                 <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>

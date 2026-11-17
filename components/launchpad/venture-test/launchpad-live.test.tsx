@@ -57,7 +57,9 @@ describe("signed-in Launchpad route", () => {
       />,
     );
     expect(await screen.findByRole("button", { name: "Dog walking. Open" })).toBeTruthy();
-    expect(document.querySelector("[data-launchpad-route='live']")).toBeTruthy();
+    const home = document.querySelector("[data-launchpad-route='live']");
+    expect(home).toBeTruthy();
+    expect(home?.className).toContain("[--lp-home-inset:16px]");
     expect(document.querySelector("[data-launchpad-focus]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Dog walking. Open" }));
     expect(document.querySelector("[data-launchpad-frame]")).toBeTruthy();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { LaunchpadFloor, LaunchpadTask } from "@/lib/launchpad/content/types";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
@@ -73,6 +73,8 @@ import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 import { primeStoryAudioFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
+import { hydrateLaunchpadLearnerProgress, noteAnswerStamps, scheduleLaunchpadLearnerSave } from "@/lib/launchpad/learner-db/save";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
 
 /** A Budgeting-style picture door that has a narration file. */
@@ -260,6 +262,24 @@ export function VentureFlow({
     openTemplates?: boolean;
   } | null>(null);
   const closeHandbook = useCallback(() => setHandbook(null), []);
+  const visitRecorded = useRef(false);
+  const remember = useCallback(
+    (id: string, next: VentureTestProgress, onboardingSeen = hasSeenVentureTestOnboarding(id)) => {
+      if (live) noteAnswerStamps(id, loadVentureTestProgress(id), next);
+      saveVentureTestProgress(id, next);
+      if (!live) return;
+      const content = ventures[id];
+      scheduleLaunchpadLearnerSave({
+        route: "dashboard",
+        ventureId: id,
+        versionId: content?.ok ? content.versionId : null,
+        floors: content?.ok ? content.payload.floors : [],
+        progress: next,
+        onboardingSeen,
+      });
+    },
+    [live, ventures],
+  );
   const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
   const served = (ventureId && ventures[ventureId]) || ventures["dog-walking"];
   const contentSource = served?.ok ? (served.source === "seed" ? "seed" : "db") : undefined;
@@ -300,12 +320,12 @@ export function VentureFlow({
       if (!ref) return openVenture(id);
       const page = draftPageOf(p, taskId);
       const restored = restoreTaskDraft(p, taskId);
-      saveVentureTestProgress(id, restored);
+      remember(id, restored);
       setVentureId(id);
       setProgress(restored);
       go({ screen: "workbook", level: ref.level, silverId: ref.silverId, bronzeId: ref.bronzeId, index: ref.taskIndex, ...(page ? { page } : {}) });
     },
-    [go, openVenture, ventures],
+    [go, openVenture, ventures, remember],
   );
 
   const toHome = useCallback(() => {
@@ -378,6 +398,36 @@ export function VentureFlow({
   }, []);
 
   useEffect(() => {
+    if (!live || visitRecorded.current || view.screen !== "home" || !inProgress || !ventures["dog-walking"]?.ok) return;
+    visitRecorded.current = true;
+    recordUsageEvent("launchpad_visit");
+  }, [live, view.screen, inProgress, ventures]);
+
+  useEffect(() => {
+    if (!live) return;
+    const id = ventureId ?? "dog-walking";
+    const content = ventures[id];
+    if (!content?.ok) return;
+    let cancelled = false;
+    void hydrateLaunchpadLearnerProgress({
+      route: "dashboard",
+      ventureId: id,
+      versionId: content.versionId,
+      floors: content.payload.floors,
+      progress: loadVentureTestProgress(id),
+      onboardingSeen: hasSeenVentureTestOnboarding(id),
+    }).then((merged) => {
+      if (cancelled || !merged) return;
+      if (merged.onboardingSeen) markVentureTestOnboardingSeen(id);
+      setProgress(merged.progress);
+      setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [live, ventureId, ventures, ventureTitles]);
+
+  useEffect(() => {
     if (view.screen !== "lift") return;
     const t = window.setTimeout(() => {
       if (view.rooftop) {
@@ -387,7 +437,7 @@ export function VentureFlow({
             completedTaskIds: progress.completedTaskIds ?? [],
             complete: true,
           };
-          saveVentureTestProgress(ventureId, next);
+          remember(ventureId, next);
           setProgress(next);
         }
         go({ screen: "rooftop" });
@@ -396,7 +446,7 @@ export function VentureFlow({
       go({ screen: "corridor", level: view.from + 1, entering: true });
     }, LIFT_MS);
     return () => window.clearTimeout(t);
-  }, [view, go, ventureId, progress]);
+  }, [view, go, ventureId, progress, remember]);
 
   if (view.screen === "home") {
     const dogWalking = ventures["dog-walking"];
@@ -470,7 +520,7 @@ export function VentureFlow({
 
   const save = (next: VentureTestProgress) => {
     setProgress(next);
-    saveVentureTestProgress(ventureId, next);
+    remember(ventureId, next);
   };
 
   const iconVentureId = iconSetOverride ?? ventureId;
@@ -504,6 +554,7 @@ export function VentureFlow({
           floors={buildingFloors(progress, floors)}
           onStart={() => {
             markVentureTestOnboardingSeen(ventureId);
+            remember(ventureId, progress, true);
             toBuilding();
           }}
         />

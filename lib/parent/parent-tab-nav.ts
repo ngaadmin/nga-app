@@ -41,10 +41,10 @@ export const SUBSCRIPTION_TAB_NAV_ITEM: DashboardNavLinkItem = {
 };
 
 /**
- * Parent profile only: the bottom bar reads Academy, Launchpad, Vault,
- * Community, Subscription. Settings and the Parent Hub are off the bar; both
+ * Parent profile only: Settings and the Parent Hub are off the bar; both
  * open from the avatar menu (the Hub behind the Parent PIN every time), and
- * their routes still work. Child and guest bars come back unchanged.
+ * their routes still work. Launchpad is removed later for parents, teachers,
+ * and guests. Child bars come back unchanged.
  */
 export function parentBottomBarItems(
   items: readonly DashboardNavLinkItem[],

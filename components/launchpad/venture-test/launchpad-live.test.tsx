@@ -2,6 +2,9 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
+
+vi.mock("@/lib/usage/record-usage-event", () => ({ recordUsageEvent: vi.fn() }));
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadSurfaceCopy } from "@/lib/launchpad/content/surface-copy";
 import type { LaunchpadVenturePayload } from "@/lib/launchpad/content/types";
@@ -11,6 +14,7 @@ afterEach(cleanup);
 beforeEach(() => {
   localStorage.clear();
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+  vi.mocked(recordUsageEvent).mockClear();
 });
 
 function view(payload: LaunchpadVenturePayload): LaunchpadVentureView {
@@ -38,6 +42,21 @@ describe("signed-in Launchpad route", () => {
     expect(screen.queryByText("You've built your business!")).toBeNull();
     expect(screen.queryByText("120")).toBeNull();
     expect(document.querySelector("[data-launchpad-route='live']")).toBeTruthy();
+    expect(recordUsageEvent).toHaveBeenCalledTimes(1);
+    expect(recordUsageEvent).toHaveBeenCalledWith("launchpad_visit");
+  });
+
+  it("does not record a visit on the test route", async () => {
+    render(
+      <VentureFlow
+        initialVentureId={null}
+        ventureTitles={titles}
+        ventures={{ "dog-walking": view(launchpadTestVentureSeed("dog-walking")) }}
+        reset={false}
+      />,
+    );
+    expect(await screen.findByRole("button", { name: "Dog walking. Open" })).toBeTruthy();
+    expect(recordUsageEvent).not.toHaveBeenCalled();
   });
 
   it("ignores rooftop, level, and complete shortcuts", async () => {

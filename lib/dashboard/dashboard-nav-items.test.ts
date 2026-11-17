@@ -14,26 +14,34 @@ const active = (items: DashboardNavLinkItem[], pathname: string) =>
     .map((item) => item.id);
 
 describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
-  const parent = dashboardNavItemsFor({ parentTabEligible: true, isParentProfile: true });
-  const child = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false });
+  const parent = dashboardNavItemsFor({ parentTabEligible: true, isParentProfile: true, audience: "parent" });
+  const child = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "child" });
 
-  it("gives the parent Academy, Launchpad, Vault, Community, Subscription", () => {
-    expect(ids(parent)).toEqual(["academy", "launchpad", "vault", "community", "subscription"]);
+  it("gives the parent Academy, Vault, Community, Subscription", () => {
+    expect(ids(parent)).toEqual(["academy", "vault", "community", "subscription"]);
     expect(parent.at(-1)?.label).toBe("Subscription");
+    expect(ids(parent)).not.toContain("launchpad");
   });
 
   it("drops Parent and Settings for the parent even before eligibility loads", () => {
-    const loading = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: true });
+    const loading = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: true, audience: "parent" });
     expect(ids(loading)).toEqual(ids(parent));
   });
 
-  it("leaves child and guest lists unchanged", () => {
+  it("keeps Launchpad for a child and hides it from a guest and a teacher", () => {
     expect(ids(child)).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
+    const guest = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "guest" });
+    const teacher = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "teacher" });
+    expect(ids(guest)).not.toContain("launchpad");
+    expect(ids(teacher)).not.toContain("launchpad");
+    expect(ids(guest)).toContain("academy");
     const eligibleNonParent = dashboardNavItemsFor({
       parentTabEligible: true,
       isParentProfile: false,
+      audience: "child",
     });
     expect(ids(eligibleNonParent)).toContain("settings");
+    expect(ids(eligibleNonParent)).toContain("launchpad");
   });
 
   it("highlights nothing for the parent on Hub and Settings pages", () => {

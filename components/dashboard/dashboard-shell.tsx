@@ -28,7 +28,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
-  const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
+  // The shop-front home is the Launchpad screen. The hub intro is a separate
+  // first-visit panel and is not part of that screen.
+  const isLaunchpadRoute =
+    pathname === "/dashboard/launchpad" || pathname.startsWith("/dashboard/launchpad/");
+  const hubIntroId = isLessonRoute || isLaunchpadRoute ? null : hubIntroIdFromPathname(pathname);
   const skipOnboardingGate = isDevAcademyDesignShellPath(pathname);
 
   useEffect(() => {

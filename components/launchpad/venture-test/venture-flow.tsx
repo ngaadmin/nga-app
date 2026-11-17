@@ -193,18 +193,19 @@ function loadInProgress(
  * (one loaded content payload per venture, database or bundled seed).
  */
 export function VentureFlow({
-  initialVentureId,
+  initialVentureId: requestedVentureId,
   ventureTitles,
   ventures,
-  reset,
-  shortcut = null,
-  iconSetOverride = null,
-  cohort = null,
-  openTemplates = false,
-  openSheet = null,
-  openWorkbookLevel = null,
-  openBronze = null,
-  openSilverWorkbook = null,
+  reset: resetRequested,
+  shortcut: shortcutRequested = null,
+  iconSetOverride: iconSetRequested = null,
+  cohort: cohortRequested = null,
+  openTemplates: openTemplatesRequested = false,
+  openSheet: openSheetRequested = null,
+  openWorkbookLevel: openWorkbookLevelRequested = null,
+  openBronze: openBronzeRequested = null,
+  openSilverWorkbook: openSilverWorkbookRequested = null,
+  live = false,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -226,7 +227,22 @@ export function VentureFlow({
   openBronze?: string | null;
   /** TEST-ONLY `?silverWorkbook=<silver id>`: finish through that silver and open its workbook page. */
   openSilverWorkbook?: string | null;
+  /**
+   * Signed-in Launchpad route. Starts on the shop-front home and ignores
+   * shortcuts, resets, draft jumps, and the test shell.
+   */
+  live?: boolean;
 }) {
+  const initialVentureId = live ? null : requestedVentureId;
+  const reset = live ? false : resetRequested;
+  const shortcut = live ? null : shortcutRequested;
+  const iconSetOverride = live ? null : iconSetRequested;
+  const cohort = live ? null : cohortRequested;
+  const openTemplates = live ? false : openTemplatesRequested;
+  const openSheet = live ? null : openSheetRequested;
+  const openWorkbookLevel = live ? null : openWorkbookLevelRequested;
+  const openBronze = live ? null : openBronzeRequested;
+  const openSilverWorkbook = live ? null : openSilverWorkbookRequested;
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
   const [inProgress, setInProgress] = useState<InProgressVenture[] | null>(null);
@@ -248,6 +264,16 @@ export function VentureFlow({
   const served = (ventureId && ventures[ventureId]) || ventures["dog-walking"];
   const contentSource = served?.ok ? (served.source === "seed" ? "seed" : "db") : undefined;
   const contentHash = served?.ok ? served.contentHash : undefined;
+  const shell = (children: ReactNode, focus = false) =>
+    live ? (
+      <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white" data-launchpad-route="live">
+        {children}
+      </div>
+    ) : (
+      <VentureTestShell focus={focus} contentSource={contentSource} contentHash={contentHash}>
+        {children}
+      </VentureTestShell>
+    );
 
   const go = useCallback((next: View) => {
     setHandbook(null);
@@ -373,11 +399,20 @@ export function VentureFlow({
   }, [view, go, ventureId, progress]);
 
   if (view.screen === "home") {
-    const homeVenture = ventures["dog-walking"]?.ok ? ventures["dog-walking"] : Object.values(ventures).find((item) => item.ok);
+    const dogWalking = ventures["dog-walking"];
+    if (live && !dogWalking?.ok) {
+      return (
+        <SurfaceCopyProvider value={surfaceCopyFrom(undefined)}>
+          {shell(<VentureUnavailable onBack={toHome} />)}
+        </SurfaceCopyProvider>
+      );
+    }
+    const homeVenture = dogWalking?.ok ? dogWalking : Object.values(ventures).find((item) => item.ok);
     const homeSurface = surfaceCopyFrom(homeVenture?.ok ? homeVenture.payload.surface : undefined);
     return (
       <SurfaceCopyProvider value={homeSurface}>
-      <VentureTestShell contentSource={contentSource} contentHash={contentHash}>
+      {shell(
+        <>
         {inProgress ? (
           <LaunchpadHome
             inProgress={inProgress}
@@ -411,7 +446,8 @@ export function VentureFlow({
               );
             })()
           : null}
-      </VentureTestShell>
+        </>,
+      )}
       </SurfaceCopyProvider>
     );
   }
@@ -419,15 +455,15 @@ export function VentureFlow({
   const content = ventureId ? ventures[ventureId] : undefined;
   if (ventureId && !content?.ok) {
     return (
-      <VentureTestShell contentSource={contentSource} contentHash={contentHash}>
-        <VentureUnavailable onBack={toHome} />
-      </VentureTestShell>
+      <SurfaceCopyProvider value={surfaceCopyFrom(undefined)}>
+        {shell(<VentureUnavailable onBack={toHome} />)}
+      </SurfaceCopyProvider>
     );
   }
 
   if (!progress || !ventureId || !content?.ok) {
     // White frame while the local progress stub loads.
-    return <VentureTestShell contentSource={contentSource} contentHash={contentHash}>{null}</VentureTestShell>;
+    return shell(null);
   }
   const floors = content.payload.floors;
   const surface = surfaceCopyFrom(content.payload.surface);
@@ -932,7 +968,7 @@ export function VentureFlow({
 
   return (
     <SurfaceCopyProvider value={surface}>
-    <VentureTestShell focus={view.screen === "workbook" || view.screen === "rooftop"} contentSource={content.source === "seed" ? "seed" : "db"} contentHash={content.contentHash}>
+    {shell(
       <div className="flex min-h-0 flex-1 flex-col bg-white" data-content-source={content.source === "seed" ? "seed" : "db"} data-content-hash={content.contentHash}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
         {handbook?.entry === "building" && handbook.ventureId === ventureId && (
@@ -969,8 +1005,9 @@ export function VentureFlow({
             }}
           />
         )}
-      </div>
-    </VentureTestShell>
+      </div>,
+      view.screen === "workbook" || view.screen === "rooftop",
+    )}
     </SurfaceCopyProvider>
   );
 }

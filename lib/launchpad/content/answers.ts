@@ -970,7 +970,7 @@ function parseServicePrices(value: unknown): CompetitorServicePrice[] | undefine
 
 export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
   if (!isRecord(value) || value.kind !== "competitor" || value.version !== 1) return null;
-  const walkersChecked = countedAsk(value.walkersChecked, 10);
+  const walkersChecked = countedAsk(value.walkersChecked, 20);
   if (walkersChecked === null) return null;
   const low = wholePrice(value.priceLow);
   const high = wholePrice(value.priceHigh);

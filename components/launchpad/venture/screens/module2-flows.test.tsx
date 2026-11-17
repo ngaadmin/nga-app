@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { selectionAnswer } from "@/lib/launchpad/content/answers";
+import { parseCompetitorAnswer, selectionAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { customerScreen, competitorScreen, offerLoopScreen } from "@/lib/launchpad/content/planning/screens";
 import { CustomerCheckFlow, CompetitorFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
@@ -31,7 +31,7 @@ describe("Decide what to sell chips", () => {
     const extra = screen.getByRole("button", { name: "Add another extra" });
     const offerScroll = document.querySelector("[data-offer-scroll]");
     expect(offerScroll?.contains(extra)).toBe(true);
-    expect(offerScroll?.className).toContain("pb-6");
+    expect(offerScroll?.className).toContain("pb-2");
     expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Extra play time" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();
@@ -88,6 +88,39 @@ describe("Decide what to sell chips", () => {
 });
 
 describe("Research what competitors offer", () => {
+  it("accepts up to 20 walkers, the same cap as people asked", () => {
+    const base = {
+      kind: "competitor" as const,
+      version: 1 as const,
+      priceLow: 10,
+      priceHigh: 20,
+      doDifferently: "walk-one-dog-at-a-time",
+      jobComparedId: "30-minute-walk",
+      addons: [],
+    };
+    expect(parseCompetitorAnswer({ ...base, walkersChecked: 20 })?.walkersChecked).toBe(20);
+    expect(parseCompetitorAnswer({ ...base, walkersChecked: 21 })).toBeNull();
+    render(
+      <CompetitorFlow
+        screen={competitorScreen()}
+        answers={{
+          "l2-offer": {
+            kind: "offer",
+            version: 1,
+            offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], addons: [] }],
+            availability: [],
+          },
+        }}
+      />,
+    );
+    const walkers = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    fireEvent.change(walkers, { target: { value: "20" } });
+    expect(walkers.value).toBe("20");
+    fireEvent.change(walkers, { target: { value: "21" } });
+    expect(walkers.value).toBe("20");
+  });
+
+
   it("shows the plain-language extra and leaves Walk one dog at a time", () => {
     render(
       <CompetitorFlow

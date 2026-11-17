@@ -133,6 +133,32 @@ describe("What others offer playback", () => {
   });
 });
 
+describe("What others offer count sentence", () => {
+  it("uses I checked only when averages are saved, and the range line otherwise", () => {
+    renderPages({
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      [SET_PRICE_ANSWER_KEY]: price("lower than"),
+      [COMPETITOR_ANSWER_KEY]: competitor(["solo-walk-one-dog-only"]),
+    });
+    const range = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(range).toContain("3 other dog walkers charge $10 to $20. They often include");
+    expect(range).not.toContain("I checked");
+    cleanup();
+    const withOffers = {
+      ...competitor(["solo-walk-one-dog-only"]),
+      servicePrices: [{ serviceId: "dog-walking", offers: ["15-minute-walk"], averages: { "15-minute-walk": 12 } }],
+    } as unknown as CompetitorAnswer;
+    renderPages({
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      [SET_PRICE_ANSWER_KEY]: price("lower than"),
+      [COMPETITOR_ANSWER_KEY]: withOffers,
+    });
+    const averages = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(averages).toContain("I checked 3 other dog walkers.");
+    expect(averages).not.toContain("other dog walkers charge");
+  });
+});
+
 describe("What others offer punctuation", () => {
   it("has no doubled period after the per-offer prices and no leading period before Mine is", () => {
     const withOffers = {

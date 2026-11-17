@@ -360,18 +360,21 @@ export function PricingPlaybackPage() {
         {competitor
           ? (
             <>
-              {s.competitor.iChecked} <ChosenValue>{competitor.walkersChecked}</ChosenValue> {competitor.servicePrices?.length ? s.competitor.checkedWalkers : s.price.otherWalkers}{" "}
-              {competitor.servicePrices?.length
-                ? competitor.servicePrices.flatMap((row) => row.offers.map((id) => (
+              {competitor.servicePrices?.length ? (
+                <>
+                  {s.competitor.iChecked} <ChosenValue>{competitor.walkersChecked}</ChosenValue> {s.competitor.checkedWalkers}{" "}
+                  {competitor.servicePrices.flatMap((row) => row.offers.map((id) => (
                     <span key={`${row.serviceId}-${id}`}>
                       {s.competitor.offerLead} <ChosenValue>{chipLabel(id)}</ChosenValue> {s.competitor.atAverage} <ChosenValue>{formatWorkbookMoney(row.averages[id] ?? 0, currency)}</ChosenValue>.{" "}
                     </span>
-                  )))
-                : (
-                  <>
-                    <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>
-                  </>
-                )}
+                  )))}
+                </>
+              ) : (
+                <>
+                  <ChosenValue>{competitor.walkersChecked}</ChosenValue> {s.price.otherWalkers}{" "}
+                  <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>
+                </>
+              )}
               {addons ? <>{competitor.servicePrices?.length ? s.competitor.oftenInclude : s.price.theyIncludePeriod} <ChosenValue>{addons}</ChosenValue>.</> : null}
             </>
           )

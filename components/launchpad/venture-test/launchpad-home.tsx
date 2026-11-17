@@ -170,7 +170,7 @@ function InProgressTile({
           </p>
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-start">
-          <p className="w-full truncate font-heading text-[14px] font-bold text-nga-ink" data-tile-level-name="">
+          <p className="w-full whitespace-normal break-words font-heading text-[14px] font-bold leading-[18px] text-nga-ink" data-tile-level-name="">
             {v.floorName}
           </p>
           {(
@@ -180,7 +180,7 @@ function InProgressTile({
               aria-expanded={expanded}
               aria-controls={listId}
               onClick={() => open.length > 0 && setExpanded((e) => !e)}
-              className="-ml-1 flex h-6 items-center gap-0.5 rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
+              className="-ml-1 flex h-6 shrink-0 items-center gap-0.5 whitespace-nowrap rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
               data-open-tasks-toggle=""
             >
               {OPEN_TASKS_LABEL(open.length)}

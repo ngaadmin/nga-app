@@ -260,7 +260,10 @@ export function answerRowsForSave(input: {
     if (!dbKey || !stored || !where) continue;
     const taskDone = input.progress.completedTaskIds.includes(where.taskId);
     const open = input.progress.tasks?.[where.taskId]?.status === "open";
-    const status = taskDone && doneEnough(dbKey, stored) ? "done" : open ? "open" : "available";
+    // A finished task is done only when the row can pass launchpad_learner_answers_done_complete.
+    // my_why needs a 5-item ranking. A shorter ranking is not written as available.
+    if (taskDone && !doneEnough(dbKey, stored)) continue;
+    const status = taskDone ? "done" : open ? "open" : "available";
     rows.push({
       learner_venture_id: input.learnerVentureId,
       user_id: input.userId,

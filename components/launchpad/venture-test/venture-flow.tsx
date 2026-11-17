@@ -75,6 +75,7 @@ import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { hydrateLaunchpadLearnerProgress, noteAnswerStamps, scheduleLaunchpadLearnerSave } from "@/lib/launchpad/learner-db/save";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
+import { LAYER_CLASS } from "@/lib/ui/layers";
 
 
 /** A Budgeting-style picture door that has a narration file. */
@@ -285,16 +286,27 @@ export function VentureFlow({
   const served = (ventureId && ventures[ventureId]) || ventures["dog-walking"];
   const contentSource = served?.ok ? (served.source === "seed" ? "seed" : "db") : undefined;
   const contentHash = served?.ok ? served.contentHash : undefined;
-  const shell = (children: ReactNode, focus = false) =>
-    live ? (
-      <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white" data-launchpad-route="live">
-        {children}
-      </div>
-    ) : (
+  const shell = (children: ReactNode, focus = false) => {
+    const frame = (
       <VentureTestShell focus={focus} contentSource={contentSource} contentHash={contentHash}>
         {children}
       </VentureTestShell>
     );
+    if (!live) return frame;
+    if (view.screen === "home") {
+      return (
+        <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white" data-launchpad-route="live">
+          {children}
+        </div>
+      );
+    }
+    // Cover the dashboard header and nav. The venture uses the same shell as the test route.
+    return (
+      <div className={`fixed inset-0 overflow-hidden bg-white ${LAYER_CLASS.overlay}`} data-launchpad-focus="">
+        {frame}
+      </div>
+    );
+  };
 
   const go = useCallback((next: View) => {
     setHandbook(null);

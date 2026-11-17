@@ -372,6 +372,37 @@ describe("launchpad learner save calls", () => {
 
 const SAVE_WAIT = 500;
 
+describe("completed task answer status", () => {
+  const five = { kind: "ranking" as const, version: 1 as const, order: ["a", "b", "c", "d", "e"], notApplicable: [] as string[] };
+  const four = { kind: "ranking" as const, version: 1 as const, order: ["a", "b", "c", "d"], notApplicable: [] as string[] };
+
+  it("saves a completed my_why as done when the ranking has five items", () => {
+    const rows = answerRowsForSave({
+      userId: USER,
+      learnerVentureId: "row-1",
+      progress: progress(["l1-s1-b2-t1"], { "l1-why": five }),
+      floors,
+      completedAt: "2026-11-17T12:00:00.000Z",
+    });
+    const row = rows.find((item) => item.answer_key === "my_why");
+    expect(row?.task_id).toBe("l1-s1-b2-t1");
+    expect(row?.status).toBe("done");
+    expect(row?.completed_at).toBe("2026-11-17T12:00:00.000Z");
+    expect(row?.answer.ranking).toHaveLength(5);
+  });
+
+  it("does not save a finished my_why as available when four reasons would fail the done check", () => {
+    const rows = answerRowsForSave({
+      userId: USER,
+      learnerVentureId: "row-1",
+      progress: progress(["l1-s1-b2-t1"], { "l1-why": four }),
+      floors,
+      completedAt: "2026-11-17T12:00:00.000Z",
+    });
+    expect(rows.find((item) => item.answer_key === "my_why")).toBeUndefined();
+  });
+});
+
 describe("venture row level cap", () => {
   it("stores level 7 on the full row and omits it on the level-1 fallback", () => {
     const row = ventureRowForSave({

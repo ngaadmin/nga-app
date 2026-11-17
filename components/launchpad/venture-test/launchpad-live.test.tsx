@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
@@ -44,6 +44,26 @@ describe("signed-in Launchpad route", () => {
     expect(document.querySelector("[data-launchpad-route='live']")).toBeTruthy();
     expect(recordUsageEvent).toHaveBeenCalledTimes(1);
     expect(recordUsageEvent).toHaveBeenCalledWith("launchpad_visit");
+  });
+
+  it("opens Dog walking in the test route shell, with the dashboard column only on the home", async () => {
+    render(
+      <VentureFlow
+        live
+        initialVentureId={null}
+        ventureTitles={titles}
+        ventures={{ "dog-walking": view(launchpadTestVentureSeed("dog-walking")) }}
+        reset={false}
+      />,
+    );
+    expect(await screen.findByRole("button", { name: "Dog walking. Open" })).toBeTruthy();
+    expect(document.querySelector("[data-launchpad-route='live']")).toBeTruthy();
+    expect(document.querySelector("[data-launchpad-focus]")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dog walking. Open" }));
+    expect(document.querySelector("[data-launchpad-focus]")).toBeTruthy();
+    expect(document.querySelector("[data-launchpad-route='live']")).toBeNull();
+    expect(document.querySelector("[data-focus-mode]")).toBeNull();
+    expect(screen.getByLabelText("3 day streak")).toBeTruthy();
   });
 
   it("does not record a visit on the test route", async () => {

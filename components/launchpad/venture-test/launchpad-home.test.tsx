@@ -80,7 +80,8 @@ describe("Launchpad home In Progress tile", () => {
     expect(go.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const row = tile.querySelector("[data-tile-row]")!;
     expect(row.contains(tile.querySelector("[data-tile-level-name]"))).toBe(true);
-    expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("truncate");
+    expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("whitespace-normal");
+    expect(tile.querySelector("[data-tile-level-name]")!.className).not.toContain("truncate");
     fireEvent.click(book);
     fireEvent.click(go);
     expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking", 6);

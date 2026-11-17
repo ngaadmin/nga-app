@@ -19,9 +19,13 @@ import {
 } from "@/lib/onboarding/reserved-guest-username";
 import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
 import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
+import {
+  ADULT_PASSWORD_MIN_LENGTH,
+  ADULT_PASSWORD_TOO_SHORT_ERROR,
+} from "@/lib/auth/password-policy";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = ADULT_PASSWORD_MIN_LENGTH;
 
 export type ApproveConsentResult =
   | {
@@ -130,7 +134,7 @@ export async function createParentMasterAndApprove(
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     return {
       success: false,
-      error: "Use at least 6 characters for your password.",
+      error: ADULT_PASSWORD_TOO_SHORT_ERROR,
     };
   }
 

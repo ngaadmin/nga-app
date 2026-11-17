@@ -79,6 +79,12 @@ import {
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
+import {
+  ADULT_PASSWORD_MIN_LENGTH,
+  ADULT_PASSWORD_TOO_SHORT_ERROR,
+  LEARNER_PASSWORD_MIN_LENGTH,
+  LEARNER_PASSWORD_TOO_SHORT_ERROR,
+} from "@/lib/auth/password-policy";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 
@@ -340,8 +346,13 @@ export function SignUpForm() {
 
       if (!password) {
         next.password = "Create a password to secure your account.";
-      } else if (password.trim().length < 6) {
-        next.password = "Use at least 6 characters for your password.";
+      } else if (
+        password.trim().length <
+        (isParentMaster ? ADULT_PASSWORD_MIN_LENGTH : LEARNER_PASSWORD_MIN_LENGTH)
+      ) {
+        next.password = isParentMaster
+          ? ADULT_PASSWORD_TOO_SHORT_ERROR
+          : LEARNER_PASSWORD_TOO_SHORT_ERROR;
       }
 
       if (isParentMaster) {

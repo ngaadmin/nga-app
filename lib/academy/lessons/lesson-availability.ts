@@ -8,14 +8,14 @@ export const ACADEMY_DESIGN_SHELL_PATH =
 /**
  * Milestone ids whose hard-coded lesson file is still registered.
  * Must match the keys of `LESSON_DEFINITIONS` in the lesson registry.
- * Module 1 lessons 1–9 play from the payload sheets.
+ * None are registered. Module 1 is not served from a hard-coded file.
  */
 export const DEFINITION_MILESTONE_IDS = [] as const;
 
 /**
- * Module 1 lessons played from the payload sheets.
- * Explorer reads lessons.json. Pathfinder and Maverick read Screens1.csv.
- * Milestone id matches the lesson number inside module 1.
+ * Module 1 lessons 1–9. Milestone id matches the lesson number.
+ * Production reads these from the database. The bundled sheets
+ * (lessons.json, Screens1.csv) are the local authoring source only.
  */
 export const BUNDLED_PAYLOAD_MILESTONE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 

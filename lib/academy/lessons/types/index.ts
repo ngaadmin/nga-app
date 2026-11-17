@@ -1,8 +1,9 @@
 /**
- * Academy lesson content schema
- * ─────────────────────────────
- * Static TypeScript modules under `lib/academy/lessons/content/` define each lesson.
- * Cohort variants use `baseScreens` + per-cohort `screenOverrides` (see cohort-overrides.ts).
+ * Academy lesson screen schema.
+ * Shipped Module 1 copy is stored in academy_lesson_versions and served from
+ * the database. This file describes screen types. It is not the live lesson source.
+ * Cohort variants of the older definition shape use `baseScreens` + per-cohort
+ * `screenOverrides` (see cohort-overrides.ts).
  * Maverick inherits Pathfinder when `maverick` is omitted.
  *
  * @example Word-drop screen (M1-L1 Screen 1)

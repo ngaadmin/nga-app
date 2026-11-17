@@ -205,14 +205,14 @@ const thisYear = new Date().getFullYear();
 const adultLearner = {
   username: "maya_18",
   cohort: "maverick" as const,
-  password: "secret123",
+  password: "secret1234",
   learnerEmail: "maya@example.com",
   birthYear: thisYear - 20,
 };
 const under16Learner = {
   username: "kid_12",
   cohort: "explorer" as const,
-  password: "secret123",
+  password: "secret1234",
   parentEmail: "parent@example.com",
   birthYear: thisYear - 12,
 };
@@ -288,7 +288,7 @@ describe("child added by a parent", () => {
     const result = await createSupabaseAccount({
       username: "kid_7",
       cohort: "explorer",
-      password: "secret123",
+      password: "secret1234",
       parentInitiatedById: "parent-1",
       termsAccepted: true,
     });
@@ -300,7 +300,7 @@ describe("parent account creation", () => {
   it("rejects without the tick and touches nothing", async () => {
     const result = await createParentMasterAccount({
       email: "new@example.com",
-      password: "secret123",
+      password: "secret1234",
     });
     expect(result).toEqual({ success: false, error: TERMS_REQUIRED_ERROR });
     expect(state.createAdminClient).not.toHaveBeenCalled();
@@ -309,7 +309,7 @@ describe("parent account creation", () => {
   it("records acceptance for the new parent", async () => {
     const result = await createParentMasterAccount({
       email: "new@example.com",
-      password: "secret123",
+      password: "secret1234",
       termsAccepted: true,
     });
     expect(result.success).toBe(true);
@@ -322,7 +322,7 @@ describe("parent account creation", () => {
     state.historyInsertError = { message: "boom" };
     const result = await createParentMasterAccount({
       email: "new@example.com",
-      password: "secret123",
+      password: "secret1234",
       termsAccepted: true,
     });
     expect(result.success).toBe(false);
@@ -334,7 +334,7 @@ describe("teacher sign-up", () => {
   it("rejects without the tick", async () => {
     const result = await createTeacherAccount({
       email: "teacher@example.com",
-      password: "secret123",
+      password: "secret1234",
       classCohort: "pathfinder",
     });
     expect(result).toEqual({ success: false, error: TERMS_REQUIRED_ERROR });
@@ -344,7 +344,7 @@ describe("teacher sign-up", () => {
   it("records acceptance for the teacher", async () => {
     const result = await createTeacherAccount({
       email: "teacher@example.com",
-      password: "secret123",
+      password: "secret1234",
       classCohort: "pathfinder",
       termsAccepted: true,
     });
@@ -382,7 +382,7 @@ describe("parent approval path", () => {
     const result = await createParentMasterAndApprove({
       token: "token",
       username: "parentuser",
-      password: "secret123",
+      password: "secret1234",
     });
     expect(result).toEqual({ success: false, error: TERMS_REQUIRED_ERROR });
     expect(state.createAdminClient).not.toHaveBeenCalled();
@@ -392,7 +392,7 @@ describe("parent approval path", () => {
     const result = await createParentMasterAndApprove({
       token: "token",
       username: "parentuser",
-      password: "secret123",
+      password: "secret1234",
       termsAccepted: true,
     });
     expect(result.success).toBe(true);
@@ -406,7 +406,7 @@ describe("parent approval path", () => {
     const result = await createParentMasterAndApprove({
       token: "token",
       username: "newparent",
-      password: "secret123",
+      password: "secret1234",
       termsAccepted: true,
     });
     expect(result.success).toBe(true);
@@ -433,5 +433,45 @@ describe("parent approval path", () => {
       expect.objectContaining({ profile_id: "parent-1", title: TERMS_ACCEPTANCE_TITLE }),
     ]);
     expect(consentApproved()).toBe(true);
+  });
+});
+
+describe("adult password minimum (security review finding 8)", () => {
+  it("refuses a 9-character password for a new parent", async () => {
+    const result = await createParentMasterAccount({
+      email: "new@example.com",
+      password: "secret123",
+      termsAccepted: true,
+    });
+    expect(result).toEqual({
+      success: false,
+      error: "Use at least 10 characters for your password.",
+    });
+  });
+
+  it("refuses a 9-character password for a new teacher", async () => {
+    const result = await createTeacherAccount({
+      email: "teacher@example.com",
+      password: "secret123",
+      classCohort: "pathfinder",
+      termsAccepted: true,
+    });
+    expect(result).toEqual({
+      success: false,
+      error: "Use at least 10 characters for your password.",
+    });
+  });
+
+  it("refuses a 9-character password for a parent created from an approval link", async () => {
+    const result = await createParentMasterAndApprove({
+      token: "token",
+      username: "newparent",
+      password: "secret123",
+      termsAccepted: true,
+    });
+    expect(result).toEqual({
+      success: false,
+      error: "Use at least 10 characters for your password.",
+    });
   });
 });

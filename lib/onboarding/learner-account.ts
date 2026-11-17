@@ -4,6 +4,12 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import {
+  LEARNER_PASSWORD_MIN_LENGTH,
+  LEARNER_PASSWORD_TOO_SHORT_ERROR,
+  newPasswordLengthError,
+  passwordMinLengthForRole,
+} from "@/lib/auth/password-policy";
 import type { AccountProgressPayload } from "@/lib/dashboard/account-progress";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -99,11 +105,32 @@ export async function updateSignedInPassword(
   password: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const trimmed = password.trim();
-  if (trimmed.length < 6) {
-    return { ok: false, error: "Use at least 6 characters for your password." };
+  if (trimmed.length < LEARNER_PASSWORD_MIN_LENGTH) {
+    return { ok: false, error: LEARNER_PASSWORD_TOO_SHORT_ERROR };
   }
 
   const supabase = await createClient();
+
+  // A changed parent or teacher password must meet the adult minimum.
+  // Sign-in itself never checks length, so existing passwords keep working.
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) {
+    return { ok: false, error: "Sign in again, then set your new password." };
+  }
+  const { data: profile } = await createAdminClient()
+    .from("profiles")
+    .select("account_role")
+    .eq("id", userId)
+    .maybeSingle();
+  const adultLengthError = newPasswordLengthError(
+    trimmed,
+    passwordMinLengthForRole(profile?.account_role ?? null),
+  );
+  if (adultLengthError) {
+    return { ok: false, error: adultLengthError };
+  }
+
   const { error } = await supabase.auth.updateUser({
     password: trimmed,
     data: { mustChangePassword: false },

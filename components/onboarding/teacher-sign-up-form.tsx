@@ -10,6 +10,10 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { createTeacherAccount } from "@/lib/school/create-teacher-account";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
+import {
+  ADULT_PASSWORD_MIN_LENGTH,
+  ADULT_PASSWORD_TOO_SHORT_ERROR,
+} from "@/lib/auth/password-policy";
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
@@ -42,8 +46,8 @@ export function TeacherSignUpForm() {
     if (!trimmedEmail || !EMAIL_PATTERN.test(trimmedEmail)) {
       next.email = "Please enter a valid email address.";
     }
-    if (password.length < 6) {
-      next.password = "Use at least 6 characters for your password.";
+    if (password.length < ADULT_PASSWORD_MIN_LENGTH) {
+      next.password = ADULT_PASSWORD_TOO_SHORT_ERROR;
     }
     if (Object.keys(next).length > 0 || !classCohort) {
       setErrors(next);

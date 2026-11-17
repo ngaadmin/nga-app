@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { ModalShell } from "@/components/ui/modal-shell";
 import {
   PROFILE_SWITCHER_COPY,
   ProfileRow,
@@ -8,6 +9,7 @@ import {
 import { ParentHubTabIconA } from "@/lib/dashboard/tab-icons-a";
 import {
   PROFILE_SWITCHING_AVAILABLE,
+  householdChildCount,
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
 import { parentHubSubtitle } from "@/lib/parent/pin-copy";
@@ -35,6 +37,12 @@ type ProfilePanelProps = {
   roleLabel?: string | null;
   /** Linked profiles. Shown as the same switcher list as the avatar menu. */
   household?: HouseholdProfiles | null;
+  /**
+   * Parent account. Parents never get a profile switcher here: a parent must
+   * not be able to switch into a child profile (COPPA; parent-targeted ads
+   * must never reach kids). Their children live in the Parent Hub instead.
+   */
+  isParent?: boolean;
   /** Parent Hub entry. Only for a parent who can open the Hub. */
   onOpenParentHub?: () => void;
   /** Opens with Achievements expanded (old /dashboard/achievements links). */
@@ -51,8 +59,10 @@ function SectionLabel({ id, children }: { id: string; children: string }) {
 
 /**
  * Body of the profile panel opened from the top-bar avatar. Every profile
- * (child, parent, teacher, guest) uses this same template: who you are,
- * your avatar, and your Achievements (medals), collapsed by default.
+ * (child, parent, teacher, guest) uses this same template: a header with the
+ * avatar (pencil to change it), the username and the track or role line,
+ * then Achievements (medals), collapsed by default. The avatar picker only
+ * opens from the pencil; it is never shown open on the profile itself.
  */
 export function ProfilePanel({
   displayName,
@@ -61,25 +71,56 @@ export function ProfilePanel({
   onChooseAvatar,
   roleLabel = null,
   household = null,
+  isParent = false,
   onOpenParentHub,
   achievementsInitiallyOpen = false,
 }: ProfilePanelProps) {
-  const profiles = household?.profiles ?? [];
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // Parents never get a profile list: no parent-to-child switching (COPPA).
+  const profiles = isParent ? [] : (household?.profiles ?? []);
   const hasOthers = profiles.some((profile) => !profile.isCurrent);
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <ProfileAvatarOrInitial
-          avatarId={avatarId}
-          name={displayName}
-          className="size-24 text-4xl ring-4 ring-[#FFA503] shadow-md"
-        />
+      <div
+        data-profile-header
+        className="flex flex-col items-center gap-2 text-center"
+      >
+        <div className="relative">
+          <ProfileAvatarOrInitial
+            avatarId={avatarId}
+            name={displayName}
+            className="size-[88px] text-[34px] ring-4 ring-[#FFA503] shadow-md"
+          />
+          <button
+            type="button"
+            data-profile-avatar-edit
+            aria-label="Change your avatar"
+            aria-haspopup="dialog"
+            aria-expanded={pickerOpen}
+            onClick={() => setPickerOpen(true)}
+            // 44px tap area (invisible padding) around a 28px navy circle that
+            // sits on the avatar's top-right edge.
+            className="group absolute -top-3 left-[56px] flex size-11 items-center justify-center rounded-full"
+          >
+            <span
+              data-profile-avatar-edit-circle
+              className="flex size-7 items-center justify-center rounded-full bg-[#031F82] text-white shadow-md ring-2 ring-white transition-transform group-active:scale-95"
+            >
+              <PencilIcon />
+            </span>
+          </button>
+        </div>
         <p
           data-profile-name
           className="max-w-full truncate font-heading text-2xl font-extrabold text-[#031F82]"
         >
           {displayName}
         </p>
+        {/*
+          TODO(role pill): the line under a parent's username still reads
+          "Parent". Cath is deciding what it should say; change it here (and
+          the matching roleLabel passed from DashboardStatusHeader) once decided.
+        */}
         {roleLabel ? (
           <p
             data-profile-role
@@ -119,9 +160,7 @@ export function ProfilePanel({
               {PROFILE_SWITCHER_COPY.parentHub}
             </span>
             <span className="text-[11.5px] font-medium text-[#1E3A5F]">
-              {parentHubSubtitle(
-                household ? profiles.filter((p) => p.role === "child").length : null,
-              )}
+              {parentHubSubtitle(householdChildCount(household))}
             </span>
           </span>
           <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">
@@ -152,12 +191,108 @@ export function ProfilePanel({
         </section>
       ) : null}
 
-      <section aria-labelledby="profile-avatar-heading">
-        <SectionLabel id="profile-avatar-heading">Choose your avatar</SectionLabel>
+      <AchievementsSection initiallyOpen={achievementsInitiallyOpen} />
+
+      <AvatarPickerModal
+        isOpen={pickerOpen}
+        avatarId={avatarId}
+        onChoose={(id) => {
+          onChooseAvatar(id);
+          setPickerOpen(false);
+        }}
+        onClose={() => setPickerOpen(false)}
+      />
+    </div>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="size-4"
+    >
+      <path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-4-4L4 16v4Z" />
+      <path d="m13.5 6.5 4 4" />
+    </svg>
+  );
+}
+
+/**
+ * The avatar picker, opened only from the pencil on the profile avatar.
+ * A pick replaces the avatar, saves it the same way as before (this device),
+ * and closes the picker.
+ */
+function AvatarPickerModal({
+  isOpen,
+  avatarId,
+  onChoose,
+  onClose,
+}: {
+  isOpen: boolean;
+  avatarId: ProfileAvatarId | null;
+  onChoose: (id: ProfileAvatarId) => void;
+  onClose: () => void;
+}) {
+  // Escape closes only the picker, not the Profile panel underneath.
+  useEffect(() => {
+    if (!isOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      onClose();
+    }
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [isOpen, onClose]);
+
+  return (
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      layer="toast"
+      align="center"
+      labelledBy="profile-avatar-heading"
+      backdropClassName="bg-[#031F82]/45"
+      panelClassName="max-w-md rounded-[24px] bg-white p-4 shadow-md"
+    >
+      <div data-profile-avatar-picker>
+        <div className="flex items-center justify-between gap-2">
+          <h2
+            id="profile-avatar-heading"
+            className="font-heading text-base font-extrabold text-[#031F82]"
+          >
+            Choose your avatar
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-[#031F82]/70 transition-colors hover:bg-[#BDE9FB]/50 hover:text-[#031F82]"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              className="size-4"
+              aria-hidden
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
         <div
           role="radiogroup"
           aria-labelledby="profile-avatar-heading"
-          className="mt-2 grid grid-cols-3 gap-3 rounded-2xl bg-[#F7FBFF] p-3 min-[400px]:grid-cols-6"
+          className="mt-2 grid grid-cols-3 gap-3"
         >
           {PROFILE_AVATAR_OPTIONS.map((option) => {
             const selected = option.id === avatarId;
@@ -169,13 +304,13 @@ export function ProfilePanel({
                 aria-checked={selected}
                 aria-label={option.name}
                 data-avatar-option={option.id}
-                onClick={() => onChooseAvatar(option.id)}
+                onClick={() => onChoose(option.id)}
                 className="flex flex-col items-center gap-1 rounded-xl p-1 transition-transform active:scale-95"
               >
                 <ProfileAvatarImage
                   avatarId={option.id}
                   className={cn(
-                    "size-12",
+                    "size-16",
                     selected
                       ? "ring-[3px] ring-[#031F82] ring-offset-2"
                       : "opacity-80",
@@ -193,13 +328,11 @@ export function ProfilePanel({
             );
           })}
         </div>
-        <p className="mt-1.5 font-sans text-[11px] text-[#8FA3B0]">
+        <p className="mt-2 text-center font-sans text-[11px] text-[#8FA3B0]">
           Saved on this device.
         </p>
-      </section>
-
-      <AchievementsSection initiallyOpen={achievementsInitiallyOpen} />
-    </div>
+      </div>
+    </ModalShell>
   );
 }
 

@@ -4,9 +4,9 @@ import { createContext, useContext, type ReactNode } from "react";
 import { academyLessonImageSrc } from "@/lib/academy/media/academy-media";
 
 /**
- * Bucket base for the lesson on screen. Set only for lessons read from the
- * database (Module 1 today). Empty means the older bundled lessons, which
- * still paint their pictures from /public.
+ * Bucket base for the lesson on screen. Set for lessons read from the
+ * database. Production Module 1 always sets it. Empty means a non-production
+ * bundled lesson, which still paints its pictures from /public.
  */
 const AcademyMediaBaseContext = createContext("");
 

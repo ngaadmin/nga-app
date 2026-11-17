@@ -10,6 +10,7 @@ import {
   clientIpKey,
 } from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { consumeSharedRateLimit } from "@/lib/auth/shared-rate-limit";
 import {
   getMasteryCohortFromBirthYear,
   requiresParentConsent,
@@ -61,7 +62,7 @@ async function handleResend(
   body: ResendBody,
 ): Promise<NextResponse> {
   const ip = clientIpKey(request);
-  const ipLimit = consumeRateLimit(`consent-resend:ip:${ip}`, 5, 60_000);
+  const ipLimit = await consumeSharedRateLimit(`consent-resend:ip:${ip}`, 5, 60_000);
   if (!ipLimit.allowed) {
     return NextResponse.json(
       { success: false, error: "Too many requests. Try again shortly." },
@@ -108,7 +109,7 @@ async function handleResend(
     );
   }
 
-  const emailLimit = consumeRateLimit(
+  const emailLimit = await consumeSharedRateLimit(
     `consent-resend:email:${parentEmail}`,
     3,
     15 * 60_000,

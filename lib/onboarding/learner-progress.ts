@@ -6,11 +6,15 @@ import {
   accountProgressLogFields,
   type AccountProgressPayload,
 } from "@/lib/dashboard/account-progress";
-import { learnerProgressAccessAllowed } from "@/lib/onboarding/learner-progress-access";
+import {
+  learnerProgressAccessAllowed,
+  learnerProgressWriteAllowedForStatus,
+} from "@/lib/onboarding/learner-progress-access";
 import {
   readLearnerProgressRow,
   writeLearnerProgressRow,
 } from "@/lib/onboarding/learner-progress-store";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -18,6 +22,35 @@ import { createClient } from "@/lib/supabase/server";
  * The user id argument is a request. It is not trusted on its own.
  */
 async function authorizeLearnerProgressTarget(
+  requestedUserId: string,
+  access: "read" | "write" = "read",
+): Promise<string | null> {
+  const target = await authorizeLearnerProgressActor(requestedUserId);
+  if (!target || access === "read") return target;
+  return (await learnerProgressTargetWritable(target)) ? target : null;
+}
+
+/**
+ * Writes are refused while the target is pending_consent or declined.
+ * The status is read with the service role so a parent's session sees the
+ * child's real status; a failed or empty lookup refuses the write.
+ */
+async function learnerProgressTargetWritable(target: string): Promise<boolean> {
+  try {
+    const { data, error } = await createAdminClient()
+      .from("profiles")
+      .select("account_status")
+      .eq("id", target)
+      .maybeSingle();
+    if (error) return false;
+    const status = (data as { account_status?: string | null } | null)?.account_status;
+    return learnerProgressWriteAllowedForStatus(status);
+  } catch {
+    return false;
+  }
+}
+
+async function authorizeLearnerProgressActor(
   requestedUserId: string,
 ): Promise<string | null> {
   const target = requestedUserId.trim();
@@ -101,7 +134,9 @@ export async function loadCurrentLearnerProgress(): Promise<AccountProgressPaylo
  * Persist Academy / XP for the signed-in learner, or for a child linked to
  * the signed-in parent in parent_child.
  * Service role runs only after that check, because a parent session cannot
- * write the child's row under learner_progress RLS.
+ * write the child's row under learner_progress RLS. Because the service role
+ * skips RLS, the pending-consent block is applied here too: nothing is
+ * written while the target is pending_consent or declined.
  */
 export async function saveLearnerProgressForUser(
   userId: string,
@@ -120,7 +155,7 @@ export async function saveLearnerProgressForUser(
   }
 
   try {
-    const target = await authorizeLearnerProgressTarget(trimmed);
+    const target = await authorizeLearnerProgressTarget(trimmed, "write");
     if (!target) {
       console.info("[learner-progress:write]", {
         xp: fields.xp,

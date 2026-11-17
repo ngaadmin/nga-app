@@ -13,7 +13,24 @@ export type HouseholdProfile = {
 export type HouseholdProfiles = {
   currentUserId: string;
   profiles: HouseholdProfile[];
+  /**
+   * Parents only: how many active children are linked (for the Parent Hub
+   * subtitle). A parent's `profiles` holds only their own row; child rows are
+   * never sent to a parent, so no parent-to-child switch can be offered.
+   */
+  linkedChildCount?: number;
 };
+
+/** Active linked children for the Parent Hub subtitle, or null if unknown. */
+export function householdChildCount(
+  household: HouseholdProfiles | null | undefined,
+): number | null {
+  if (!household) return null;
+  if (typeof household.linkedChildCount === "number") {
+    return household.linkedChildCount;
+  }
+  return household.profiles.filter((profile) => profile.role === "child").length;
+}
 
 /**
  * Switching between profiles is not built yet. Parent and child are separate
@@ -43,6 +60,10 @@ function asCohort(value: string | null): MasteryCohort | null {
  * and their parent, never their siblings. Returns null unless there is at
  * least one other profile to show, so single-profile accounts keep the plain
  * avatar.
+ *
+ * A signed-in parent never gets child rows (COPPA: no parent-to-child
+ * switching, so parent-targeted content can never reach a child profile).
+ * They get only their own row plus `linkedChildCount`.
  */
 export function buildHouseholdProfiles(input: {
   currentUserId: string;
@@ -99,6 +120,16 @@ export function buildHouseholdProfiles(input: {
 
   if (!profiles.some((profile) => profile.isCurrent)) return null;
   if (profiles.length < 2) return null;
+  const callerIsParent = profiles.some(
+    (profile) => profile.isCurrent && profile.role === "parent",
+  );
+  if (callerIsParent) {
+    return {
+      currentUserId,
+      profiles: profiles.filter((profile) => profile.isCurrent),
+      linkedChildCount: profiles.filter((profile) => profile.role === "child").length,
+    };
+  }
   // Current profile on top in every switcher and menu.
   const ordered = [
     ...profiles.filter((profile) => profile.isCurrent),

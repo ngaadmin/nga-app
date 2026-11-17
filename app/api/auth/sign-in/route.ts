@@ -3,7 +3,11 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import {
+  AUTH_RATE_LIMITS,
+  consumeSharedRateLimit,
+  normalizeRateLimitAccount,
+} from "@/lib/auth/shared-rate-limit";
 import {
   SIGN_IN_MISMATCH_ERROR,
   SIGN_IN_UNAVAILABLE_ERROR,
@@ -27,10 +31,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipLimit = consumeRateLimit(
+  const ipLimit = await consumeSharedRateLimit(
     `sign-in:ip:${clientIpKey(request)}`,
-    12,
-    60_000,
+    AUTH_RATE_LIMITS.signInIp.limit,
+    AUTH_RATE_LIMITS.signInIp.windowMs,
   );
   if (!ipLimit.allowed) {
     return NextResponse.json(
@@ -57,6 +61,23 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: SIGN_IN_MISMATCH_ERROR },
         { status: 400 },
+      );
+    }
+
+    // Per-account limit: a whole class can share one school IP, so guessing
+    // is stopped per username or email instead.
+    const accountLimit = await consumeSharedRateLimit(
+      `sign-in:account:${normalizeRateLimitAccount(identifier)}`,
+      AUTH_RATE_LIMITS.signInAccount.limit,
+      AUTH_RATE_LIMITS.signInAccount.windowMs,
+    );
+    if (!accountLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many sign-in attempts for this account. Try again in 15 minutes.",
+        },
+        { status: 429 },
       );
     }
 

@@ -261,8 +261,8 @@ function AcademyNode({
   );
 }
 
-const HOLLY_SITTING_SRC =
-  "/assets/illustrations/characters/holly/holly-sitting-512.webp";
+const PENNY_JOURNEY_SRC =
+  "/assets/illustrations/characters/penny/penny-journey-512.webp";
 
 function pennyFallbackOffsetPx(nodeOnRight: boolean): number {
   return nodeOnRight
@@ -360,7 +360,7 @@ function PennyBesideActiveNode({
       aria-hidden
     >
       <Image
-        src={HOLLY_SITTING_SRC}
+        src={PENNY_JOURNEY_SRC}
         alt=""
         width={PENNY_SIZE_PX}
         height={PENNY_SIZE_PX}

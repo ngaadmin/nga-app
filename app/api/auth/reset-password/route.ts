@@ -3,7 +3,11 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { verifyPasswordResetToken } from "@/lib/auth/password-reset-token";
+import {
+  AUTH_RATE_LIMITS,
+  consumeSharedRateLimit,
+} from "@/lib/auth/shared-rate-limit";
 import { completePasswordReset } from "@/lib/onboarding/complete-password-reset";
 
 export const runtime = "nodejs";
@@ -23,10 +27,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipLimit = consumeRateLimit(
+  const ipLimit = await consumeSharedRateLimit(
     `password-reset:ip:${clientIpKey(request)}`,
-    8,
-    60_000,
+    AUTH_RATE_LIMITS.resetIp.limit,
+    AUTH_RATE_LIMITS.resetIp.windowMs,
   );
   if (!ipLimit.allowed) {
     return NextResponse.json(
@@ -57,6 +61,24 @@ export async function POST(request: Request) {
         },
         { status: 400 },
       );
+    }
+
+    // Per-account limit, keyed on the account in a validly signed reset link.
+    // Links that don't verify are rejected by completePasswordReset and are
+    // covered by the IP limit only.
+    const claims = verifyPasswordResetToken(token);
+    if (claims?.userId) {
+      const accountLimit = await consumeSharedRateLimit(
+        `password-reset:account:${claims.userId}`,
+        AUTH_RATE_LIMITS.resetAccount.limit,
+        AUTH_RATE_LIMITS.resetAccount.windowMs,
+      );
+      if (!accountLimit.allowed) {
+        return NextResponse.json(
+          { ok: false, error: "Too many reset attempts. Try again in 15 minutes." },
+          { status: 429 },
+        );
+      }
     }
 
     const result = await completePasswordReset(token, password);

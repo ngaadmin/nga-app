@@ -108,7 +108,7 @@ describe("allocation slider", () => {
     ]);
   });
 
-  it("plays the Explorer lesson 2 slider from the live Explorer payload", () => {
+  it("plays the Explorer lesson 2 slider from the bundled Explorer payload", () => {
     const bundled = loadBundledLessonPayload(1, 2);
     const explorer = loadExplorerM1Payload(2);
     const selected = selectLessonPayload("explorer", bundled, explorer);
@@ -119,7 +119,7 @@ describe("allocation slider", () => {
     const lesson = resolvePayloadLesson(selected, "explorer", 2);
     const slider = lesson.screens.find((screen) => screen.type === "allocation-slider");
     // The archived baked lesson expected total 25, targetMin 20, and the
-    // Senna phone-case intro. The payload Explorer plays today is below.
+    // Senna phone-case intro. The bundled Explorer authoring payload is below.
     expect(slider).toMatchObject({
       type: "allocation-slider",
       total: 15,

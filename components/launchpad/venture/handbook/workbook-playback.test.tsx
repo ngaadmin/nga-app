@@ -97,7 +97,7 @@ describe("What others offer playback", () => {
       [COMPETITOR_ANSWER_KEY]: competitor([]),
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain(". Mine is lower than others");
+    expect(document.querySelector("[data-price-compared]")?.textContent).toBe("Mine is lower than others.");
     expect(text).not.toContain("Mine is lower than others others");
     expect(text).not.toContain("They often include");
   });
@@ -109,7 +109,7 @@ describe("What others offer playback", () => {
       [COMPETITOR_ANSWER_KEY]: competitor(["solo-walk-one-dog-only"]),
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain(". Mine is about the same as others");
+    expect(document.querySelector("[data-price-compared]")?.textContent).toBe("Mine is about the same as others.");
     expect(text).toContain("They often include");
     expect(text).toContain("walk one dog only");
     expect(text).not.toContain("They often include .");
@@ -130,5 +130,32 @@ describe("What others offer playback", () => {
     );
     expect(screen.getByText("cheaper than the rest")).toBeTruthy();
     expect(document.body.textContent).not.toContain("lower than others");
+  });
+});
+
+describe("What others offer punctuation", () => {
+  it("has no doubled period after the per-offer prices and no leading period before Mine is", () => {
+    const withOffers = {
+      ...competitor(["solo-walk-one-dog-only"]),
+      servicePrices: [{ serviceId: "dog-walking", offers: ["15-minute-walk"], averages: { "15-minute-walk": 12 } }],
+    } as unknown as CompetitorAnswer;
+    renderPages({
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      [SET_PRICE_ANSWER_KEY]: price("lower than"),
+      [COMPETITOR_ANSWER_KEY]: withOffers,
+    });
+    const text = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(text).not.toMatch(/\.\s*\./);
+    expect(text).toContain("$12. They often include");
+    expect(document.querySelector("[data-price-compared]")?.textContent).toBe("Mine is lower than others.");
+  });
+
+  it("shows a payload edit of the Mine is lead", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      price: { ...LAUNCHPAD_SURFACE_COPY.price, mineIsStart: "My price is" },
+    } as unknown as typeof LAUNCHPAD_SURFACE_COPY;
+    renderPages({ "l1-offer": selectionAnswer(["dog-walking"]), [SET_PRICE_ANSWER_KEY]: price("lower than"), [COMPETITOR_ANSWER_KEY]: competitor([]) }, copy);
+    expect(document.querySelector("[data-price-compared]")?.textContent).toBe("My price is lower than others.");
   });
 });

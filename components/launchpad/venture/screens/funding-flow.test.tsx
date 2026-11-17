@@ -90,6 +90,15 @@ describe("Funding bronze", () => {
     expect(own.className).toContain("shadow-[inset_0_0_0_1.5px_#0CC1E0]");
     fireEvent.change(own, { target: { value: "050" } });
     expect(own.value).toBe("50");
+    fireEvent.change(own, { target: { value: "5" } });
+    own.setSelectionRange(0, 0);
+    fireEvent.keyDown(own, { key: "Backspace" });
+    expect(own.value).toBe("");
+    fireEvent.change(own, { target: { value: "50" } });
+    own.setSelectionRange(0, 2);
+    fireEvent.keyDown(own, { key: "Backspace" });
+    expect(own.value).toBe("");
+    fireEvent.change(own, { target: { value: "50" } });
     expect(document.querySelector("[data-tick]")).toBeTruthy();
     expect(screen.queryByText(spec.copy.overWarning)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

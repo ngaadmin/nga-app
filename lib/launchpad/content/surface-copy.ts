@@ -301,6 +301,7 @@ export const LAUNCHPAD_SURFACE_COPY = {
     whatOthersCharge: "What others offer",
     otherWalkers: "other walkers charge",
     theyIncludePeriod: ". They often include",
+    mineIsStart: "Mine is",
     notCheckedShort: "Not checked yet.",
     pickOne: "Pick one to save.",
     pickAtLeast: "Pick at least one to save.",

@@ -82,15 +82,29 @@ export function storedGivingPercent(floors: readonly LaunchpadFloor[], answers: 
 
 /**
  * Whole dollars. Each jar is Money made times that jar's percent, divided by
- * 100, rounded on its own. Other jars do not change this one, so the dollars
- * need not add up to Money made when the percents add up to less than 100.
+ * 100. Largest-remainder rounding: every jar is rounded down, then the dollars
+ * left over go one at a time to the jars with the biggest leftover cents
+ * (first jar wins a tie). The jars always add up to Money made times the total
+ * percent, rounded, so with percents summing to 100 they add up to Money made.
  */
 export function splitDollars(total: number, percents: readonly number[]): number[] {
   const amount = Math.max(0, Math.floor(Number.isFinite(total) ? total : 0));
-  return percents.map((percent) => {
-    const share = (amount * percent) / 100;
-    return Math.max(0, Math.round(Number.isFinite(share) ? share : 0));
+  const shares = percents.map((percent) => {
+    const share = (amount * (Number.isFinite(percent) ? Math.max(0, percent) : 0)) / 100;
+    return Number.isFinite(share) ? share : 0;
   });
+  const floors = shares.map((share) => Math.floor(share));
+  const target = Math.round(shares.reduce((sum, share) => sum + share, 0));
+  let left = target - floors.reduce((sum, value) => sum + value, 0);
+  const order = shares
+    .map((share, index) => ({ index, rest: share - Math.floor(share) }))
+    .sort((a, b) => b.rest - a.rest || a.index - b.index);
+  for (const { index } of order) {
+    if (left <= 0) break;
+    floors[index] = (floors[index] ?? 0) + 1;
+    left -= 1;
+  }
+  return floors;
 }
 
 /** Digits only. An empty field calculates from 100. Zero stays zero. */

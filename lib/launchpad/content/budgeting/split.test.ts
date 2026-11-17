@@ -9,7 +9,7 @@ describe("budget split dollars", () => {
   });
 
   it("rounds each jar on its own, including a half dollar", () => {
-    expect(splitDollars(250, DEFAULT)).toEqual([13, 38, 100, 100]);
+    expect(splitDollars(250, DEFAULT)).toEqual([13, 37, 100, 100]);
   });
 
   it("treats an empty field as 100 and keeps a typed 0 as zero", () => {
@@ -24,7 +24,7 @@ describe("budget split dollars", () => {
   });
 
   it("rounds each jar on its own when the percents do not use the whole dollar", () => {
-    expect(splitDollars(1, DEFAULT)).toEqual([0, 0, 0, 0]);
+    expect(splitDollars(1, DEFAULT)).toEqual([0, 0, 1, 0]);
     expect(splitDollars(2, [10, 10])).toEqual([0, 0]);
     expect(splitDollars(1, [10, 30])).toEqual([0, 0]);
     expect(splitDollars(3, DEFAULT).every((value) => Number.isInteger(value))).toBe(true);
@@ -42,5 +42,18 @@ describe("budget split dollars", () => {
     expect(budgetPercents(5)).toEqual(DEFAULT);
     expect(budgetPercents(10)).toEqual([10, 15, 40, 40]);
     expect(budgetPercents(10).reduce((sum, value) => sum + value, 0)).toBe(105);
+  });
+});
+
+describe("splitDollars sums to Money made", () => {
+  it("adds up exactly with percents that total 100", () => {
+    const dollars = splitDollars(99, [10, 15, 30, 45]);
+    expect(dollars.reduce((a, b) => a + b, 0)).toBe(99);
+    expect(dollars).toEqual([10, 15, 30, 44]);
+    for (let made = 0; made <= 500; made += 1) {
+      for (const pcts of [[5, 15, 40, 40], [10, 15, 30, 45], [33, 33, 34, 0], [1, 2, 3, 94]]) {
+        expect(splitDollars(made, pcts).reduce((a, b) => a + b, 0)).toBe(made);
+      }
+    }
   });
 });

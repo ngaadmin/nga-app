@@ -354,7 +354,7 @@ export function PricingPlaybackPage() {
                     <ChosenValue>{formatWorkbookMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatWorkbookMoney(competitor.priceHigh, currency)}</ChosenValue>
                   </>
                 )}
-              {addons ? <>{s.price.theyIncludePeriod} <ChosenValue>{addons}</ChosenValue>.</> : null}
+              {addons ? <>{competitor.servicePrices?.length ? s.competitor.oftenInclude : s.price.theyIncludePeriod} <ChosenValue>{addons}</ChosenValue>.</> : null}
             </>
           )
           : s.price.notCheckedShort}
@@ -376,7 +376,7 @@ export function PricingPlaybackPage() {
           <p className={WORKBOOK_HINT} data-doodle-anchor={row === price?.prices[0] ? "price-calc" : undefined}>
             {formatWorkbookMoney(row.price, currency)} − {formatWorkbookMoney(row.costPerJob, currency)} = {formatWorkbookMoney(row.keptPerJob, currency)}
           </p>
-          {row.comparedToOthers ? <p className={WORKBOOK_BODY}>{s.price.mineIs} <ChosenValue>{comparedPhrase(row.comparedToOthers, s.price)}</ChosenValue></p> : null}
+          {row.comparedToOthers ? <p className={WORKBOOK_BODY} data-price-compared="">{s.price.mineIsStart} <ChosenValue>{comparedPhrase(row.comparedToOthers, s.price)}</ChosenValue>.</p> : null}
         </div>
       ))}
     </div>

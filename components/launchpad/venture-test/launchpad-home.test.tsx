@@ -79,7 +79,7 @@ describe("Launchpad home In Progress tile", () => {
     expect(book.parentElement?.className).toContain("gap-[14px]");
     expect(go.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const row = tile.querySelector("[data-tile-row]")!;
-    expect(row.className).toContain("gap-2");
+    expect(row.className).toContain("gap-x-2");
     expect(row.className).toContain("grid-cols-[auto_minmax(0,1fr)_auto]");
     expect(row.contains(tile.querySelector("[data-tile-level-name]"))).toBe(true);
     const level = tile.querySelector("[data-tile-level-name]")!;
@@ -166,9 +166,15 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     const one = [{ taskId: "l1-s2-b1-t1", title: "Set your goals" }];
     const { unmount: unmountOne } = render(<LaunchpadHome inProgress={[{ ...L6, openTasks: one }]} onOpenVenture={() => {}} />);
     const counter = screen.getByRole("button", { name: "1 saved for later" });
-    expect(counter.className).toContain("whitespace-normal");
-    expect(counter.className).toContain("min-w-0");
-    expect(counter.className).not.toContain("whitespace-nowrap");
+    const row = counter.parentElement as HTMLElement;
+    expect(row.getAttribute("data-tile-row")).toBe("");
+    expect(counter.className).toContain("col-span-3");
+    expect(counter.className).toContain("whitespace-nowrap");
+    expect(counter.className).toContain("min-[360px]:col-start-2");
+    expect(counter.className).toContain("min-[360px]:col-span-1");
+    expect(counter.className).toContain("min-[360px]:whitespace-normal");
+    expect(counter.className).not.toContain("break-words");
+    expect(document.querySelector("[data-tile-level-name]")?.parentElement?.contains(counter)).toBe(false);
     unmountOne();
 
     render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [...one, ...OPEN] }]} onOpenVenture={() => {}} />);
@@ -183,9 +189,11 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     const toggle = screen.getByRole("button", { name: "2 saved for later" });
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     expect(toggle.className).toContain("text-nga-cta-hover");
-    // Under the level name, in the same column.
     const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
-    expect(level.parentElement?.contains(toggle)).toBe(true);
+    const row = document.querySelector("[data-tile-row]") as HTMLElement;
+    expect(row.contains(level)).toBe(true);
+    expect(row.contains(toggle)).toBe(true);
+    expect(level.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(document.querySelector("[data-open-tasks-list]")).toBeNull();
     // No badge on the workbook (handbook) button.
     expect(document.querySelector("[data-handbook-button]")?.textContent).toBe("");
@@ -224,8 +232,10 @@ describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasp
     expect(go.className).toContain("min-w-[84px]");
     expect([...actions.children]).toEqual([go, book]);
     expect(actions.className).toContain("gap-[14px]");
-    // Two-line label block: level name, then "1 saved for later".
     const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
-    expect(level.parentElement?.querySelector("[data-open-tasks-toggle]")?.textContent).toMatch(/^1 saved for later/);
+    const toggle = document.querySelector("[data-open-tasks-toggle]") as HTMLElement;
+    expect(toggle.textContent).toMatch(/^1 saved for later/);
+    expect(level.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(toggle.className).toContain("col-span-3");
   });
 });

@@ -2,6 +2,9 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 import { launchpadContentHash } from "@/lib/launchpad/content/content-hash";
 import { LAUNCHPAD_VENTURE_ID_RE } from "@/lib/launchpad/content/check-payload";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
+import { isVersionId } from "@/lib/launchpad/content/version-id";
+
+export { isVersionId };
 
 /** Next data-cache tag for database reads. */
 export const LAUNCHPAD_CONTENT_CACHE_TAG = "launchpad-content";
@@ -21,12 +24,6 @@ export type LaunchpadContentSource = {
   name: "db" | "seed";
   read: (ventureId: string, selector: LaunchpadVersionSelector) => Promise<LaunchpadVersionRow | null>;
 };
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isVersionId(value: unknown): value is string {
-  return typeof value === "string" && UUID_RE.test(value);
-}
 
 /**
  * Bundled seed. TEST-ONLY: it serves the same test venture for every venture

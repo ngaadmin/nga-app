@@ -1,3 +1,7 @@
+/**
+ * Server and tooling only. node:crypto cannot be bundled for a client component.
+ * server-only is not imported here: tools/launchpad-seed-sql.ts loads this file under tsx.
+ */
 import { createHash } from "node:crypto";
 
 /** JSON with object keys sorted, so the same content always hashes the same. */

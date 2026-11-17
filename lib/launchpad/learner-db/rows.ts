@@ -1,5 +1,5 @@
 import { parseLaunchpadAnswers, type LaunchpadAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
-import { isVersionId } from "@/lib/launchpad/content/content-sources";
+import { isVersionId } from "@/lib/launchpad/content/version-id";
 import type { LaunchpadFloor, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { parseVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 import { currentLevel, isSilverDone, type VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";

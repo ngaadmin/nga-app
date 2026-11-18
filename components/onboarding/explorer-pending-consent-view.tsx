@@ -4,10 +4,8 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
   DASHBOARD_ACADEMY_PATH,
-  ONBOARDING_SIGN_IN_PATH,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 import { markExplorerPendingPlayAllowed } from "@/lib/onboarding/explorer-pending-consent";
@@ -37,21 +35,12 @@ export function ExplorerPendingConsentView({
   const [isResending, setIsResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLeaving, setIsLeaving] = useState(false);
   const resendInFlightRef = useRef(false);
 
   const heading = approved ? copy.headingApproved : copy.heading;
   const body = approved ? copy.bodyApproved : copy.body;
 
-  async function leaveToLogin() {
-    if (isLeaving) return;
-    setIsLeaving(true);
-    await signOutApp();
-    router.push(ONBOARDING_SIGN_IN_PATH);
-    router.refresh();
-  }
-
-  function keepPlaying() {
+  function goToAcademy() {
     markExplorerPendingPlayAllowed();
     router.push(DASHBOARD_ACADEMY_PATH);
   }
@@ -133,7 +122,7 @@ export function ExplorerPendingConsentView({
             {copy.continue}
           </Button>
         ) : justSubmitted ? (
-          <Button type="button" variant="cta" fullWidth onClick={keepPlaying}>
+          <Button type="button" variant="cta" fullWidth onClick={goToAcademy}>
             {copy.keepPlaying}
           </Button>
         ) : (
@@ -154,10 +143,7 @@ export function ExplorerPendingConsentView({
           type="button"
           variant="ghost"
           fullWidth
-          onClick={() => {
-            void leaveToLogin();
-          }}
-          disabled={isLeaving}
+          onClick={goToAcademy}
         >
           {copy.logOut}
         </Button>

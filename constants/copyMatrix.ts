@@ -44,8 +44,8 @@ export const copyMatrix = {
       parent: "I'm a parent",
     },
     pendingConsent: {
-      heading: "Hang tight. Approval saves your coins",
-      body: "Your account needs approval to save your coins. You can keep playing while you wait.",
+      heading: "Waiting for a parent's OK",
+      body: "You can keep playing in the Academy while you wait! Your coins will start saving once a parent approves your account.",
       headingApproved: "You're cleared to play!",
       bodyApproved:
         "Your parent or guardian said yes. Pick up right where you left off.",
@@ -53,11 +53,13 @@ export const copyMatrix = {
       resending: "Sending…",
       keepPlaying: "Keep playing",
       continue: "Continue in the app",
-      logOut: "Back to login",
+      logOut: "Back to the Academy",
     },
     /** Learner sign-up button that asks a parent to approve (under 16). */
     parentApprovalRequest: {
       submit: "Send to my parent",
+      parentEmailHint:
+        "Approval saves your coins. You can keep playing while you wait.",
     },
     approvalSaved: {
       heading: "Approval saved. {username} is active.",

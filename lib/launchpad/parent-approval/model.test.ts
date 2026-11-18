@@ -8,6 +8,8 @@ import {
 } from "@/lib/launchpad/parent-approval/config";
 import {
   isVentureId,
+  learnerApprovalGate,
+  NO_APPROVAL_GATE,
   parentApprovalRequestedAt,
   parentApprovalStatus,
   withApprovalDecision,
@@ -104,5 +106,26 @@ describe("approval copy rules", () => {
     for (const text of strings) {
       expect(text).not.toMatch(/\b(colour|favourite|organis|centre|programme)/i);
     }
+  });
+});
+
+describe("learnerApprovalGate (hard stop)", () => {
+  it("does not let a learner with no linked parent skip the stop, and sends nothing", () => {
+    const gate = learnerApprovalGate(false, null);
+    expect(gate.view).toEqual({ applies: true, status: "pending" });
+    expect(gate.needsRequest).toBe(false);
+    // Even a stored yes does not open the door when no parent is linked.
+    expect(learnerApprovalGate(false, { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_YES]: T2 }).view.status).toBe("pending");
+    expect(gate.view).not.toEqual(NO_APPROVAL_GATE);
+  });
+
+  it("asks a linked parent once, then follows their answer", () => {
+    expect(learnerApprovalGate(true, null)).toEqual({ view: { applies: true, status: "none" }, needsRequest: true });
+    expect(learnerApprovalGate(true, { [APPROVAL_KEY_REQUESTED]: T1 })).toEqual({
+      view: { applies: true, status: "pending" },
+      needsRequest: false,
+    });
+    expect(learnerApprovalGate(true, { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_YES]: T2 }).view.status).toBe("approved");
+    expect(learnerApprovalGate(true, { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_NO]: T2 }).view.status).toBe("declined");
   });
 });

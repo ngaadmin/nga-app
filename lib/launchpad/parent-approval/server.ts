@@ -12,6 +12,7 @@ import {
   parentApprovalStatus,
   withApprovalDecision,
   withApprovalRequested,
+  learnerApprovalGate,
   type LearnerApprovalGateView,
   type ParentApprovalStatus,
 } from "@/lib/launchpad/parent-approval/model";
@@ -115,9 +116,9 @@ export async function loadLaunchpadApprovalGate(
   try {
     const admin = createAdminClient();
     if (!(await isActiveLearner(admin, userId))) return NO_APPROVAL_GATE;
-    if (!(await linkedParentId(admin, userId))) return NO_APPROVAL_GATE;
-    const row = await readVentureRow(admin, userId, ventureId);
-    return { applies: true, status: parentApprovalStatus(row?.wrap_up_confirmed_at) };
+    const hasParent = (await linkedParentId(admin, userId)) !== null;
+    const row = hasParent ? await readVentureRow(admin, userId, ventureId) : null;
+    return learnerApprovalGate(hasParent, row?.wrap_up_confirmed_at).view;
   } catch {
     // A signed-in learner fails closed: the screen shows a retry, never the task.
     throw new Error("approval-gate-unavailable");
@@ -139,10 +140,10 @@ export async function requestLaunchpadParentApproval(
   if (!userId) return NO_APPROVAL_GATE;
   const admin = createAdminClient();
   if (!(await isActiveLearner(admin, userId))) return NO_APPROVAL_GATE;
-  if (!(await linkedParentId(admin, userId))) return NO_APPROVAL_GATE;
-  const row = await readVentureRow(admin, userId, ventureId);
-  const status = parentApprovalStatus(row?.wrap_up_confirmed_at);
-  if (status !== "none") return { applies: true, status };
+  const hasParent = (await linkedParentId(admin, userId)) !== null;
+  const row = hasParent ? await readVentureRow(admin, userId, ventureId) : null;
+  const { view, needsRequest } = learnerApprovalGate(hasParent, row?.wrap_up_confirmed_at);
+  if (!needsRequest) return view;
   const saved = await writeMilestones(
     admin,
     row,

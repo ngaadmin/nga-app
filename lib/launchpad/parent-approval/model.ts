@@ -67,3 +67,18 @@ export type LearnerApprovalGateView = {
 };
 
 export const NO_APPROVAL_GATE: LearnerApprovalGateView = { applies: false, status: "none" };
+
+/**
+ * The gate for a signed-in active learner. The stop is a hard stop, so a learner
+ * with no linked parent does NOT skip it: they see the waiting screen (fail
+ * closed) and nothing is written, because there is no parent to receive a request.
+ * `needsRequest` is true only when a linked parent should be sent the request now.
+ */
+export function learnerApprovalGate(
+  hasLinkedParent: boolean,
+  map: ParentApprovalMilestones,
+): { view: LearnerApprovalGateView; needsRequest: boolean } {
+  if (!hasLinkedParent) return { view: { applies: true, status: "pending" }, needsRequest: false };
+  const status = parentApprovalStatus(map);
+  return { view: { applies: true, status }, needsRequest: status === "none" };
+}

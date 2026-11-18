@@ -9,6 +9,10 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import {
+  formatParentHubUnreadCount,
+  parentHubUnreadAriaLabel,
+} from "@/lib/parent/parent-hub-unread";
 import { parentHubSubtitle } from "@/lib/parent/pin-copy";
 import { ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
@@ -284,6 +288,7 @@ export function ProfileSwitcherMenu({
   onOpenParentHub,
   isParent = false,
   isGuest = false,
+  parentHubUnreadCount = 0,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
@@ -300,6 +305,8 @@ export function ProfileSwitcherMenu({
   isParent?: boolean;
   /** Guests have no account yet: Settings reads "Preferences". */
   isGuest?: boolean;
+  /** Rose count pill on the Parent Hub row. Hidden at 0. */
+  parentHubUnreadCount?: number;
 }) {
   const [box, setBox] = useState<MenuBox | null>(null);
   const [scrimTop, setScrimTop] = useState(0);
@@ -421,6 +428,7 @@ export function ProfileSwitcherMenu({
             title={PROFILE_SWITCHER_COPY.parentHub}
             sub={parentHubSubtitle(householdChildCount(household))}
             onClick={onOpenParentHub}
+            unreadCount={parentHubUnreadCount}
           />
         ) : null}
         {showList ? (
@@ -469,13 +477,17 @@ function MenuLinkRow({
   title,
   sub,
   onClick,
+  unreadCount = 0,
 }: {
   "data-attr": "settings" | "parent-hub";
   icon: ReactNode;
   title: string;
   sub: string;
   onClick: () => void;
+  unreadCount?: number;
 }) {
+  const unreadLabel = formatParentHubUnreadCount(unreadCount);
+  const unreadAria = parentHubUnreadAriaLabel(unreadCount);
   return (
     <button
       type="button"
@@ -490,6 +502,15 @@ function MenuLinkRow({
         <span className="font-heading text-sm font-bold text-[#031F82]">{title}</span>
         <span className="text-[11.5px] font-medium text-[#1E3A5F]">{sub}</span>
       </span>
+      {unreadLabel ? (
+        <span
+          data-parent-hub-unread-count={unreadCount}
+          className="shrink-0 rounded-full bg-[#E11D48] px-2 py-0.5 font-sans text-[11.5px] font-semibold leading-none text-white"
+          aria-label={unreadAria ?? undefined}
+        >
+          {unreadLabel}
+        </span>
+      ) : null}
       <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">
         <path
           d="M4.5 3 7.5 6 4.5 9"

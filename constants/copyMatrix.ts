@@ -390,7 +390,7 @@ export const copyMatrix = {
             id: "cash-stash",
             number: 1,
             subtitle: "Control Your Spending",
-            focusAreas: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+            focusAreas: "Stop the behaviors and beliefs that keep people stuck in scarcity",
             iconPath: "/dashboard/money-bag.svg",
           },
           {
@@ -456,7 +456,7 @@ export const copyMatrix = {
         notAllocatedLabel: "Not allocated",
         assignAllMoneyHint: "Make sure all the money is assigned a home.",
         allocationSplitTip:
-          "We parked your cash in the four jars so you don’t have to do the maths. This is the recommended split, but you can change it if you want the money in different jars.",
+          "We parked your cash in the four jars so you don’t have to do the math. This is the recommended split, but you can change it if you want the money in different jars.",
         allocationSplitTipAriaLabel: "About this split",
         allocationSplitTipClose: "Close",
         currencySettingsNote:
@@ -634,7 +634,7 @@ export const copyMatrix = {
       {
         id: "level-1",
         title: "Control Your Spending",
-        subtext: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+        subtext: "Stop the behaviors and beliefs that keep people stuck in scarcity",
       },
       {
         id: "level-2",

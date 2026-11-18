@@ -104,7 +104,7 @@ KEEP: 20
 ITEM: Phone case","TOTAL: 25
 KEEP: 20
 ITEM: Phone case",Slide until $20 is locked for the gift.,Slide until $20 is locked for the gift.,Slide until $20 is locked for the gift.,
-1,2,6,rank-order,"Lars has only $10 left in his savings and sees a $5 bundle-deal for his favourite lemonade. Drag the choices in the correct order, starting with what would be best for Lars to do.","Holly has only $5 left in her savings and sees a $5 bundle-deal for her favourite lemonade. Drag the choices in the correct order, starting with what would be best for Holly to do.","Aiden has only $5 left in his savings and sees a $5 bundle-deal for his favourite energy drink. Drag the choices in the correct order, starting with what would be best for Aiden to do.",lars-deciding-512.webp,holly-deciding-512.webp,senna-older-deciding-r1-512.webp,"ITEMS: Don't buy anything - keep the $10 for 'needs'.
+1,2,6,rank-order,"Lars has only $10 left in his savings and sees a $5 bundle-deal for his favorite lemonade. Drag the choices in the correct order, starting with what would be best for Lars to do.","Holly has only $5 left in her savings and sees a $5 bundle-deal for her favorite lemonade. Drag the choices in the correct order, starting with what would be best for Holly to do.","Aiden has only $5 left in his savings and sees a $5 bundle-deal for his favorite energy drink. Drag the choices in the correct order, starting with what would be best for Aiden to do.",lars-deciding-512.webp,holly-deciding-512.webp,senna-older-deciding-r1-512.webp,"ITEMS: Don't buy anything - keep the $10 for 'needs'.
 ITEMS: Choose something cheaper, so he has some money left.
 ITEMS: Borrow money from dad to buy the lemonade.
 ORDER: keep,cheaper,borrow","ITEMS: Don't buy anything - keep the $5 for 'needs'.
@@ -142,13 +142,13 @@ SPENT: 🍫 Snacks. - $8",,,,
 1,3,3,link-match,Holly explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:,Mia explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,Aiden explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,lars-senna-sidebyside.webp,holly-senna-sidebyside-r1-512.webp,senna-older-aiden19-sidebyside-r1-512.webp,"PAIRS:
 I broke my sister's headphones = I can replace them
 It's my friend's birthday = I can buy a gift
-There's a sale at the game store = I can buy my favourite game now","PAIRS:
+There's a sale at the game store = I can buy my favorite game now","PAIRS:
 I broke my sister's headphones = I can replace them
 It's my friend's birthday = I can buy a gift
-There's a sale at the game store = I can buy my favourite game now","PAIRS:
+There's a sale at the game store = I can buy my favorite game now","PAIRS:
 I broke my friend's headphones = I can replace them
 It's my friend's birthday = I can buy a gift
-There's a sale at the game store = I can buy my favourite game now",,,,
+There's a sale at the game store = I can buy my favorite game now",,,,
 1,3,4,rank-order,Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,concept-piggy-bank-r2.webp,concept-piggy-bank-r2.webp,concept-piggy-bank-r2.webp,"ITEMS: 💵 Get your pocket money.
 ITEMS: 🫙 Move a small amount to your Emergencies jar.
 ITEMS: 🎮 Spend what is left on fun.

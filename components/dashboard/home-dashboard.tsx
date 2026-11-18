@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
@@ -458,6 +460,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const hydrated = useHydrated();
 
   const session = isOpen ? readUserSession() : null;
   const knownEmail = session ? resolveHouseholdEmail(session) : null;
@@ -530,7 +533,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
           {copy.passwordResetNeedEmail}
         </p>
       ) : (
-        <form className="mt-4 space-y-3" onSubmit={handleSubmit} noValidate>
+        <CredentialForm className="mt-4 space-y-3" onSubmit={handleSubmit} noValidate>
           <label htmlFor="settings-reset-email" className="block space-y-1.5">
             <span className="font-heading text-sm font-bold text-[#031F82]">
               Parent email
@@ -569,12 +572,12 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
           <button
             type="submit"
-            disabled={isSending || !email.trim()}
+            disabled={isSending || !email.trim() || !hydrated}
             className={cn("h-touch w-full px-6 shadow-md", orangeCtaClass)}
           >
             {isSending ? copy.passwordResetSending : copy.passwordResetSubmit}
           </button>
-        </form>
+        </CredentialForm>
       )}
 
       <button

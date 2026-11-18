@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -72,6 +74,7 @@ export function AddLinkedProfilePanel() {
   const router = useRouter();
   const copy = copyMatrix.dashboard.settings.accountSubscription;
   const parentSession = useMemo(() => readUserSession(), []);
+  const hydrated = useHydrated();
   const householdEmail = parentSession
     ? resolveHouseholdEmail(parentSession)
     : null;
@@ -311,7 +314,7 @@ export function AddLinkedProfilePanel() {
           </Button>
         </section>
       ) : (
-        <form
+        <CredentialForm
           className={cn(floatingPanelClass, "space-y-4 p-4")}
           onSubmit={handleSubmit}
           noValidate
@@ -457,12 +460,12 @@ export function AddLinkedProfilePanel() {
             type="submit"
             variant="cta"
             fullWidth
-            disabled={isSubmitting}
+            disabled={isSubmitting || !hydrated}
             aria-busy={isSubmitting || undefined}
           >
             {isSubmitting ? copy.addLinkedSubmitting : copy.addLinkedSubmit}
           </Button>
-        </form>
+        </CredentialForm>
       )}
     </div>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,6 +17,7 @@ export function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = (searchParams.get("token") ?? "").trim();
+  const hydrated = useHydrated();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -109,7 +112,7 @@ export function ResetPasswordForm() {
             </Link>
           </div>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+          <CredentialForm className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
               <label
                 htmlFor="reset-new-password"
@@ -184,10 +187,10 @@ export function ResetPasswordForm() {
               </p>
             ) : null}
 
-            <Button type="submit" variant="cta" fullWidth disabled={isSaving}>
+            <Button type="submit" variant="cta" fullWidth disabled={isSaving || !hydrated}>
               {isSaving ? "Saving…" : "Save new password"}
             </Button>
-          </form>
+          </CredentialForm>
         )}
 
         {!lookupError ? (

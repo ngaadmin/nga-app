@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,6 +61,7 @@ export function SignInForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const hydrated = useHydrated();
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
@@ -351,7 +354,7 @@ export function SignInForm() {
         </div>
 
         {forcePasswordChange ? (
-          <form
+          <CredentialForm
             className="space-y-6"
             onSubmit={handlePasswordChangeSubmit}
             noValidate
@@ -440,13 +443,13 @@ export function SignInForm() {
               type="submit"
               variant="cta"
               fullWidth
-              disabled={isUpdatingPassword}
+              disabled={isUpdatingPassword || !hydrated}
             >
               {isUpdatingPassword ? "Saving…" : "Save new password"}
             </Button>
-          </form>
+          </CredentialForm>
         ) : recoveryMode ? (
-          <form className="space-y-6" onSubmit={handleRecoverySubmit} noValidate>
+          <CredentialForm className="space-y-6" onSubmit={handleRecoverySubmit} noValidate>
             <div className="space-y-2 text-center sm:text-left">
               <h2 className="font-heading text-xl font-extrabold text-nga-primary">
                 {recoveryMode === "username"
@@ -534,7 +537,7 @@ export function SignInForm() {
                 {recoveryNotice}
               </p>
             ) : (
-              <Button type="submit" variant="cta" fullWidth disabled={isRecovering}>
+              <Button type="submit" variant="cta" fullWidth disabled={isRecovering || !hydrated}>
                 {isRecovering
                   ? copy.recoverySending
                   : recoveryMode === "username"
@@ -549,9 +552,9 @@ export function SignInForm() {
             >
               {copy.recoveryCancel}
             </button>
-          </form>
+          </CredentialForm>
         ) : (
-          <form
+          <CredentialForm
             className="space-y-6"
             onSubmit={handleSubmit}
             noValidate
@@ -681,11 +684,11 @@ export function SignInForm() {
               type="submit"
               variant="cta"
               fullWidth
-              disabled={isSigningIn}
+              disabled={isSigningIn || !hydrated}
             >
               {isSigningIn ? copy.signingIn : copy.submit}
             </Button>
-          </form>
+          </CredentialForm>
         )}
 
         {!forcePasswordChange ? (

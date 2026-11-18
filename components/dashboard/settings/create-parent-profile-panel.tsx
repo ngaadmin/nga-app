@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,7 @@ export function CreateParentProfilePanel({
   const router = useRouter();
   const copy = copyMatrix.dashboard.settings.accountSubscription;
   const existingEmail = useMemo(() => prefillEmail(), []);
+  const hydrated = useHydrated();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -162,7 +165,7 @@ export function CreateParentProfilePanel({
         </div>
       </div>
 
-      <form
+      <CredentialForm
         className={cn(floatingPanelClass, "space-y-4 p-4")}
         onSubmit={handleSubmit}
         noValidate
@@ -287,12 +290,12 @@ export function CreateParentProfilePanel({
           type="submit"
           variant="cta"
           fullWidth
-          disabled={isSubmitting || !termsAccepted}
+          disabled={isSubmitting || !termsAccepted || !hydrated}
           aria-busy={isSubmitting || undefined}
         >
           {isSubmitting ? copy.createParentSubmitting : copy.createParentSubmit}
         </Button>
-      </form>
+      </CredentialForm>
     </div>
   );
 }

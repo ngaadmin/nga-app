@@ -350,6 +350,19 @@ export async function openParentTabGate(
 }
 
 /**
+ * The Parent Hub's own entry: checks the PIN and, when it is right, loads the
+ * Hub in the same request. The Hub used to ask twice (check the PIN, then load
+ * the data), which cost a second round trip. The checks are the same ones.
+ */
+export async function openParentHubWithPin(
+  pin: string,
+): Promise<ParentTabPinCheck | (Extract<ParentTabPinCheck, { ok: true }> & { hub: ParentHubLoad })> {
+  const checked = await openParentTabGate(pin);
+  if (!checked.ok) return checked;
+  return { ...checked, hub: await loadParentTabData(checked.pass) };
+}
+
+/**
  * Keeps an open Parent Hub open: a still-valid pass gets a fresh pass and a
  * fresh data grant, so nothing inside the Hub asks for the PIN again. Only
  * works before the current pass expires; leaving or backgrounding the Hub
@@ -440,12 +453,11 @@ export type ParentTabData = {
   messages: never[];
 };
 
-export async function loadParentTabData(
-  pass: string,
-): Promise<
+export type ParentHubLoad =
   | { ok: true; data: ParentTabData }
-  | { ok: false; error: string; locked?: true }
-> {
+  | { ok: false; error: string; locked?: true };
+
+export async function loadParentTabData(pass: string): Promise<ParentHubLoad> {
   const context = await resolveParentContext();
   if (!context?.eligible) {
     return {

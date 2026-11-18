@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const server = vi.hoisted(() => ({
   loadParentTabData: vi.fn(),
   renewParentTabGatePass: vi.fn(),
+  openParentHubWithPin: vi.fn(),
 }));
 const data = vi.hoisted(() => ({ loadParentHubChildProgress: vi.fn() }));
 
@@ -31,9 +32,10 @@ vi.mock("@/components/ui/modal-shell", () => ({
 vi.mock("@/components/parent/hub-child-page", () => ({
   HubChildPage: () => <div data-testid="child-page" />,
 }));
+let gateResult: unknown;
 vi.mock("@/components/parent/parent-pin-gate", () => ({
-  ParentPinGate: ({ onUnlocked }: { onUnlocked: (pass: string) => void }) => (
-    <button type="button" data-testid="entry-gate" onClick={() => onUnlocked("pass-1")}>
+  ParentPinGate: ({ onUnlocked }: { onUnlocked: (pass: string, result?: unknown) => void }) => (
+    <button type="button" data-testid="entry-gate" onClick={() => onUnlocked("pass-1", gateResult)}>
       Unlock
     </button>
   ),
@@ -61,6 +63,7 @@ async function openHub() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  gateResult = undefined;
   server.loadParentTabData.mockResolvedValue({ ok: true, data: hubData });
 });
 
@@ -139,5 +142,18 @@ describe("ParentTabScreen", () => {
     expect(document.querySelectorAll("[data-parent-tab-ok-row=launchpad]")).toHaveLength(0);
     expect(deltas).toEqual([{ pendingDelta: -1 }]);
     window.removeEventListener("parent-hub:unread-changed", listen);
+  });
+
+  it("uses the Hub data that came back with the PIN check, without asking again", async () => {
+    gateResult = { ok: true, pass: "pass-1", hub: { ok: true, data: hubData } };
+    await openHub();
+    expect(server.loadParentTabData).not.toHaveBeenCalled();
+    expect(document.querySelector("[data-parent-tab-child='Zed']")).toBeTruthy();
+  });
+
+  it("falls back to loading the Hub when the PIN check brought no data", async () => {
+    gateResult = { ok: true, pass: "pass-1", hub: { ok: false, error: "x" } };
+    await openHub();
+    expect(server.loadParentTabData).toHaveBeenCalledWith("pass-1");
   });
 });

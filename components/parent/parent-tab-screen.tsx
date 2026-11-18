@@ -24,9 +24,12 @@ import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
+import type { ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
 import {
   loadParentTabData,
+  openParentHubWithPin,
   renewParentTabGatePass,
+  type ParentHubLoad,
   type ParentTabChildSummary,
   type ParentTabData,
   type ParentTabOkItem,
@@ -114,9 +117,16 @@ export function ParentTabScreen({
 
   /** The server checked the PIN and signed this pass. Memory only. */
   const unlock = useCallback(
-    (gatePass: string) => {
+    (gatePass: string, result?: ParentTabPinCheck) => {
       setPass(gatePass);
       setUnlocked(true);
+      // The Hub's own PIN check returns the Hub data in the same request.
+      const hub = result && result.ok ? (result as { hub?: ParentHubLoad }).hub : undefined;
+      if (hub?.ok) {
+        setLoadError(null);
+        setData(hub.data);
+        return;
+      }
       void refresh(gatePass);
     },
     [refresh],
@@ -181,6 +191,7 @@ export function ParentTabScreen({
             className="mx-0"
             enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to open the Parent Hub.`}
             onUnlocked={unlock}
+            openGate={openParentHubWithPin}
           />
         )}
       </div>

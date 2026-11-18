@@ -38,6 +38,7 @@ import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
 import { useParentHubUnreadCount } from "@/lib/parent/use-parent-hub-unread";
+import { prefetchParentPinState } from "@/lib/parent/pin-state-client";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
 import {
@@ -169,7 +170,9 @@ export function DashboardStatusHeader() {
   const toggleSwitcher = useCallback(() => {
     setTipVisible(false);
     setSwitcherOpen((open) => !open);
-  }, []);
+    // A parent is likely heading for the Parent Hub: get the PIN state ready now.
+    if (isParent) prefetchParentPinState();
+  }, [isParent]);
   const closeSwitcher = useCallback(() => setSwitcherOpen(false), []);
   const viewProfileFromSwitcher = useCallback(() => {
     setSwitcherOpen(false);

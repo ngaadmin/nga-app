@@ -55,6 +55,10 @@ export const copyMatrix = {
       continue: "Continue in the app",
       logOut: "Back to login",
     },
+    /** Learner sign-up button that asks a parent to approve (under 16). */
+    parentApprovalRequest: {
+      submit: "Send to my parent",
+    },
     approvalSaved: {
       heading: "Approval saved. {username} is active.",
       body: "You can follow their progress in your parent account.",

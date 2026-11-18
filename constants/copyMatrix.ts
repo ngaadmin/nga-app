@@ -4,6 +4,9 @@ export const COPY_USERNAME_TOKEN = "[Username]" as const;
 
 export const copyMatrix = {
   onboarding: {
+    entryGate: {
+      primaryCta: "Try the app",
+    },
     signIn: {
       title: "Log in",
       submit: "Log in",
@@ -44,8 +47,8 @@ export const copyMatrix = {
       parent: "I'm a parent",
     },
     pendingConsent: {
-      heading: "Hang tight. Approval saves your coins",
-      body: "Your account needs approval to save your coins. You can keep playing while you wait.",
+      heading: "Waiting for a parent's OK",
+      body: "You can keep playing in the Academy while you wait! Your coins will start saving once a parent approves your account.",
       headingApproved: "You're cleared to play!",
       bodyApproved:
         "Your parent or guardian said yes. Pick up right where you left off.",
@@ -53,7 +56,13 @@ export const copyMatrix = {
       resending: "Sending…",
       keepPlaying: "Keep playing",
       continue: "Continue in the app",
-      logOut: "Back to login",
+      logOut: "Back to the Academy",
+    },
+    /** Learner sign-up button that asks a parent to approve (under 16). */
+    parentApprovalRequest: {
+      submit: "Send to my parent",
+      parentEmailHint:
+        "Approval saves your coins. You can keep playing while you wait.",
     },
     approvalSaved: {
       heading: "Approval saved. {username} is active.",
@@ -386,7 +395,7 @@ export const copyMatrix = {
             id: "cash-stash",
             number: 1,
             subtitle: "Control Your Spending",
-            focusAreas: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+            focusAreas: "Stop the behaviors and beliefs that keep people stuck in scarcity",
             iconPath: "/dashboard/money-bag.svg",
           },
           {
@@ -430,7 +439,11 @@ export const copyMatrix = {
     launchpad: {
       title: "Business Launchpad",
       description:
-        "Launch your business. Two starter ventures are free — unlock the rest with Premium.",
+        "Launch your own business, step by step. Start with the Dog Walking business!",
+      guestLocked: {
+        body: "The Business Launchpad is only for signed-up learners. Create an account to start building your own business!",
+        cta: "Create an account",
+      },
     },
     community: {
       title: "Community",
@@ -452,7 +465,7 @@ export const copyMatrix = {
         notAllocatedLabel: "Not allocated",
         assignAllMoneyHint: "Make sure all the money is assigned a home.",
         allocationSplitTip:
-          "We parked your cash in the four jars so you don’t have to do the maths. This is the recommended split, but you can change it if you want the money in different jars.",
+          "We parked your cash in the four jars so you don’t have to do the math. This is the recommended split, but you can change it if you want the money in different jars.",
         allocationSplitTipAriaLabel: "About this split",
         allocationSplitTipClose: "Close",
         currencySettingsNote:
@@ -611,6 +624,11 @@ export const copyMatrix = {
       description:
         "Your skill cabinet - track Locked, Unlocked, Bronze, Silver, and Gold across your learning track.",
     },
+    parentHubUnread: {
+      overflowLabel: "9+",
+      ariaLabelOne: "1 unread Parent Hub item",
+      ariaLabelMany: "{count} unread Parent Hub items",
+    },
   },
   home: {
     streak: {
@@ -630,7 +648,7 @@ export const copyMatrix = {
       {
         id: "level-1",
         title: "Control Your Spending",
-        subtext: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+        subtext: "Stop the behaviors and beliefs that keep people stuck in scarcity",
       },
       {
         id: "level-2",
@@ -658,6 +676,46 @@ export const copyMatrix = {
         subtext: "Move from trading time for money to ownership",
       },
     ],
+  },
+  /**
+   * Launchpad parent approval stop (Cath's decisions, 17 Nov 2026). Tokens in
+   * braces are filled in by the screens: {child}, {venture}, {date}.
+   */
+  launchpadParentApproval: {
+    learner: {
+      title: "Time to check in with a parent",
+      waitingBody:
+        "Before you start telling people about your business, a parent needs to say OK. We sent them a message in the Parent Hub.",
+      waitingChip: "Waiting for a parent's OK",
+      notNowBody:
+        "Your parent said not right now. You can keep building the rest of your business while you wait.",
+      checking: "Checking in with your parent...",
+      errorBody: "We couldn't check on that just now. Try again in a moment.",
+      retry: "Try again",
+      back: "Go back",
+    },
+    parent: {
+      rowEyebrow: "Business approval",
+      rowTitle: "{child} is ready to tell people about their {venture} business",
+      rowPending: "Asked on {date}.",
+      rowNotNow: "You said not now. You can change your answer any time.",
+      review: "Review",
+      sheetTitle: "{child} is ready to tell people about their business",
+      sheetIntro:
+        "{child} has finished the planning steps for their {venture} business. Next they start telling people about it and reaching out to customers.",
+      sheetWhatYouApprove:
+        "Saying yes means you know your child is about to start selling and talking to customers. Small changes to their plan later do not need another OK.",
+      sheetCounsel:
+        "Before you say yes, talk it through together. Check when, where and how they will deliver the business to customers, and who they will be dealing with.",
+      sheetDisclaimer:
+        "NextGenAchiever$ is an educational tool. We do not take on any risk for you or your child, and what you see here is not advice. You decide what your child does in the real world.",
+      disclaimerLink: "Read our disclaimer",
+      approve: "Approve",
+      notNow: "Not now",
+      back: "Back",
+      saving: "Saving...",
+      saveError: "Could not save that. Try again.",
+    },
   },
 } as const;
 

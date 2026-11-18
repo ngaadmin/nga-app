@@ -1,4 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
+import { copyMatrix } from "../constants/copyMatrix";
+
+const PARENT_EMAIL_HINT =
+  copyMatrix.onboarding.parentApprovalRequest.parentEmailHint;
 
 const SESSION_KEY = "nga_guest_session";
 const WALLET_KEY = "nga_dashboard_wallet_v2";
@@ -162,7 +166,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
 
   for (const viewport of WIDTHS) {
@@ -194,7 +198,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/signup-375-C-maverick.png",
@@ -207,7 +211,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(
-    page.getByText("Approval saves your coins. You can keep playing while you wait."),
+    page.getByText(PARENT_EMAIL_HINT),
   ).toBeVisible();
   await expect(page.getByText("Check the highlighted fields and try again.")).toHaveCount(0);
   await expect(page.getByLabel("Your Email Address")).toHaveCount(0);
@@ -215,7 +219,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await page.setViewportSize({ width: 375, height: 667 });
   await page.screenshot({
@@ -290,13 +294,13 @@ test("age flag decides the parent step and guest play never asks for a year", as
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
   await expect(page.getByLabel("Parent/guardian email address")).toBeVisible();
   await expect(
-    page.getByText("Approval saves your coins. You can keep playing while you wait."),
+    page.getByText(PARENT_EMAIL_HINT),
   ).toBeVisible();
   await expect(
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   expect(page.url()).not.toContain("2010");
 
@@ -314,7 +318,7 @@ test("age flag decides the parent step and guest play never asks for a year", as
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Create My Free Account" }),

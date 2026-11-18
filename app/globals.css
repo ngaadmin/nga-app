@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* AC2 (Launchpad tasks): tighter spacing on short phones, e.g. 375x667. */
+@custom-variant short (@media (max-height: 740px));
+
 /*
  * NextGenAchievers corporate design tokens
  * Primary Base: #031F82 | Panel: #BDE9FB | Secondary: #0CC1E0

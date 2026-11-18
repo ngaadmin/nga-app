@@ -36,6 +36,7 @@ import {
 import { assembleLearnerView } from "@/lib/privacy/data-controls";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { listLaunchpadApprovals } from "@/lib/launchpad/parent-approval/list";
 
 type ChildProfileRow = {
   id: string;
@@ -67,11 +68,11 @@ async function resolveParentContext(): Promise<ParentContext | null> {
   if (!user) return null;
 
   const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id, username, account_role")
-    .eq("id", user.id)
-    .maybeSingle();
+  // The profile and the child links only need the user id, so ask together.
+  const [{ data: profile }, { data: links }] = await Promise.all([
+    admin.from("profiles").select("id, username, account_role").eq("id", user.id).maybeSingle(),
+    admin.from("parent_child").select("child_id").eq("parent_id", user.id),
+  ]);
   if (!profile || profile.account_role !== "parent_master") {
     return {
       userId: user.id,
@@ -81,10 +82,6 @@ async function resolveParentContext(): Promise<ParentContext | null> {
     };
   }
 
-  const { data: links } = await admin
-    .from("parent_child")
-    .select("child_id")
-    .eq("parent_id", user.id);
   const childIds = [
     ...new Set((links ?? []).map((row) => row.child_id).filter(Boolean)),
   ] as string[];
@@ -353,6 +350,19 @@ export async function openParentTabGate(
 }
 
 /**
+ * The Parent Hub's own entry: checks the PIN and, when it is right, loads the
+ * Hub in the same request. The Hub used to ask twice (check the PIN, then load
+ * the data), which cost a second round trip. The checks are the same ones.
+ */
+export async function openParentHubWithPin(
+  pin: string,
+): Promise<ParentTabPinCheck | (Extract<ParentTabPinCheck, { ok: true }> & { hub: ParentHubLoad })> {
+  const checked = await openParentTabGate(pin);
+  if (!checked.ok) return checked;
+  return { ...checked, hub: await loadParentTabData(checked.pass) };
+}
+
+/**
  * Keeps an open Parent Hub open: a still-valid pass gets a fresh pass and a
  * fresh data grant, so nothing inside the Hub asks for the PIN again. Only
  * works before the current pass expires; leaving or backgrounding the Hub
@@ -417,6 +427,16 @@ export type ParentTabOkItem =
       expiresAt: string;
     }
   | {
+      /** A learner reached the Launchpad parent approval stop (or was told not now). */
+      kind: "launchpad";
+      learnerId: string;
+      childUsername: string;
+      ventureId: string;
+      ventureName: string;
+      requestedAt: string;
+      status: "pending" | "declined";
+    }
+  | {
       kind: "owed";
       childUserId: string;
       childUsername: string;
@@ -433,12 +453,11 @@ export type ParentTabData = {
   messages: never[];
 };
 
-export async function loadParentTabData(
-  pass: string,
-): Promise<
+export type ParentHubLoad =
   | { ok: true; data: ParentTabData }
-  | { ok: false; error: string; locked?: true }
-> {
+  | { ok: false; error: string; locked?: true };
+
+export async function loadParentTabData(pass: string): Promise<ParentHubLoad> {
   const context = await resolveParentContext();
   if (!context?.eligible) {
     return {
@@ -458,10 +477,13 @@ export async function loadParentTabData(
   // Progress is read for active children only: a waiting child's parent
   // hasn't consented, so none of their data reaches the Hub.
   const active = shown.filter((row) => row.account_status === "active");
-  const [payloads, lifetimeLessons, pending] = await Promise.all([
+  const [payloads, lifetimeLessons, pending, launchpadApprovals] = await Promise.all([
     readLearnerProgressPayloads(active.map((row) => row.id)),
     readLifetimeLessonCounts(active.map((row) => String(row.username).trim())),
     listPendingConsentRequestsForParent(),
+    listLaunchpadApprovals(
+      active.map((row) => ({ id: row.id, username: String(row.username).trim() })),
+    ),
   ]);
 
   const linked: ParentTabChildSummary[] = shown.map((row) => {
@@ -508,6 +530,9 @@ export async function loadParentTabData(
       childCohort: request.childCohort,
       expiresAt: request.expiresAt,
     });
+  }
+  for (const request of launchpadApprovals) {
+    needsOk.push({ kind: "launchpad", ...request });
   }
   for (const row of active) {
     const progress = payloads.get(row.id) as { wallet?: unknown } | undefined;

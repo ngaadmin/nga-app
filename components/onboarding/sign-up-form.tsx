@@ -1,5 +1,8 @@
 "use client";
 
+import { WrappingEmailField } from "@/components/onboarding/wrapping-email-field";
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -133,6 +136,7 @@ export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingSession = useMemo(() => readUserSession(), []);
+  const hydrated = useHydrated();
   const consentToken = (searchParams.get("token") ?? "").trim();
   const isParentMaster =
     searchParams.get("role") === "parent_master" && Boolean(consentToken);
@@ -971,7 +975,7 @@ export function SignUpForm() {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+          <CredentialForm className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
               <label
                 htmlFor="signup-username"
@@ -1019,10 +1023,9 @@ export function SignUpForm() {
               >
                 Parent or guardian&apos;s email address
               </label>
-              <input
+              <WrappingEmailField
                 id="signup-parent-email"
                 name="parentEmail"
-                type="email"
                 autoComplete="email"
                 value={parentEmail}
                 readOnly
@@ -1185,6 +1188,7 @@ export function SignUpForm() {
               fullWidth
               disabled={
                 isCreatingParentMaster ||
+                !hydrated ||
                 !termsAccepted ||
                 (isExplorerConsentFlow && !parentalConsentGiven)
               }
@@ -1194,7 +1198,7 @@ export function SignUpForm() {
                 ? "Setting up your account…"
                 : "Create Master Profile"}
             </Button>
-          </form>
+          </CredentialForm>
         </div>
       </section>
     );
@@ -1291,7 +1295,7 @@ export function SignUpForm() {
           </h1>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+        <CredentialForm className="space-y-6" onSubmit={handleSubmit} noValidate>
           {learnerStep === "track" ? (
             <>
               <LearnerTrackCards
@@ -1449,22 +1453,21 @@ export function SignUpForm() {
                     id="signup-parent-email-hint"
                     className="font-sans text-sm font-bold text-purple-700"
                   >
-                    Approval saves your coins. You can keep playing while you wait.
+                    {copyMatrix.onboarding.parentApprovalRequest.parentEmailHint}
                   </p>
-                  <input
+                  <WrappingEmailField
                     id="signup-parent-email"
                     name="parentEmail"
-                    type="email"
                     autoComplete="email"
                     placeholder="parent@example.com"
                     value={parentEmail}
                     onChange={(e) => {
-                      setParentEmail(e.target.value);
+                      setParentEmail(e.target.value.replace(/[\r\n]+/g, ""));
                       clearError("parentEmail");
                     }}
                     aria-invalid={Boolean(errors.parentEmail)}
                     aria-describedby="signup-parent-email-hint"
-                    className={learnerFieldClass}
+                    className={cn(learnerFieldClass, "py-[14px]")}
                   />
                   {errors.parentEmail ? (
                     <p
@@ -1507,6 +1510,7 @@ export function SignUpForm() {
                   fullWidth
                   disabled={
                     isSendingApprovalEmail ||
+                    !hydrated ||
                     (!needsParentApproval && !termsAccepted)
                   }
                   aria-busy={isSendingApprovalEmail || undefined}
@@ -1514,7 +1518,7 @@ export function SignUpForm() {
                   {needsParentApproval
                     ? isSendingApprovalEmail
                       ? "Sending…"
-                      : "Request Parent Approval"
+                      : copyMatrix.onboarding.parentApprovalRequest.submit
                     : isSendingApprovalEmail
                       ? "Creating…"
                       : "Create My Free Account"}
@@ -1534,7 +1538,7 @@ export function SignUpForm() {
               )}
             </div>
           </div>
-        </form>
+        </CredentialForm>
       </div>
     </section>
   );

@@ -139,6 +139,20 @@ These principles govern how we build and extend the codebase:
 
 ---
 
+## Launchpad dog-walking TEST venture (5 Nov 2026)
+
+| Date | Decision | Implementation | Why |
+|------|----------|----------------|-----|
+| 2026-11-05 | Module 1 = Final rows 2–14 as three silvers | Define the business → Set your goals → The Brand (`l1-s1`…`l1-s3`). Handbook column AB is TEST validation only (never built as L2 screens). Loader: `read-framework.ts` + hybrid `dog-walking-load.ts`. | Cath steering; Final sheet is SoT for Module 1 |
+| 2026-11-05 | Building floors 1–6; Budgeting rooftop | Floors: Vision and Goals, Planning, Getting Ready, **Sales**, Delivery, Growing. Level 7 Budgeting outcome kept as draft data only — not a wired floor. | Cath: wire modules 1–6; Budgeting later |
+| 2026-11-05 | Level outcomes = Storybird DRAFT | `SERVICE_LEVEL_OUTCOMES_DRAFT` in `service-level-outcomes.ts` feeds `floor.gold.title`. **Not Cath-approved** — swappable. Status: `default-pending-cath` (D28). | Storybird draft set replaces prior Gold Outcomes strings |
+| 2026-11-05 | The Brand name then logo | Locked seed pickers reorder to Name → Design your logo; answer key stays `l2-s2-identity`; identity silver lives off-floor so Pricing can own `l2-s2`. | Final D/E Revised order (D27) |
+| 2026-11-05 | No Define / Goals wrap-up | Workbook page is The Brand identity wrap only; no gold-completion screen — lift shows Congratulations. | Final has no silver wrap for those silvers (D30) |
+| 2026-11-05 | L2 hybrid | Module 1 from framework xlsx; L2 product doors from bronze tracker (working). Pricing + L3–6 = structure/placeholder from Final titles. | Keep current L2 product screens working |
+
+
+---
+
 ## Deferred / Open Decisions
 
 | Topic | Status | Notes |
@@ -159,4 +173,4 @@ These principles govern how we build and extend the codebase:
 
 ---
 
-*Last updated: 2026-08-03*
+*Last updated: 2026-11-05*

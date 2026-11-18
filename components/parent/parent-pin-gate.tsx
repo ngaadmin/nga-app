@@ -1,15 +1,18 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
 import { requestParentPinReset } from "@/lib/dashboard/parent-pin-reset";
 import {
   createParentPin,
-  getParentPinState,
   openParentTabGate,
   resetParentPinWithPassword,
 } from "@/lib/parent/parent-tab-server";
+import { clearParentPinStateCache, getParentPinStateCached } from "@/lib/parent/pin-state-client";
+import type { ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
 import { cn } from "@/lib/utils/cn";
 
 type Phase = "loading" | "set" | "confirm" | "enter" | "forgot";
@@ -83,6 +86,7 @@ export function ParentPinGate({
   parentName,
   enterBody,
   onUnlocked,
+  openGate = openParentTabGate,
   className,
   headingLevel = "h2",
 }: {
@@ -91,10 +95,14 @@ export function ParentPinGate({
   enterBody?: string;
   /** h1 when the gate is the whole page. */
   headingLevel?: "h1" | "h2";
-  onUnlocked: (pass: string) => void | Promise<void>;
+  /** The pass, plus the whole check result in case `openGate` returned extra. */
+  onUnlocked: (pass: string, result?: ParentTabPinCheck) => void | Promise<void>;
+  /** Checks the PIN. The Parent Hub passes one that also returns its data, saving a round trip. */
+  openGate?: (pin: string) => Promise<ParentTabPinCheck>;
   className?: string;
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
+  const hydrated = useHydrated();
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -110,7 +118,7 @@ export function ParentPinGate({
 
   useEffect(() => {
     let cancelled = false;
-    void getParentPinState().then((state) => {
+    void getParentPinStateCached().then((state) => {
       if (cancelled) return;
       if (!state.ok) {
         setError(state.error);
@@ -229,6 +237,7 @@ export function ParentPinGate({
           resetting.current = false;
           setPassword("");
           hasPin.current = true;
+          clearParentPinStateCache();
           setLockedUntil(null);
           await onUnlocked(reset.pass);
           return;
@@ -240,15 +249,17 @@ export function ParentPinGate({
           return;
         }
         hasPin.current = true;
+        clearParentPinStateCache();
         await onUnlocked(created.pass);
         return;
       }
 
-      const result = await openParentTabGate(pin);
+      const result = await openGate(pin);
       if (result.ok) {
-        await onUnlocked(result.pass);
+        await onUnlocked(result.pass, result);
         return;
       }
+      clearParentPinStateCache();
       setPin("");
       if (result.reason === "locked") {
         setLockedUntil(result.lockedUntil);
@@ -305,7 +316,7 @@ export function ParentPinGate({
   const Heading = headingLevel;
 
   return (
-    <form
+    <CredentialForm
       data-parent-tab-gate={phase}
       onSubmit={submit}
       className={cn(
@@ -367,6 +378,7 @@ export function ParentPinGate({
         data-parent-tab-continue
         disabled={
           busy ||
+          !hydrated ||
           (phase === "forgot"
             ? !password
             : (lockedOut && !resetFlow) || pin.length !== 4)
@@ -432,6 +444,6 @@ export function ParentPinGate({
           {notice}
         </p>
       ) : null}
-    </form>
+    </CredentialForm>
   );
 }

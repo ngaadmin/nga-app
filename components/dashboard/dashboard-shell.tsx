@@ -19,16 +19,30 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { syncLocalSessionWithSupabaseAccount } from "@/lib/onboarding/sync-registered-session";
 import { cn } from "@/lib/utils/cn";
+import { LaunchpadFrameProvider, useLaunchpadFrame } from "@/components/dashboard/launchpad-frame";
 
 type DashboardShellProps = {
   children: React.ReactNode;
 };
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  return (
+    <LaunchpadFrameProvider>
+      <DashboardShellFrame>{children}</DashboardShellFrame>
+    </LaunchpadFrameProvider>
+  );
+}
+
+function DashboardShellFrame({ children }: DashboardShellProps) {
+  const launchpadFrame = useLaunchpadFrame();
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
-  const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
+  // The shop-front home is the Launchpad screen. The hub intro is a separate
+  // first-visit panel and is not part of that screen.
+  const isLaunchpadRoute =
+    pathname === "/dashboard/launchpad" || pathname.startsWith("/dashboard/launchpad/");
+  const hubIntroId = isLessonRoute || isLaunchpadRoute ? null : hubIntroIdFromPathname(pathname);
   const skipOnboardingGate = isDevAcademyDesignShellPath(pathname);
 
   useEffect(() => {
@@ -84,7 +98,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
             "flex min-h-0 flex-1 flex-col overflow-x-hidden",
             isLessonRoute
               ? "overflow-hidden px-0 py-0"
-              : "overflow-y-auto overscroll-y-contain px-4 py-6 pb-[calc(112px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 print:overflow-visible print:p-0",
+              : launchpadFrame
+                ? "overflow-hidden px-0 py-0 pb-[calc(112px+env(safe-area-inset-bottom))] md:pb-6 print:overflow-visible print:p-0"
+                : "overflow-y-auto overscroll-y-contain px-4 py-6 pb-[calc(112px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 print:overflow-visible print:p-0",
           )}
         >
           <DashboardPendingScreen>

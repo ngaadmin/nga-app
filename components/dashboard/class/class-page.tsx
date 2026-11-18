@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DownloadIcon } from "@/lib/dashboard/icons";
@@ -179,6 +181,7 @@ function ClassPasswordRow({
   initiallySaved?: boolean;
 }) {
   const titleId = useId();
+  const hydrated = useHydrated();
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [changing, setChanging] = useState(false);
@@ -191,7 +194,7 @@ function ClassPasswordRow({
   const copiedTimer = useRef<number | null>(null);
   const nextValid = isKidClassPassword(nextPassword);
   const matches = nextPassword.length > 0 && nextPassword === confirmPassword;
-  const canSave = nextValid && matches && !saving;
+  const canSave = nextValid && matches && !saving && hydrated;
   const hint =
     nextPassword.length > 0 && !nextValid
       ? "Use two easy words with a dash, like blue-tiger."
@@ -326,7 +329,7 @@ function ClassPasswordRow({
             role="presentation"
             onClick={closeChange}
           >
-            <form
+            <CredentialForm
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
@@ -421,7 +424,7 @@ function ClassPasswordRow({
               >
                 {saving ? "Saving…" : "Save"}
               </button>
-            </form>
+            </CredentialForm>
           </div>
         </ClientPortal>
       ) : null}

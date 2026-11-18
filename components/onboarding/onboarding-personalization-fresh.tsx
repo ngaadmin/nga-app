@@ -8,7 +8,7 @@ import {
 } from "@/lib/onboarding/guest-session";
 
 /**
- * Clears only the user session so a fresh "Try the Free App" visit
+ * Clears only the user session so a fresh "Try the app" visit
  * shows the track picker again, without wiping wallet, academy, or skill progress.
  *
  * Supports `?fresh=1` and legacy `?guest=1`.

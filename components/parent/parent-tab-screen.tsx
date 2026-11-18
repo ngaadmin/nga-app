@@ -24,9 +24,12 @@ import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
+import type { ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
+import { openParentHubFromBrowser } from "@/lib/parent/hub-open-client";
 import {
   loadParentTabData,
   renewParentTabGatePass,
+  type ParentHubLoad,
   type ParentTabChildSummary,
   type ParentTabData,
   type ParentTabOkItem,
@@ -35,6 +38,10 @@ import { cn } from "@/lib/utils/cn";
 import { HUB_CHILD_PARAM } from "@/lib/parent/cash-rate-return";
 import { HubChildPage } from "@/components/parent/hub-child-page";
 import { ParentHubChildCard } from "@/components/parent/parent-hub-child-card";
+import {
+  LaunchpadApprovalRow,
+  LaunchpadApprovalSheet,
+} from "@/components/parent/launchpad-approval";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 
@@ -110,9 +117,16 @@ export function ParentTabScreen({
 
   /** The server checked the PIN and signed this pass. Memory only. */
   const unlock = useCallback(
-    (gatePass: string) => {
+    (gatePass: string, result?: ParentTabPinCheck) => {
       setPass(gatePass);
       setUnlocked(true);
+      // The Hub's own PIN check returns the Hub data in the same request.
+      const hub = result && result.ok ? (result as { hub?: ParentHubLoad }).hub : undefined;
+      if (hub?.ok) {
+        setLoadError(null);
+        setData(hub.data);
+        return;
+      }
       void refresh(gatePass);
     },
     [refresh],
@@ -177,6 +191,7 @@ export function ParentTabScreen({
             className="mx-0"
             enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to open the Parent Hub.`}
             onUnlocked={unlock}
+            openGate={openParentHubFromBrowser}
           />
         )}
       </div>
@@ -290,6 +305,16 @@ function UnlockedView({
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
   /** Parent ticks the Terms box before approving a child in the app. */
   const [reviewTermsAccepted, setReviewTermsAccepted] = useState(false);
+  /** Launchpad approval sheet: a learner is at the parent approval stop. */
+  const [launchpadReview, setLaunchpadReview] = useState<Extract<
+    ParentTabOkItem,
+    { kind: "launchpad" }
+  > | null>(null);
+  /**
+   * Launchpad answers given here, applied at once so the row clears or turns to
+   * "Not now" without waiting for the Hub to reload. The reload then agrees.
+   */
+  const [launchpadAnswered, setLaunchpadAnswered] = useState<Record<string, "approved" | "declined">>({});
   /** To settle: the parent confirms they paid this amount outside the app. */
   const [settle, setSettle] = useState<Extract<
     ParentTabOkItem,
@@ -493,6 +518,18 @@ function UnlockedView({
     }
   }
 
+  const needsOk = data.needsOk.flatMap((item): ParentTabOkItem[] => {
+    if (item.kind !== "launchpad") return [item];
+    const answered = launchpadAnswered[`${item.learnerId}:${item.ventureId}`];
+    if (answered === "approved") return [];
+    return [answered === "declined" ? { ...item, status: "declined" } : item];
+  });
+
+  /** A "not now" answer stays listed so it can be changed, but is not a to-do. */
+  const todoCount = needsOk.filter(
+    (item) => !(item.kind === "launchpad" && item.status === "declined"),
+  ).length;
+
   return (
     <div data-parent-tab-content>
       <div
@@ -513,7 +550,7 @@ function UnlockedView({
           }
           // Waiting for consent: never opens progress. With an open request
           // the card opens that approval (same sheet as Review).
-          const approval = data.needsOk.find(
+          const approval = needsOk.find(
             (item): item is Extract<ParentTabOkItem, { kind: "approval" }> =>
               item.kind === "approval" && item.requestId === child.requestId,
           );
@@ -551,17 +588,23 @@ function UnlockedView({
             Needs your OK
           </h2>
           <small className="font-sans text-[11.5px] font-semibold text-[#8A5300]">
-            {data.needsOk.length === 0
-              ? "All done"
-              : `${data.needsOk.length} to do`}
+            {todoCount === 0 ? "All done" : `${todoCount} to do`}
           </small>
         </div>
-        {data.needsOk.length === 0 ? (
+        {needsOk.length === 0 ? (
           <p className="pb-2.5 pt-1 font-sans text-[12.5px] text-[#1E3A5F]">
             Nothing needs your OK right now.
           </p>
         ) : (
-          data.needsOk.map((item, index) => (
+          needsOk.map((item, index) =>
+            item.kind === "launchpad" ? (
+              <LaunchpadApprovalRow
+                key={`launchpad-${item.learnerId}-${item.ventureId}`}
+                item={item}
+                first={index === 0}
+                onReview={() => setLaunchpadReview(item)}
+              />
+            ) : (
             <div
               key={
                 item.kind === "approval"
@@ -631,13 +674,27 @@ function UnlockedView({
                 </button>
               )}
             </div>
-          ))
+            ),
+          )
         )}
       </section>
 
       {data.messages.length > 0 ? (
         <MessagesLog messages={data.messages} />
       ) : null}
+
+      <LaunchpadApprovalSheet
+        item={launchpadReview}
+        onClose={() => setLaunchpadReview(null)}
+        onDecided={(status) => {
+          if (launchpadReview) {
+            const key = `${launchpadReview.learnerId}:${launchpadReview.ventureId}`;
+            setLaunchpadAnswered((current) => ({ ...current, [key]: status }));
+          }
+          setLaunchpadReview(null);
+          onChanged();
+        }}
+      />
 
       <ModalShell
         isOpen={Boolean(settle)}

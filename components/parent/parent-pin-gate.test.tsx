@@ -14,6 +14,10 @@ vi.mock("@/lib/parent/parent-tab-server", () => server);
 vi.mock("@/lib/dashboard/parent-pin-reset", () => reset);
 
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
+import { clearParentPinStateCache } from "@/lib/parent/pin-state-client";
+
+// The PIN state now comes from GET /api/parent/pin-state; this stands in for it.
+vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => server.getParentPinState() }));
 
 function pinInput(): HTMLInputElement {
   return document.querySelector("input[type=password]") as HTMLInputElement;
@@ -26,6 +30,7 @@ function typeAndContinue(value: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearParentPinStateCache();
 });
 
 afterEach(() => {

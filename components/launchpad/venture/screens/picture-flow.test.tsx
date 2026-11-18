@@ -1,0 +1,242 @@
+// @vitest-environment jsdom
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
+import { playStoryClipFromGesture, playStoryClipOnMount } from "@/lib/academy/lessons/story-audio/playback";
+import { fieldsAnswer } from "@/lib/launchpad/content/answers";
+import { BUDGETING_SPLIT_ASK, BUDGETING_SPLIT_CONTEXT, BUDGETING_SPLIT_GUIDANCE, BUDGETING_SPLIT_MADE_ASK, BUDGETING_SPLIT_MADE_HELP, BUDGETING_SPLIT_MADE_LABEL } from "@/lib/launchpad/content/budgeting/copy";
+import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
+import { readBudgetSplit, writeBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
+import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
+import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
+import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
+
+vi.mock("@/lib/academy/lessons/story-audio/playback", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/academy/lessons/story-audio/playback")>();
+  return {
+    ...actual,
+    playStoryClipOnScreen: vi.fn(() => Promise.resolve(false)),
+    playStoryClipOnMount: vi.fn(() => Promise.resolve(false)),
+    playStoryClipFromGesture: vi.fn(),
+    stopStoryAudio: vi.fn(),
+    storyAudioElement: vi.fn(() => null),
+    installStoryAudioFallback: vi.fn(() => () => {}),
+    applyMasterMute: (muted: boolean) => {
+      window.localStorage.setItem("nga_master_muted", muted ? "1" : "0");
+    },
+  };
+});
+
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
+
+const screenSpec = budgetingDoor().tasks[0]!.screens[0]!;
+
+function continueButton() {
+  return screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
+}
+
+function releaseContinue() {
+  act(() => {
+    vi.advanceTimersByTime(2000);
+  });
+}
+
+describe("Budgeting picture screens", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("holds Continue for 2 seconds on each Budgeting page, then lets it go", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    expect(continueButton().disabled).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(1999);
+    });
+    expect(continueButton().disabled).toBe(true);
+    releaseContinue();
+    expect(continueButton().disabled).toBe(false);
+    fireEvent.click(continueButton());
+    expect(document.querySelector("[data-picture-page='s2']")).toBeTruthy();
+    expect(continueButton().disabled).toBe(true);
+    releaseContinue();
+    fireEvent.click(continueButton());
+    expect(document.querySelector("[data-picture-page='s3']")).toBeTruthy();
+    expect(continueButton().disabled).toBe(true);
+  });
+
+  it("replays the current page from the start through the shared player", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    expect(playStoryClipFromGesture).toHaveBeenCalledWith("/launchpad/budgeting/l6-s1-vo.mp3");
+    releaseContinue();
+    fireEvent.click(continueButton());
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    expect(playStoryClipFromGesture).toHaveBeenLastCalledWith("/launchpad/budgeting/l6-s2-vo.mp3");
+  });
+
+  it("locks the split only when the four rows add up to 100", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const onFinish = vi.fn();
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={onFinish} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const lock = screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement;
+    expect(document.querySelector("[data-lesson-air='fitted']")?.className).toContain("pb-[30px]");
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect(lock.disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Less Giving" }));
+    expect(screen.getByText("Total 95%")).toBeTruthy();
+    expect(lock.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "More Giving" }));
+    expect(lock.disabled).toBe(false);
+    fireEvent.click(lock);
+    expect(readBudgetSplit()).toEqual([5, 15, 40, 40]);
+    expect(onFinish).toHaveBeenCalled();
+  });
+
+  it("starts at 105 when Giving is 10 and enables the lock after one minus step", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    render(
+      <LaunchpadAnswersProvider
+        value={{
+          iconVentureId: "dog-walking",
+          answers: { "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false) },
+          setAnswer: () => {},
+          floors,
+        }}
+      >
+        <PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />
+      </LaunchpadAnswersProvider>,
+    );
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const lock = screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement;
+    expect(screen.getByText("Total 105%")).toBeTruthy();
+    expect(lock.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Less Emergencies" }));
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect(lock.disabled).toBe(false);
+  });
+
+  it("uses a saved split instead of the Giving default", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    writeBudgetSplit([12, 18, 30, 40]);
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    render(
+      <LaunchpadAnswersProvider
+        value={{
+          iconVentureId: "dog-walking",
+          answers: { "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false) },
+          setAnswer: () => {},
+          floors,
+        }}
+      >
+        <PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />
+      </LaunchpadAnswersProvider>,
+    );
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    expect(screen.getByText("12%")).toBeTruthy();
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("puts the split context, guidance, and question above the first row, in that order", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const editor = document.querySelector("[data-budget-editor]")!;
+    const text = editor.textContent ?? "";
+    const contextAt = text.indexOf(BUDGETING_SPLIT_CONTEXT);
+    const guidanceAt = text.indexOf(BUDGETING_SPLIT_GUIDANCE);
+    const madeAt = text.indexOf(BUDGETING_SPLIT_MADE_ASK);
+    const askAt = text.indexOf(BUDGETING_SPLIT_ASK);
+    const givingAt = text.indexOf("Giving");
+    expect(contextAt).toBeGreaterThanOrEqual(0);
+    expect(contextAt).toBeLessThan(guidanceAt);
+    expect(guidanceAt).toBeLessThan(madeAt);
+    expect(madeAt).toBeLessThan(askAt);
+    expect(askAt).toBeLessThan(givingAt);
+    expect(text).not.toContain("from your sales, so each budget item gets its share");
+    expect(screen.getByRole("textbox", { name: BUDGETING_SPLIT_MADE_LABEL })).toBeTruthy();
+    expect(screen.getByText(BUDGETING_SPLIT_MADE_HELP)).toBeTruthy();
+    expect(document.querySelector("[data-split-dollars='giving']")?.textContent).toBe("$5");
+    expect(document.querySelector("[data-split-dollars='pay']")?.textContent).toBe("$40");
+    const context = editor.querySelector("[data-split-copy='context']")!;
+    expect(context.className).toContain("text-[18px]");
+    expect(context.className).toContain("leading-[26px]");
+    const guidance = [...editor.querySelectorAll("p")].find((node) => node.textContent === BUDGETING_SPLIT_GUIDANCE)!;
+    const ask = [...editor.querySelectorAll("p")].find((node) => node.textContent === BUDGETING_SPLIT_ASK)!;
+    expect(guidance.className).toContain("text-[16px]");
+    expect(ask.className).toContain("text-[21px]");
+    expect(editor.textContent).not.toMatch(/rule of thumb/i);
+  });
+
+  it("shows a payload edit of the money-made prompt and recalculates the jar dollars", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const next = structuredClone(screenSpec);
+    const page = next.pages[3];
+    if (!page?.split) throw new Error("split page missing");
+    page.madeAsk = "A payload sales prompt.";
+    render(<PictureFlow screen={next} onExit={() => {}} onFinish={() => {}} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    expect(screen.getByText("A payload sales prompt.")).toBeTruthy();
+    expect(screen.queryByText(BUDGETING_SPLIT_MADE_ASK)).toBeNull();
+    expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox", { name: page.madeLabel }), { target: { value: "200" } });
+    expect(document.querySelector("[data-split-dollars='giving']")?.textContent).toBe("$10");
+    expect(document.querySelector("[data-split-dollars='emergencies']")?.textContent).toBe("$30");
+    expect(document.querySelector("[data-split-dollars='pay']")?.textContent).toBe("$80");
+    expect(window.localStorage.getItem("lp-venture-test:budget-money-made")).toBe("200");
+  });
+
+  it("keeps the Grok credit off every Budgeting story screen", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    expect(playStoryClipOnMount).toHaveBeenCalledWith("/launchpad/budgeting/l6-s1-vo.mp3");
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
+    const mute = screen.getByRole("button", { name: "Mute sound" });
+    const frame = mute.closest("[data-screen-frame]");
+    expect(frame?.className).toContain("relative");
+    expect(mute.className).toContain("right-2");
+    expect(mute.className).toContain("top-2");
+    expect(mute.getAttribute("aria-pressed")).toBe("false");
+
+    releaseContinue();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-picture-page='s2']")).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
+    expect(screen.getByRole("button", { name: "Mute sound" })).toBeTruthy();
+
+    fireEvent.click(mute);
+    expect(screen.getByRole("button", { name: "Unmute sound" }).getAttribute("aria-pressed")).toBe("true");
+    expect(window.localStorage.getItem(MASTER_MUTED_KEY)).toBe("1");
+
+    releaseContinue();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-picture-page='s3']")).toBeTruthy();
+    expect(screen.queryByText("Voice created with Grok")).toBeNull();
+    expect(screen.getByRole("button", { name: "Unmute sound" })).toBeTruthy();
+  });
+});

@@ -18,6 +18,7 @@ import {
 import { coinWord } from "@/lib/copy/coin-word";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
+import { parentHubUnreadAriaLabel } from "@/lib/parent/parent-hub-unread";
 
 type AcademyMomentumHeaderProps = {
   username: string;
@@ -31,6 +32,8 @@ type AcademyMomentumHeaderProps = {
   trackLabelIsRole?: boolean;
   /** Dot on the avatar when a new medal is waiting in the profile panel. */
   profileHasAttention?: boolean;
+  /** Rose unread dot on a parent avatar. Hidden at 0. */
+  parentHubUnreadCount?: number;
   showCoins?: boolean;
   onProfileClick: () => void;
   onStreakClick: () => void;
@@ -65,6 +68,7 @@ export function AcademyMomentumHeader({
   trackLabel,
   trackLabelIsRole = false,
   profileHasAttention = false,
+  parentHubUnreadCount = 0,
   showCoins = true,
   onProfileClick,
   onStreakClick,
@@ -114,6 +118,7 @@ export function AcademyMomentumHeader({
                   ? trackLabel
                   : `${trackLabel} track`
                 : null,
+              parentHubUnreadAriaLabel(parentHubUnreadCount),
               profileHasAttention ? "New medal earned" : null,
             ]
               .filter(Boolean)
@@ -132,6 +137,15 @@ export function AcademyMomentumHeader({
                 name={username}
                 className="size-8 text-sm ring-2 ring-[#FFA503]"
               />
+              {parentHubUnreadCount > 0 ? (
+                <span
+                  data-parent-hub-unread-dot={parentHubUnreadCount}
+                  className="absolute -left-0.5 -top-0.5 size-2.5 rounded-full bg-[#E11D48] ring-2 ring-white"
+                  aria-label={
+                    parentHubUnreadAriaLabel(parentHubUnreadCount) ?? undefined
+                  }
+                />
+              ) : null}
               {profileHasAttention ? (
                 <span
                   className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[#031F82] ring-2 ring-white"

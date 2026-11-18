@@ -5,9 +5,9 @@ import { useSyncExternalStore } from "react";
 import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { DashboardNavLink } from "@/components/dashboard/dashboard-nav-link";
 import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
-import { dashboardNavItemsFor } from "@/lib/dashboard/dashboard-nav-items";
+import { dashboardNavAudience, dashboardNavItemsFor } from "@/lib/dashboard/dashboard-nav-items";
 import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
-import { useUserSession } from "@/lib/dashboard/use-user-session";
+import { hasSyncedUserSession, useUserSession } from "@/lib/dashboard/use-user-session";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { zLayerStyle } from "@/lib/ui/layers";
 
@@ -41,10 +41,14 @@ export function DashboardNavigation() {
   const parentTab = useParentTabAccess();
   const session = useUserSession();
   /** Same list for the phone bar and the desktop sidebar (see dashboardNavItemsFor). */
+  const sessionReady = hasSyncedUserSession();
   const navItems = dashboardNavItemsFor({
     advancedMoneyUnlocked,
     parentTabEligible: parentTab.eligible,
     isParentProfile: session?.accountRole === "parent_master",
+    audience: sessionReady ? dashboardNavAudience(session) : "guest",
+    accountStatus: session?.accountStatus,
+    sessionReady,
   });
 
   if (isDesktop) {

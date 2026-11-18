@@ -23,10 +23,11 @@ export function dashboardNavAudience(session: UserSession | null): DashboardNavA
 
 /**
  * The one list both the phone bottom bar and the desktop sidebar render, so
- * they can't drift apart. An active child sees Launchpad. A pending or
- * declined child, a parent, a teacher, or a guest does not. A parent sees
- * Academy, Vault, Community, Subscription. Settings and the Parent Hub open
- * from the avatar menu.
+ * they can't drift apart. An active child sees Launchpad. A guest sees a
+ * locked Launchpad tab that does not open the route. A pending or declined
+ * child, a parent, or a teacher does not see the tab. A parent sees Academy,
+ * Vault, Community, Subscription. Settings and the Parent Hub open from the
+ * avatar menu.
  */
 export function dashboardNavItemsFor(options: {
   advancedMoneyUnlocked?: boolean;
@@ -35,6 +36,11 @@ export function dashboardNavItemsFor(options: {
   audience?: DashboardNavAudience;
   /** profiles.account_status, or the session lifecycle value (ACTIVE, …). */
   accountStatus?: string | null;
+  /**
+   * When false, the session has not been read yet, so a locked guest tab is
+   * not shown (avoids a flash for signed-in users). Omit or true otherwise.
+   */
+  sessionReady?: boolean;
 }): DashboardNavLinkItem[] {
   const base = withParentTabNavItem(
     withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
@@ -51,5 +57,10 @@ export function dashboardNavItemsFor(options: {
       accountStatus: options.accountStatus,
     });
   if (showLaunchpad) return items;
+  if (audience === "guest" && options.sessionReady !== false) {
+    return items.map((item) =>
+      item.id === "launchpad" ? { ...item, locked: true } : item,
+    );
+  }
   return items.filter((item) => item.id !== "launchpad");
 }

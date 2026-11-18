@@ -434,7 +434,11 @@ export const copyMatrix = {
     launchpad: {
       title: "Business Launchpad",
       description:
-        "Launch your business. Two starter ventures are free — unlock the rest with Premium.",
+        "Launch your own business, step by step. Start with the Dog Walking business!",
+      guestLocked: {
+        body: "The Business Launchpad is only for signed-up learners. Create an account to start building your own business!",
+        cta: "Create an account",
+      },
     },
     community: {
       title: "Community",

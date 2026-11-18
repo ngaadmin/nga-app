@@ -33,13 +33,11 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
     expect(ids(loading)).toEqual(ids(parent));
   });
 
-  it("keeps Launchpad for a child and hides it from a guest and a teacher", () => {
+  it("keeps Launchpad for a child and hides it from a teacher", () => {
     expect(ids(child)).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
-    const guest = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "guest" });
+    expect(child.find((item) => item.id === "launchpad")?.locked).toBeFalsy();
     const teacher = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "teacher" });
-    expect(ids(guest)).not.toContain("launchpad");
     expect(ids(teacher)).not.toContain("launchpad");
-    expect(ids(guest)).toContain("academy");
     const eligibleNonParent = dashboardNavItemsFor({
       parentTabEligible: true,
       isParentProfile: false,
@@ -66,6 +64,28 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
     expect(ids(pending)).not.toContain("launchpad");
     expect(ids(declined)).not.toContain("launchpad");
     expect(ids(pending)).toContain("academy");
+  });
+
+  it("shows guests a locked Launchpad tab that does not navigate to the route", () => {
+    const guest = dashboardNavItemsFor({
+      parentTabEligible: false,
+      isParentProfile: false,
+      audience: "guest",
+    });
+    const launchpad = guest.find((item) => item.id === "launchpad");
+    expect(ids(guest)).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
+    expect(launchpad?.locked).toBe(true);
+    expect(launchpad?.href).toBe("/dashboard/launchpad");
+  });
+
+  it("hides Launchpad until the session is ready, so signed-in users do not see a guest lock flash", () => {
+    const loading = dashboardNavItemsFor({
+      parentTabEligible: false,
+      isParentProfile: false,
+      audience: "guest",
+      sessionReady: false,
+    });
+    expect(ids(loading)).not.toContain("launchpad");
   });
 
   it("highlights nothing for the parent on Hub and Settings pages", () => {

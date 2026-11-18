@@ -41,12 +41,14 @@ export function DashboardNavigation() {
   const parentTab = useParentTabAccess();
   const session = useUserSession();
   /** Same list for the phone bar and the desktop sidebar (see dashboardNavItemsFor). */
+  const sessionReady = hasSyncedUserSession();
   const navItems = dashboardNavItemsFor({
     advancedMoneyUnlocked,
     parentTabEligible: parentTab.eligible,
     isParentProfile: session?.accountRole === "parent_master",
-    audience: hasSyncedUserSession() ? dashboardNavAudience(session) : "guest",
+    audience: sessionReady ? dashboardNavAudience(session) : "guest",
     accountStatus: session?.accountStatus,
+    sessionReady,
   });
 
   if (isDesktop) {

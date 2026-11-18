@@ -310,6 +310,22 @@ describe("lesson page production guard", () => {
       expect(loadExplorerM1Payload).not.toHaveBeenCalled();
     });
   });
+
+  it("stays on the database path when the master-payload flag is on", async () => {
+    await withEnv(
+      {
+        ACADEMY_MASTER_PAYLOAD: "1",
+        NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD: "1",
+      },
+      async () => {
+        const page = asElement(await openModuleOne());
+        expect(propsOf(page)["data-lesson-source"]).toBe("current");
+        expect(loadMasterLessonTrio).toHaveBeenCalledWith(1, 1, { draft: undefined });
+        expect(loadBundledLessonPayload).not.toHaveBeenCalled();
+        expect(loadExplorerM1Payload).not.toHaveBeenCalled();
+      },
+    );
+  });
 });
 
 describe("lesson 1 map intro", () => {

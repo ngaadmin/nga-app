@@ -5,6 +5,7 @@ import { storyClipDurationLabel } from "@/lib/academy/lessons/story-audio/next-c
 import {
   installStoryAudioFallback,
   playStoryClipFromGesture,
+  playStoryClipOnMount,
   playStoryClipOnScreen,
   stopStoryAudio,
   storyAudioElement,
@@ -17,6 +18,13 @@ type StoryAudioPlayerProps = {
   preloadSrc?: string;
   /** The footer is taller when a credit sits above Next. */
   aboveCredit?: boolean;
+  /**
+   * Launchpad footer row. Academy beats leave this unset and keep the floating pill.
+   * The replay marker is only on this row, so Academy replay stays on main's gesture path.
+   */
+  inline?: boolean;
+  /** Call play() as soon as this screen is showing, before a gesture. */
+  immediate?: boolean;
 };
 
 /**
@@ -24,7 +32,7 @@ type StoryAudioPlayerProps = {
  * A beat plays when it opens, after the lesson tap has unlocked sound.
  * Sound on or off is the master switch, not a control on this pill.
  */
-export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: StoryAudioPlayerProps) {
+export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false, inline = false, immediate = false }: StoryAudioPlayerProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -38,9 +46,13 @@ export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: Stor
   }, []);
 
   useEffect(() => {
+    if (immediate) {
+      void playStoryClipOnMount(clip?.src);
+      return;
+    }
     if (!ready) return;
     void playStoryClipOnScreen(clip?.src);
-  }, [clip?.src, ready]);
+  }, [clip?.src, ready, immediate]);
 
   const replay = () => {
     if (!clip?.src) return;
@@ -48,6 +60,31 @@ export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: Stor
   };
 
   const lengthLabel = clip ? storyClipDurationLabel(clip.durationMs) : null;
+
+  if (inline) {
+    return (
+      <>
+        {preloadSrc ? <link rel="preload" as="audio" href={preloadSrc} /> : null}
+        {clip ? (
+          <div data-story-player="" className="relative mb-2 flex justify-center">
+            <div className="flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-sm ring-1 ring-[#031F82]/10">
+              <button
+                type="button"
+                data-story-replay=""
+                onClick={replay}
+                className="font-sans text-[16px] font-semibold leading-[23px] text-[#031F82]"
+              >
+                Replay
+              </button>
+              {lengthLabel ? (
+                <span className="font-sans text-[16px] font-medium leading-[23px] text-[#5A6A99]">{lengthLabel}</span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <>

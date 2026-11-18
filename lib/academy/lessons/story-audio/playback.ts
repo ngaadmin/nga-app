@@ -169,6 +169,18 @@ export function createStoryPlayback(sink: StoryAudioSink) {
       }
       return beginPlay(src, false, false);
     },
+    /**
+     * Try play() as soon as the screen is on screen, even before a gesture.
+     * A rejection leaves the clip blocked so the next tap can start it.
+     */
+    playOnMount(src: string | undefined, muted: boolean): Promise<boolean> {
+      if (!src) {
+        stop();
+        return Promise.resolve(false);
+      }
+      if (muted) return silence(src);
+      return beginPlay(src, false, true);
+    },
     resumeBlocked(muted: boolean): Promise<boolean> {
       if (!blocked || !activeSrc) return Promise.resolve(false);
       if (muted) return silence(activeSrc);
@@ -302,6 +314,17 @@ export function playStoryClipOnScreen(src: string | undefined): Promise<boolean>
   return active.playOnScreen(src, readMasterMuted());
 }
 
+/**
+ * Start the clip the moment its screen is showing. Calls play() even when no
+ * gesture has unlocked sound yet. If the browser rejects that play, the clip
+ * stays blocked and the next tap starts it.
+ */
+export function playStoryClipOnMount(src: string | undefined): Promise<boolean> {
+  const active = session();
+  if (!active) return Promise.resolve(false);
+  return active.playOnMount(src, readMasterMuted());
+}
+
 export function isStoryAudioUnlocked(): boolean {
   return session()?.isUnlocked() ?? false;
 }
@@ -309,7 +332,10 @@ export function isStoryAudioUnlocked(): boolean {
 /** Hard refresh onto a beat: the first tap or key starts the clip that was blocked. */
 export function installStoryAudioFallback(): () => void {
   if (typeof document === "undefined") return () => {};
-  const onGesture = () => {
+  const onGesture = (event: Event) => {
+    const target = event.target;
+    // Replay handles its own gesture. A second play() here aborts that one.
+    if (target instanceof Element && target.closest("[data-story-replay]")) return;
     const active = session();
     if (!active) return;
     if (active.isBlocked()) {

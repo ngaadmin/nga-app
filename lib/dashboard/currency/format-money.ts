@@ -17,6 +17,15 @@ export function formatMoney(
   }).format(Math.max(0, amount));
 }
 
+/** Workbook amounts: whole dollars, unless the cents are not zero. */
+export function formatWorkbookMoney(
+  amount: number,
+  currencyCode: SupportedCurrencyCode = DEFAULT_CURRENCY_CODE,
+): string {
+  const cents = Math.abs(Math.round(amount * 100) % 100);
+  return cents === 0 ? formatWholeMoney(amount, currencyCode) : formatMoney(amount, currencyCode);
+}
+
 /** Vault balances / totals — whole dollars only (no cents). */
 export function formatWholeMoney(
   amount: number,

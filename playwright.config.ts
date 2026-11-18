@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 3000;
+// PLAYWRIGHT_PORT lets a run reuse a dev server on another port (default 3000).
+const port = Number(process.env.PLAYWRIGHT_PORT) || 3000;
 const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({

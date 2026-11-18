@@ -5,6 +5,7 @@ import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-
 import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { loadLaunchpadVenture } from "@/lib/launchpad/content/fetch-published";
+import { seedContentSource } from "@/lib/launchpad/content/content-sources";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import { LAUNCHPAD_VENTURE_ID_RE } from "@/lib/launchpad/content/check-payload";
 import {
@@ -43,6 +44,7 @@ export const metadata: Metadata = {
  *   open silver (so `l2-s1` opens Level 2 with "Build your identity" current).
  * - `?level=<n>` (e.g. `?level=2`) marks every floor below n complete and
  *   lands in Level n's corridor.
+ * - `?source=seed` reads the bundled seed instead of the database (test route only).
  * - `?iconSet=<venture id>` (e.g. `friendship-bracelets`) shows that
  *   business's icon set in the logo picker, for ventures not yet in the app.
  * The shortcuts use `?venture=<id>` when given, otherwise the dog-walking
@@ -62,6 +64,7 @@ export default async function TestLaunchpadVenturePage({
     complete?: string;
     level?: string;
     iconSet?: string;
+    source?: string;
     cohort?: string;
     templates?: string;
     sheet?: string;
@@ -77,7 +80,17 @@ export default async function TestLaunchpadVenturePage({
   if (ventureId && !VENTURE_BLUEPRINTS.some((v) => v.id === ventureId)) notFound();
   const ventureTitles = Object.fromEntries(VENTURE_BLUEPRINTS.map((v) => [v.id, v.title]));
   const ids = [...new Set([...liveVentureIds(), ...(ventureId ? [ventureId] : [])])];
-  const loads = await Promise.all(ids.map((id) => loadLaunchpadVenture(id, { draft: params.draft })));
+  // `?source=seed` reads the bundled content built from this branch's code. Use it
+  // when the published database version was made for an older build. This route is
+  // already 404 in production, so the seed can never reach the live app this way.
+  const loads = await Promise.all(
+    ids.map((id) =>
+      loadLaunchpadVenture(id, {
+        draft: params.draft,
+        ...(params.source === "seed" ? { source: seedContentSource } : {}),
+      }),
+    ),
+  );
   const ventures: Record<string, LaunchpadVentureView> = Object.fromEntries(
     ids.map((id, i) => {
       const load = loads[i]!;

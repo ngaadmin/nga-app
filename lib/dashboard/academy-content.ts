@@ -12,7 +12,7 @@ export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
 
 /** Short sub-headers shown under each module title. */
 export const ACADEMY_MODULE_DESCRIPTIONS: Record<AcademyLevelId, string> = {
-  1: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+  1: "Stop the behaviors and beliefs that keep people stuck in scarcity",
   2: "Create real cash so money stops being theoretical",
   3: "Stop leakage and install a personal operating system",
   4: "Make surplus capital start working",

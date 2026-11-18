@@ -31,7 +31,7 @@ export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
   {
     levelId: 1,
     title: "Control Your Spending",
-    subtitle: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+    subtitle: "Stop the behaviors and beliefs that keep people stuck in scarcity",
     theme: "Awareness",
     isAdvancedCohortOnly: false,
   },
@@ -46,7 +46,7 @@ export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
     levelId: 3,
     title: "Be the boss of your money",
     subtitle: "Stop leakage and install a personal operating system",
-    theme: "Organise",
+    theme: "Organize",
     isAdvancedCohortOnly: false,
   },
   {

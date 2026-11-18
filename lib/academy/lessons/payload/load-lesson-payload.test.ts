@@ -768,7 +768,7 @@ describe("lesson payload loader", () => {
         },
         {
           event: "There's a sale at the game store",
-          benefit: "I can buy my favourite game now",
+          benefit: "I can buy my favorite game now",
         },
       ],
     });

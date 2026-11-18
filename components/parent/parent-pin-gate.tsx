@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
@@ -95,6 +97,7 @@ export function ParentPinGate({
   className?: string;
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
+  const hydrated = useHydrated();
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -305,7 +308,7 @@ export function ParentPinGate({
   const Heading = headingLevel;
 
   return (
-    <form
+    <CredentialForm
       data-parent-tab-gate={phase}
       onSubmit={submit}
       className={cn(
@@ -367,6 +370,7 @@ export function ParentPinGate({
         data-parent-tab-continue
         disabled={
           busy ||
+          !hydrated ||
           (phase === "forgot"
             ? !password
             : (lockedOut && !resetFlow) || pin.length !== 4)
@@ -432,6 +436,6 @@ export function ParentPinGate({
           {notice}
         </p>
       ) : null}
-    </form>
+    </CredentialForm>
   );
 }

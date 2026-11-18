@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useMemo, useState, type FormEvent } from "react";
 import { CommunityChallengesPanel } from "@/components/community/community-challenges-panel";
 import { ClassPage } from "@/components/dashboard/class/class-page";
@@ -191,6 +193,7 @@ function downloadStrippedChildFile() {
 
 function ParentFlowPreview() {
   const pinHash = useMemo(() => hashCredential(PREVIEW_PIN), []);
+  const hydrated = useHydrated();
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -209,7 +212,7 @@ function ParentFlowPreview() {
 
   if (!open) {
     return (
-      <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
+      <CredentialForm onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
         <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your parent PIN</h1>
         <p className="font-sans text-sm text-[#1E3A5F]">
           This page shows your child&apos;s data. It is view only until you confirm a delete.
@@ -230,12 +233,12 @@ function ParentFlowPreview() {
         ) : null}
         <button
           type="submit"
-          disabled={!isFourDigitPin(pin)}
+          disabled={!isFourDigitPin(pin) || !hydrated}
           className="h-12 rounded-2xl border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white disabled:opacity-40"
         >
           Continue
         </button>
-      </form>
+      </CredentialForm>
     );
   }
 

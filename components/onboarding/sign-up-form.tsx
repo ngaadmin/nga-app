@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -133,6 +135,7 @@ export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingSession = useMemo(() => readUserSession(), []);
+  const hydrated = useHydrated();
   const consentToken = (searchParams.get("token") ?? "").trim();
   const isParentMaster =
     searchParams.get("role") === "parent_master" && Boolean(consentToken);
@@ -971,7 +974,7 @@ export function SignUpForm() {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+          <CredentialForm className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
               <label
                 htmlFor="signup-username"
@@ -1185,6 +1188,7 @@ export function SignUpForm() {
               fullWidth
               disabled={
                 isCreatingParentMaster ||
+                !hydrated ||
                 !termsAccepted ||
                 (isExplorerConsentFlow && !parentalConsentGiven)
               }
@@ -1194,7 +1198,7 @@ export function SignUpForm() {
                 ? "Setting up your account…"
                 : "Create Master Profile"}
             </Button>
-          </form>
+          </CredentialForm>
         </div>
       </section>
     );
@@ -1291,7 +1295,7 @@ export function SignUpForm() {
           </h1>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+        <CredentialForm className="space-y-6" onSubmit={handleSubmit} noValidate>
           {learnerStep === "track" ? (
             <>
               <LearnerTrackCards
@@ -1507,6 +1511,7 @@ export function SignUpForm() {
                   fullWidth
                   disabled={
                     isSendingApprovalEmail ||
+                    !hydrated ||
                     (!needsParentApproval && !termsAccepted)
                   }
                   aria-busy={isSendingApprovalEmail || undefined}
@@ -1534,7 +1539,7 @@ export function SignUpForm() {
               )}
             </div>
           </div>
-        </form>
+        </CredentialForm>
       </div>
     </section>
   );

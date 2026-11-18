@@ -1,5 +1,7 @@
 "use client";
 
+import { CredentialForm } from "@/components/ui/credential-form";
+import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useState } from "react";
 import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
@@ -29,6 +31,7 @@ const TRACK_REQUIRED = "Pick the learning track for this profile.";
 
 export function TeacherSignUpForm() {
   const [classCohort, setClassCohort] = useState<MasteryCohort | null>(null);
+  const hydrated = useHydrated();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -94,7 +97,7 @@ export function TeacherSignUpForm() {
               account.
             </p>
           ) : (
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <CredentialForm className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <CohortTrackField
               legend="Your class's learning track"
               hint="Pick the track for your class. You can change it until you add students."
@@ -179,11 +182,11 @@ export function TeacherSignUpForm() {
               type="submit"
               variant="cta"
               fullWidth
-              disabled={isSubmitting || !termsAccepted}
+              disabled={isSubmitting || !termsAccepted || !hydrated}
             >
               {isSubmitting ? "Creating…" : "Create account"}
             </Button>
-          </form>
+          </CredentialForm>
           )}
           <p className="mt-6 text-center">
             <PrivacyPolicyLink />

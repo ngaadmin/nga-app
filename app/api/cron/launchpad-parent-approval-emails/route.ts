@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Hourly job for the Launchpad Level 4 parent approval emails. Vercel Cron calls
+ * Daily job for the Launchpad Level 4 parent approval emails. Vercel Cron calls
  * GET with the CRON_SECRET bearer token. It sends the one reminder, 24 hours
  * after the request email, to a parent who has not answered, and retries a
  * request email that failed. The reminder is claimed with a marker on the

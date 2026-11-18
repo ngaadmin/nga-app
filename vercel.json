@@ -9,7 +9,7 @@
     },
     {
       "path": "/api/cron/launchpad-parent-approval-emails",
-      "schedule": "15 * * * *"
+      "schedule": "0 17 * * *"
     }
   ]
 }

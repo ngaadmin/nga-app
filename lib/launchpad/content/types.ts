@@ -676,11 +676,13 @@ export type LaunchpadDeliveryScreen = TaskScreenBase & {
       askBefore: string;
     askAfter: string;
     askOptions: readonly DeliveryOption[];
-    trackerLine: string;
+    /** Absent when that sentence is not on this screen. */
+    trackerLine?: string;
     whenBefore: string;
     whenAfter: string;
     whenOptions: readonly DeliveryOption[];
-    note: string;
+    /** Absent when that sentence is not on this screen. */
+    note?: string;
   };
   record?: {
     emptyLabel: string;

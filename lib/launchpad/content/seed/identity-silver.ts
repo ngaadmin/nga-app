@@ -111,7 +111,7 @@ export function identitySilver(): LaunchpadSilver {
               heading: "Choose a font",
               prompt: "Pick the lettering for your name.",
               options: [
-                { id: "poppins-bold", label: "Bold" },
+                { id: "alfa-slab-one", label: "Bold" },
                 { id: "fredoka-semibold", label: "Rounded" },
                 { id: "pacifico", label: "Script" },
               ],

@@ -90,9 +90,9 @@ describe("workbook page 1, the cover", () => {
       [IDENTITY_ANSWER_KEY]: { ...ID, font: "poppins-bold", nameColor: "logo", color: "#FFA503" } as never,
     });
     const bold = q("[data-cover-name='filled'] [data-business-name]") as HTMLElement;
-    expect(bold.getAttribute("data-name-font")).toBe("poppins-bold");
-    expect(bold.className).toContain(NAME_FONT_CLASS["poppins-bold"]);
-    expect(parseFloat(bold.style.fontSize)).toBe(21);
+    expect(bold.getAttribute("data-name-font")).toBe("alfa-slab-one");
+    expect(bold.className).toContain(NAME_FONT_CLASS["alfa-slab-one"]);
+    expect(parseFloat(bold.style.fontSize)).toBe(24);
     expect(bold.style.color).toBe(rgb("#FFA503"));
   });
 

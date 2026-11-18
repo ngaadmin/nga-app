@@ -112,6 +112,7 @@ export const SERVICE_CATALOGS: readonly ServiceCatalog[] = [
     packages: chips(["15-minute walk", "30-minute walk", "45-minute walk", "60-minute walk"]),
     extras: [
       ...chips(["Photo updates", "Treats"]),
+      { id: "feeding", label: "Feeding" },
       { id: "solo-walk-one-dog", label: "Walk one dog only" },
       { id: "play-session", label: "Extra play time" },
     ],

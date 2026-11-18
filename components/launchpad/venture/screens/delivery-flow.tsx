@@ -242,9 +242,9 @@ function WrapScreens({
         <>
           <InlinePick before={copy.askPayBefore} after={copy.askPayAfter} value={askPay} emptyLabel={copy.emptyLabel} options={copy.askPayOptions} onChange={setAskPay} />
           <InlinePick before={copy.askBefore} after={copy.askAfter} value={ask} emptyLabel={copy.emptyLabel} options={copy.askOptions} onChange={setAsk} />
-          <Replay before={copy.trackerLine} value="" after="" />
+          {copy.trackerLine ? <Replay before={copy.trackerLine} value="" after="" /> : null}
           <InlinePick before={copy.whenBefore} after={copy.whenAfter} value={when} emptyLabel={copy.emptyLabel} options={copy.whenOptions} onChange={setWhen} />
-          <p className={LESSON_HINT}>{copy.note}</p>
+          {copy.note ? <p className={LESSON_HINT}>{copy.note}</p> : null}
         </>
       ) : null}
     </Shell>

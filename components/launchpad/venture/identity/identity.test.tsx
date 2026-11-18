@@ -13,6 +13,7 @@ import {
   contrastRatio,
   parseBusinessIdentityAnswer,
   resolveNameColor,
+  resolvedNameFont,
   setIdentityField,
   type BusinessIdentityAnswer,
   type LaunchpadAnswers,
@@ -83,7 +84,7 @@ describe("The Brand seed (D26/D27)", () => {
     expect(NAME_INK_HEX).toBe("#111C3A");
     // Light blue, orange and pale olive are approved below 3:1 on white; navy and ink are strong.
     for (const hex of ["#1D3F9A", NAME_INK_HEX]) expect(contrastRatio(hex, "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
-    expect(choices.fonts.map((f) => f.id)).toEqual(["poppins-bold", "fredoka-semibold", "pacifico"]);
+    expect(choices.fonts.map((f) => f.id)).toEqual(["alfa-slab-one", "fredoka-semibold", "pacifico"]);
     expect(choices.nameColors.map((c) => c.id)).toEqual(["logo", "ink"]);
     expect(choices.nameMaxLength).toBe(24);
   });
@@ -157,6 +158,14 @@ describe("business name", () => {
 
   it("the parser trims and caps a stored name", () => {
     expect(parseBusinessIdentityAnswer({ ...FULL, name: `  ${"B".repeat(30)}  ` })?.name).toHaveLength(24);
+  });
+
+  it("maps a saved Bold font onto Alfa Slab One", () => {
+    const saved = parseBusinessIdentityAnswer({ ...FULL, font: "poppins-bold" } as unknown);
+    expect(saved?.font).toBe("alfa-slab-one");
+    expect(resolvedNameFont("poppins-bold")).toBe("alfa-slab-one");
+    expect(resolvedNameFont("alfa-slab-one")).toBe("alfa-slab-one");
+    expect(resolvedNameFont("pacifico")).toBe("pacifico");
   });
 });
 

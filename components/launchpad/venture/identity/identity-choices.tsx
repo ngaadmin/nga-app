@@ -6,6 +6,7 @@ import type { LaunchpadPickerOption } from "@/lib/launchpad/content/types";
 import {
   LOGO_PREVIEW_BASE,
   NAME_INK_HEX,
+  resolvedNameFont,
   type BusinessIdentityAnswer,
   type IdentityField,
   type LogoIconId,
@@ -188,6 +189,7 @@ export function NameInput({
 }) {
   const value = answer.name ?? "";
   const count = Array.from(value).length;
+  const face = answer.font ? NAME_FONT_CLASS[resolvedNameFont(answer.font)] : "font-sans";
   return (
     <div className="flex flex-col">
       <label htmlFor={id} className={visibleLabel ? "mb-2 text-[18px] font-medium text-[#374151]" : "sr-only"}>
@@ -202,7 +204,7 @@ export function NameInput({
         autoComplete="off"
         aria-describedby={`${id}-count`}
         onChange={(e) => update("name", e.target.value)}
-        className="h-[54px] w-full rounded-xl bg-white px-4 font-sans text-[18px] font-medium leading-[26px] text-[#111827] shadow-[inset_0_0_0_1.5px_#E5E7EB] outline-none placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_1.5px_#3FB7DA]"
+        className={`h-[54px] w-full rounded-xl bg-white px-4 text-[18px] font-medium leading-[26px] text-[#111827] shadow-[inset_0_0_0_1.5px_#E5E7EB] outline-none placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_1.5px_#3FB7DA] ${face}`}
         style={{ caretColor: IDENTITY_ACCENT }}
       />
       <span id={`${id}-count`} className="mt-[7px] self-end text-[16px] text-[#9CA3AF]" aria-live="polite">
@@ -250,7 +252,7 @@ export function FontChoices({
   return (
     <div role="radiogroup" aria-label={labelledBy ? undefined : "Name font"} aria-labelledby={labelledBy}>
       {options.map((o) => {
-        const on = answer.font === o.id;
+        const on = answer.font !== undefined && resolvedNameFont(answer.font) === o.id;
         return (
           <button
             key={o.id}

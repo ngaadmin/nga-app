@@ -4,6 +4,7 @@ import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import { identityAnswerOf, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { resolvedNameFont } from "@/lib/launchpad/content/identity";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import {
@@ -118,7 +119,8 @@ export function Handbook({
   backLabel?: string;
 }) {
   const s = useSurfaceCopy();
-  const nameFont = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.font;
+  const savedFont = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.font;
+  const nameFont = savedFont ? resolvedNameFont(savedFont) : undefined;
   const pages = scopeLevel != null
     ? handbookScopePages(progress, floors, scopeLevel)
     : initialLevel == null
@@ -201,6 +203,16 @@ export function Handbook({
           title={s.workbook.introHeading}
           onBack={onClose}
           footer={<LessonContinue onClick={dismissIntro} />}
+          decoration={
+            <img
+              src="/launchpad/workbook/workbook-icon-512.png"
+              alt=""
+              width={260}
+              height={260}
+              data-workbook-intro-art=""
+              className="pointer-events-none absolute inset-x-0 bottom-[132px] mx-auto h-auto w-[260px]"
+            />
+          }
         >
           <ContextScreen screen={{ id: "workbook-intro", type: "context", context: s.workbook.introContext, guidance: s.workbook.introGuidance }} />
         </LessonSurface>

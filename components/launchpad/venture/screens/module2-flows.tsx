@@ -40,7 +40,7 @@ function Chip({
 }) {
   if (lined) {
     return (
-      <button type="button" aria-pressed={selected} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-left text-[18px] text-[#19347D]">
+      <button type="button" aria-pressed={selected} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-1.5 text-left text-[18px] text-[#19347D]">
         <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] text-[18px] text-white ${selected ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>{selected ? "✓" : ""}</span>
         {label}
       </button>
@@ -127,7 +127,7 @@ export function OfferLoopFlow({
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
       <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
-      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-6" data-offer-scroll="">
+      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-2" data-offer-scroll="">
         <p className={LESSON_HINT}>
           {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? s.offer.thisService)}
         </p>
@@ -138,7 +138,7 @@ export function OfferLoopFlow({
               {(offering.addons.length > 0 || offering.addonsExtra) && ` ${s.offer.extrasLead} ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
             </p>
             <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
-              <ScreenPrompt tone="section" flush>{screen.copy.packagesHeading}</ScreenPrompt>
+              <ScreenPrompt tone="section" flush>{screen.copy.packagesHeading.split("{service}").join(service?.label ?? s.offer.thisService)}</ScreenPrompt>
               <p className={LESSON_HINT}>{screen.copy.packagesHint}</p>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -227,12 +227,14 @@ export function CustomerCheckFlow({
     }
   }
   const [step, setStep] = useState<0 | 1>(0);
-  const [draft, setDraft] = useState<CustomerAnswer>(() => saved ?? { kind: "customer", version: 1, numberAsked: 3, yesNo: "yes", interests: [] });
+  const [draft, setDraft] = useState<CustomerAnswer>(() => saved ?? { kind: "customer", version: 1, yesNo: "yes", interests: [] });
   const write = (next: CustomerAnswer) => {
     setDraft(next);
     persist(screen.answerKey, next);
   };
   const times = draft.times ?? [];
+  const asked = draft.numberAsked;
+  const countReady = typeof asked === "number" && asked >= 1 && asked <= 20;
   const interestsReady = draft.interests.length > 0;
   const timesReady = times.length > 0 || !!draft.timesExtra?.trim();
   const sentence = screen.sentence.split(/(\{number\}|\{product\}|\{yesNo\})/g);
@@ -242,13 +244,13 @@ export function CustomerCheckFlow({
       onBack={() => (step === 1 ? setStep(0) : onExit())}
       footer={
         <LessonContinue
-          disabled={step === 0 ? !interestsReady : !timesReady}
+          disabled={step === 0 ? !(interestsReady && countReady) : !timesReady || !countReady}
           onClick={() => {
             if (step === 0) {
-              if (interestsReady) setStep(1);
+              if (interestsReady && countReady) setStep(1);
               return;
             }
-            if (timesReady) onFinish({ ...draft, times: times.filter(isAvailabilitySlot) });
+            if (timesReady && countReady && draft.numberAsked !== undefined) onFinish({ ...draft, numberAsked: draft.numberAsked, times: times.filter(isAvailabilitySlot) });
           }}
         />
       }
@@ -266,10 +268,16 @@ export function CustomerCheckFlow({
                       appearance="inline"
                       idPrefix={screen.id}
                       field={{ name: "numberAsked", label: s.offer.numberAsked, input: "integer", min: 1, max: 20 }}
-                      value={draft.numberAsked}
+                      value={draft.numberAsked ?? ""}
                       onChange={(value) => {
+                        if (value === "") {
+                          const next = { ...draft };
+                          delete next.numberAsked;
+                          write(next);
+                          return;
+                        }
                         const n = typeof value === "number" ? value : Number(value);
-                        if (n >= 1 && n <= 20) write({ ...draft, numberAsked: n });
+                        if (Number.isInteger(n) && n >= 1 && n <= 20) write({ ...draft, numberAsked: n });
                       }}
                     />
                   );
@@ -411,7 +419,6 @@ export function CompetitorFlow({
     const base: CompetitorAnswer = saved ?? {
       kind: "competitor",
       version: 1,
-      walkersChecked: 3,
       priceLow: 12,
       priceHigh: 20,
       addons: [],
@@ -456,7 +463,8 @@ export function CompetitorFlow({
   };
   const blockedIdeas = new Set(ADDON_IDEA_BLOCKS.filter((pair) => draft.addons.includes(pair.addonId)).map((pair) => pair.ideaId));
   const ideaReady = !blockedIdeas.has(draft.doDifferently) && (draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim());
-  const ready = extras ? ideaReady : priceReady(row);
+  const walkersReady = typeof draft.walkersChecked === "number" && draft.walkersChecked >= 1 && draft.walkersChecked <= 20;
+  const ready = extras ? ideaReady && walkersReady : priceReady(row) && (page === 0 ? walkersReady : true);
   return (
     <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={extras ? "extras" : service?.serviceId}>
       {extras ? <AnchorDoodle name="paw" size={128} /> : null}
@@ -472,7 +480,7 @@ export function CompetitorFlow({
             {page === 0 ? (
               <p className={`mt-3 ${LESSON_BODY}`}>
                 {s.competitor.iChecked}{" "}
-                <input aria-label={s.competitor.walkersChecked} inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
+                <input aria-label={s.competitor.walkersChecked} inputMode="numeric" value={draft.walkersChecked === undefined ? "" : String(draft.walkersChecked)} onChange={(event) => { const digits = event.target.value.replace(/\D/g, "").slice(0, 2); if (!digits) { const next = { ...draft }; delete next.walkersChecked; write(next); return; } const n = Number(digits); if (n >= 1 && n <= 20) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
                 {" "}{s.competitor.checkedWalkers}
               </p>
             ) : null}

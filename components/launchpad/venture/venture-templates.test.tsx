@@ -142,6 +142,55 @@ describe("bronze doors", () => {
     expect(screen.getAllByText(/^Door \d$/)).toHaveLength(n);
   });
 
+  it("shows a payload edit of Up next and Locked on doors and corridor plaques", () => {
+    const copy = {
+      ...LAUNCHPAD_SURFACE_COPY,
+      chrome: { ...LAUNCHPAD_SURFACE_COPY.chrome, upNext: "Your turn", locked: "Not open yet" },
+    };
+    render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <BronzeDoors
+          level={7}
+          silverTitle="Level Up"
+          bronzes={[
+            { id: "reflect", title: "Reflect", state: "current" },
+            { id: "improve", title: "Improve", state: "locked" },
+          ]}
+          onBuilding={noop}
+          onCorridor={noop}
+          onOpenBronze={noop}
+        />
+      </SurfaceCopyProvider>,
+    );
+    expect(screen.getByText("Your turn")).toBeTruthy();
+    expect(screen.getByText("Not open yet")).toBeTruthy();
+    expect(screen.queryByText("Up next")).toBeNull();
+    expect(screen.queryByText("Locked")).toBeNull();
+    cleanup();
+    render(
+      <SurfaceCopyProvider value={copy as typeof LAUNCHPAD_SURFACE_COPY}>
+        <FloorTemplate
+          floorType="corridor"
+          level={2}
+          floorName="Planning"
+          goal="Price the work."
+          entering={false}
+          silvers={[
+            { id: "a", title: "The product and its buyers", state: "done" },
+            { id: "b", title: "Pricing", state: "current" },
+            { id: "c", title: "Funding", state: "locked" },
+          ]}
+          onBack={noop}
+          onOpenSilver={noop}
+        />
+      </SurfaceCopyProvider>,
+    );
+    expect(screen.getByText("Done")).toBeTruthy();
+    expect(screen.getByText("Your turn")).toBeTruthy();
+    expect(screen.getByText("Not open yet")).toBeTruthy();
+    expect(screen.queryByText("Tap to start")).toBeNull();
+  });
+
   it("Pricing placeholder doors show the Final titles, all locked", () => {
     const titles = [
       "Know your cost",

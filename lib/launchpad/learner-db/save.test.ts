@@ -5,7 +5,7 @@ import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-shee
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { launchpadLearnerSaveEnabled } from "@/lib/launchpad/learner-db/flag";
 import { mergeLaunchpadLearnerSnapshot, type LaunchpadLearnerSnapshot } from "@/lib/launchpad/learner-db/merge";
-import { answerRowsForSave, ventureRowForSave, ventureRowWithoutFullProgress } from "@/lib/launchpad/learner-db/rows";
+import { answerRowsForSave, locateAnswerTask, ventureRowForSave, ventureRowWithoutFullProgress } from "@/lib/launchpad/learner-db/rows";
 import {
   flushLaunchpadLearnerSave,
   hydrateLaunchpadLearnerProgress,
@@ -401,6 +401,43 @@ describe("completed task answer status", () => {
     });
     expect(rows.find((item) => item.answer_key === "my_why")).toBeUndefined();
   });
+});
+
+describe("completed answers of every stored type save as done", () => {
+  const completeCases: Array<[string, string, LaunchpadAnswers[string]]> = [
+    ["l1-offer", "business_offer", { kind: "selection", version: 1, selected: ["walks"] }],
+    ["l1-why", "my_why", { kind: "ranking", version: 1, order: ["a", "b", "c", "d", "e"], notApplicable: [] }],
+    ["l1-cause", "my_cause", { kind: "selection", version: 1, selected: ["animals"] }],
+    ["l1-goal-be-my-own-boss", "goal_be_my_own_boss", { kind: "selection", version: 1, selected: ["freedom"] }],
+    ["l1-goal-support-a-cause", "goal_support_cause", { kind: "fields", version: 1, values: { donatePercent: 10 } }],
+    ["l1-goal-other", "goal_other", { kind: "fields", version: 1, values: { goalText: "Save for a bike" } }],
+  ];
+
+  for (const [appKey, dbKey, answer] of completeCases) {
+    it(`${dbKey}: done once its task is complete, available before`, () => {
+      const where = locateAnswerTask(floors, appKey);
+      expect(where).not.toBeNull();
+      const taskId = where?.taskId ?? "";
+      const finished = answerRowsForSave({
+        userId: USER,
+        learnerVentureId: "row-1",
+        progress: progress([taskId], { [appKey]: answer }),
+        floors,
+        completedAt: "2026-11-18T12:00:00.000Z",
+      }).find((item) => item.answer_key === dbKey);
+      expect(finished?.status).toBe("done");
+      expect(finished?.completed_at).toBe("2026-11-18T12:00:00.000Z");
+      const early = answerRowsForSave({
+        userId: USER,
+        learnerVentureId: "row-1",
+        progress: progress([], { [appKey]: answer }),
+        floors,
+        completedAt: "2026-11-18T12:00:00.000Z",
+      }).find((item) => item.answer_key === dbKey);
+      expect(early?.status).toBe("available");
+      expect(early?.completed_at).toBeNull();
+    });
+  }
 });
 
 describe("venture row level cap", () => {

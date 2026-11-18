@@ -137,7 +137,8 @@ export type OfferAnswer = {
 export type CustomerAnswer = {
   kind: "customer";
   version: 1;
-  numberAsked: number;
+  /** Absent until the learner types it. The screen starts empty. */
+  numberAsked?: number;
   yesNo: "yes" | "no";
   interests: readonly string[];
   interestExtra?: string;
@@ -155,7 +156,8 @@ export type CompetitorServicePrice = {
 export type CompetitorAnswer = {
   kind: "competitor";
   version: 1;
-  walkersChecked: number;
+  /** Absent until the learner types it. The screen starts empty. */
+  walkersChecked?: number;
   jobComparedId?: string;
   jobComparedExtra?: string;
   priceLow: number;
@@ -918,17 +920,24 @@ export function parseOfferAnswer(value: unknown): OfferAnswer | null {
   };
 }
 
+function countedAsk(value: unknown, max: number): number | undefined | null {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > max) return null;
+  return value;
+}
+
 export function parseCustomerAnswer(value: unknown): CustomerAnswer | null {
   if (!isRecord(value) || value.kind !== "customer" || value.version !== 1) return null;
   if (value.yesNo !== "yes" && value.yesNo !== "no") return null;
-  if (typeof value.numberAsked !== "number" || !Number.isInteger(value.numberAsked) || value.numberAsked < 1 || value.numberAsked > 20) return null;
+  const numberAsked = countedAsk(value.numberAsked, 20);
+  if (numberAsked === null) return null;
   const interestExtra = optText(value.interestExtra, 80);
   const times = idGroup(value.times).filter(isAvailabilitySlot);
   const timesExtra = optText(value.timesExtra, 80);
   return {
     kind: "customer",
     version: 1,
-    numberAsked: value.numberAsked,
+    ...(numberAsked !== undefined ? { numberAsked } : {}),
     yesNo: value.yesNo,
     interests: idGroup(value.interests),
     ...(interestExtra ? { interestExtra } : {}),
@@ -961,7 +970,8 @@ function parseServicePrices(value: unknown): CompetitorServicePrice[] | undefine
 
 export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
   if (!isRecord(value) || value.kind !== "competitor" || value.version !== 1) return null;
-  if (typeof value.walkersChecked !== "number" || !Number.isInteger(value.walkersChecked) || value.walkersChecked < 1 || value.walkersChecked > 10) return null;
+  const walkersChecked = countedAsk(value.walkersChecked, 20);
+  if (walkersChecked === null) return null;
   const low = wholePrice(value.priceLow);
   const high = wholePrice(value.priceHigh);
   if (low === null || high === null || high < low) return null;
@@ -975,7 +985,7 @@ export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
   return {
     kind: "competitor",
     version: 1,
-    walkersChecked: value.walkersChecked,
+    ...(walkersChecked !== undefined ? { walkersChecked } : {}),
     ...(jobId ? { jobComparedId: jobId } : {}),
     ...(jobExtra ? { jobComparedExtra: jobExtra } : {}),
     priceLow: low,

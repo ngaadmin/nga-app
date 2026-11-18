@@ -107,7 +107,7 @@ describe("Level 5 Delivery", () => {
     fireEvent.change(screen.getByRole("combobox", { name: edited.wrap!.askBefore.trim() }), { target: { value: "how-went" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Keep the payment private.")).toBeTruthy();
-    expect(screen.queryByText(spec.wrap!.note)).toBeNull();
+    expect(screen.queryByText("Take payment with a parent or trusted adult nearby, and keep customer details private.")).toBeNull();
     fireEvent.change(screen.getByRole("combobox", { name: edited.wrap!.whenBefore.trim() }), { target: { value: "same-evening" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onFinish.mock.calls[0]?.[0]).toEqual({
@@ -194,7 +194,8 @@ describe("Level 5 Delivery", () => {
     const note = document.querySelector("[data-record-note]");
     expect(note?.className).toContain("pr-[120px]");
     expect(note?.textContent).toContain("No real money");
-    expect(screen.getByText(/in my workbook/).closest("[data-record-note]")).toBeNull();
+    expect(screen.getByText(/in My order tracker\./)).toBeTruthy();
+    expect(screen.queryByText(/in my workbook/)).toBeNull();
     expect(screen.getByText("$15").className).toContain("font-semibold");
     expect(screen.getByText("A$")).toBeTruthy();
     expect(screen.queryByText(spec.record!.paidPrefix)).toBeNull();

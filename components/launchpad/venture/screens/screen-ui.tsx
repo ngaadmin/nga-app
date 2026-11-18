@@ -250,7 +250,7 @@ export function LessonSurface({
 }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const frame = (
-    <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-lesson-surface="">
+    <section className="relative flex min-h-0 flex-1 flex-col bg-white" data-lesson-surface="" data-screen-frame="">
       {showMute ? <MasterMuteButton /> : null}
       <LessonTopBar title={title} onBack={onBack} progress={progress} progressClassName={progressClassName} />
       <div className={`min-h-0 flex-1 overflow-y-auto px-5 [&>:first-child]:mt-0 [&>:first-child>:first-child]:mt-0 ${air === "roomy" ? "pt-10 pb-4" : air === "fitted" ? "pt-0 pb-[30px]" : air === "plain" ? "pt-0 pb-2" : "pt-5 pb-4"}`} data-lesson-air={air}>{children}</div>

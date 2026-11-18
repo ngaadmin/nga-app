@@ -2,7 +2,7 @@
 
 import { useSurfaceCopy } from "@/components/launchpad/venture/surface-copy";
 import type { ReactNode } from "react";
-import { resolveNameColor } from "@/lib/launchpad/content/identity";
+import { resolveNameColor, resolvedNameFont } from "@/lib/launchpad/content/identity";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
@@ -16,7 +16,7 @@ function PaperIdentity({ businessName }: { businessName: string }) {
   const { answer } = useIdentityAnswer(IDENTITY_ANSWER_KEY);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
   const name = answer.name || businessName;
-  const nameFont = answer.font ?? "poppins-bold";
+  const nameFont = resolvedNameFont(answer.font);
   if (!hasLogo && !name) return null;
   return (
     <div className="mb-3 flex items-center gap-2" data-paper-identity="">

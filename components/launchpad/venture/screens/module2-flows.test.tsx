@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { selectionAnswer } from "@/lib/launchpad/content/answers";
+import { parseCompetitorAnswer, selectionAnswer } from "@/lib/launchpad/content/answers";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { customerScreen, competitorScreen, offerLoopScreen } from "@/lib/launchpad/content/planning/screens";
 import { CustomerCheckFlow, CompetitorFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
@@ -20,7 +20,10 @@ describe("Decide what to sell chips", () => {
       />,
     );
     expect(screen.getByRole("heading", { name: "Dog walking" })).toBeTruthy();
-    expect(screen.getByText("Services").className).toContain("text-[#0CC1E0]");
+    const serviceHeading = screen.getAllByText("Dog walking").find((node) => node.className.includes("text-[#0CC1E0]"));
+    expect(serviceHeading).toBeTruthy();
+    expect(screen.queryByText("Services")).toBeNull();
+    expect(screen.getByRole("button", { name: "Feeding" })).toBeTruthy();
     expect(screen.getByText("Pick at least 1").className).toContain("text-[#4A5568]");
     expect(screen.getByText("Extras").className).toContain("text-[18px]");
     expect(screen.getByText("Optional").className).toContain("text-[16px]");
@@ -28,7 +31,7 @@ describe("Decide what to sell chips", () => {
     const extra = screen.getByRole("button", { name: "Add another extra" });
     const offerScroll = document.querySelector("[data-offer-scroll]");
     expect(offerScroll?.contains(extra)).toBe(true);
-    expect(offerScroll?.className).toContain("pb-6");
+    expect(offerScroll?.className).toContain("pb-2");
     expect(screen.getByRole("button", { name: "Walk one dog only" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Extra play time" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Solo walk (one dog only)" })).toBeNull();
@@ -85,6 +88,39 @@ describe("Decide what to sell chips", () => {
 });
 
 describe("Research what competitors offer", () => {
+  it("accepts up to 20 walkers, the same cap as people asked", () => {
+    const base = {
+      kind: "competitor" as const,
+      version: 1 as const,
+      priceLow: 10,
+      priceHigh: 20,
+      doDifferently: "walk-one-dog-at-a-time",
+      jobComparedId: "30-minute-walk",
+      addons: [],
+    };
+    expect(parseCompetitorAnswer({ ...base, walkersChecked: 20 })?.walkersChecked).toBe(20);
+    expect(parseCompetitorAnswer({ ...base, walkersChecked: 21 })).toBeNull();
+    render(
+      <CompetitorFlow
+        screen={competitorScreen()}
+        answers={{
+          "l2-offer": {
+            kind: "offer",
+            version: 1,
+            offerings: [{ serviceId: "dog-walking", packages: ["30-minute-walk"], addons: [] }],
+            availability: [],
+          },
+        }}
+      />,
+    );
+    const walkers = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    fireEvent.change(walkers, { target: { value: "20" } });
+    expect(walkers.value).toBe("20");
+    fireEvent.change(walkers, { target: { value: "21" } });
+    expect(walkers.value).toBe("20");
+  });
+
+
   it("shows the plain-language extra and leaves Walk one dog at a time", () => {
     render(
       <CompetitorFlow
@@ -99,8 +135,12 @@ describe("Research what competitors offer", () => {
         }}
       />,
     );
+    const counted = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    expect(counted.value).toBe("");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(counted, { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("option", { name: "Walk one dog only" })).toBeTruthy();
     expect((document.querySelector("[data-scribble-large='paw']") as HTMLElement).style.width).toBe("128px");
@@ -120,6 +160,7 @@ describe("Research what competitors offer", () => {
       },
     }} />);
     fireEvent.change(screen.getByRole("textbox", { name: "Average price 30-minute walk" }), { target: { value: "15" } });
+    fireEvent.change(screen.getByLabelText("Walkers checked"), { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("option", { name: "A payload addon label" })).toBeTruthy();
     expect(screen.queryByRole("option", { name: "Walk one dog only" })).toBeNull();
@@ -144,7 +185,10 @@ describe("Research what competitors offer", () => {
         onFinish={onFinish}
       />,
     );
-    expect(screen.getByLabelText("Walkers checked")).toBeTruthy();
+    const walkers = screen.getByLabelText("Walkers checked") as HTMLInputElement;
+    expect(walkers.value).toBe("");
+    fireEvent.change(walkers, { target: { value: "2" } });
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     const walks = screen.getByRole("combobox", { name: "My competitors all offer" });
     expect(within(walks).getByRole("option", { name: "15-minute walk" })).toBeTruthy();
     expect(within(walks).getByRole("option", { name: "30-minute walk" })).toBeTruthy();
@@ -188,8 +232,12 @@ describe("Know who your customers are", () => {
     expect(screen.getByRole("heading", { name: "Know who your customers are" })).toBeTruthy();
     expect(screen.getByText("From what you offer")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Weekdays" })).toBeNull();
+    const asked = screen.getByLabelText("Number of people asked") as HTMLInputElement;
+    expect(asked.value).toBe("");
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "30-minute walk" }));
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(asked, { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("When did your customers want walks?")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(true);

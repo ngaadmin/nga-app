@@ -119,7 +119,7 @@ export function SetPriceFlow({
         progress={{ index: 1, total: 2 }}
         showMute={narrating}
         creditSlot
-        aboveFooter={narrating && screen.audio ? <StoryAudioPlayer inline clip={screen.audio} /> : null}
+        aboveFooter={narrating && screen.audio ? <StoryAudioPlayer immediate inline clip={screen.audio} /> : null}
         footer={<LessonContinue disabled={!introReady} onClick={() => { stopStoryAudio(); setIntro(false); }} />}
       >
         <div data-task-screen="set-price" data-price-page="intro">

@@ -1,4 +1,4 @@
-import { Fredoka, Pacifico, Poppins } from "next/font/google";
+import { Alfa_Slab_One, Fredoka, Pacifico } from "next/font/google";
 import type { NameFontId } from "@/lib/launchpad/content/identity";
 
 /*
@@ -6,7 +6,7 @@ import type { NameFontId } from "@/lib/launchpad/content/identity";
  * identity components (the class names are applied to the name text alone;
  * nothing here touches the app-wide font variables).
  */
-const poppinsBold = Poppins({ weight: "700", subsets: ["latin"], display: "swap" });
+const alfaSlabOne = Alfa_Slab_One({ weight: "400", subsets: ["latin"], display: "swap" });
 const fredokaSemiBold = Fredoka({ weight: "600", subsets: ["latin"], display: "swap" });
 /**
  * Workbook section headings. Cath may switch this to "600".
@@ -18,7 +18,7 @@ export const FREDOKA_HEADING_CLASS = fredokaHeading.className;
 const pacifico = Pacifico({ weight: "400", subsets: ["latin"], display: "swap" });
 
 export const NAME_FONT_CLASS: Record<NameFontId, string> = {
-  "poppins-bold": poppinsBold.className,
+  "alfa-slab-one": alfaSlabOne.className,
   "fredoka-semibold": fredokaSemiBold.className,
   pacifico: pacifico.className,
 };
@@ -29,13 +29,13 @@ export const NAME_FONT_CLASS: Record<NameFontId, string> = {
  * stays at 24px or more, the large-text size for regular weight.
  */
 export const NAME_FONT_MIN_PX: Record<NameFontId, number> = {
-  "poppins-bold": 19,
+  "alfa-slab-one": 24,
   "fredoka-semibold": 19,
   pacifico: 24,
 };
 
 export const NAME_FONT_LINE_HEIGHT: Record<NameFontId, number> = {
-  "poppins-bold": 1.2,
+  "alfa-slab-one": 1.2,
   "fredoka-semibold": 1.2,
   pacifico: 1.45,
 };

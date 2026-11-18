@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import styles from "@/components/launchpad/venture-test/venture-test.module.css";
-import { BackCrumb, BTN_LIFT, BTN_ROOFTOP, CheckIcon, Heading, LockIcon, TICK_COLOR } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BackCrumb, BTN_LIFT, BTN_ROOFTOP, CheckIcon, Heading, TICK_COLOR } from "@/components/launchpad/venture-test/venture-test-ui";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
+import { ComeBackMarker, MilestoneMark } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
@@ -21,17 +21,9 @@ function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; 
         : "bg-[#eef2f6] text-[#8a9bb0]";
   const body = (
     <>
-      <span className="block font-heading text-base font-bold">
-        {label}
-        {state === "locked" && (
-          <>
-            {" "}
-            <LockIcon size={13} />
-          </>
-        )}
-      </span>
-      <span className="mt-0.5 block text-xs font-medium opacity-95">
-        {state === "current" ? s.chrome.tapToStart : state === "done" ? s.chrome.tapToReview : s.chrome.tapToLookInside}
+      <span className="block font-heading text-base font-bold">{label}</span>
+      <span className="mt-1.5 block" data-milestone-state={state}>
+        <MilestoneMark state={state} />
       </span>
       {(["top", "bottom"] as const).flatMap((v) =>
         (["left", "right"] as const).map((h) => (

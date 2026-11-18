@@ -64,7 +64,7 @@ export function levelUpContent(): LaunchpadLevelUpContent {
         { id: "two-months", label: "two months", months: 2, period: "two months" },
         { id: "three-months", label: "three months", months: 3, period: "three months" },
       ],
-      closerHeadline: "See you in {period}.",
+      closerHeadline: "Your quarterly business review",
       closerContext: "The goals you just set each have their own timeline. It's also good practice to review your whole business every three months. This review is separate from those goal check-ins.",
       calendarNote: "NextGenAchiever$ check-in: review what worked, what to fix, and where to grow.",
       checkIn: "Your next check-in: {date}",

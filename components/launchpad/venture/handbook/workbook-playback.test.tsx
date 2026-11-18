@@ -59,9 +59,9 @@ describe("Typical week playback", () => {
       [JOBS_COVER_ANSWER_KEY]: jobs,
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain("3 Dog walking");
-    expect(text).toContain("a week.");
-    expect(text).toContain("Keep $43.80");
+    expect(text).toContain("In a typical week, I'll do 3 Dog walking jobs.");
+    expect(text).toContain("I keep $43.80 a week.");
+    expect(text).toContain("That's about 2 weeks to cover my $80 start-up costs.");
     expect(text).not.toContain("Keep $0");
   });
 
@@ -83,8 +83,8 @@ describe("Typical week playback", () => {
       [JOBS_COVER_ANSWER_KEY]: jobs,
     });
     const text = document.body.textContent ?? "";
-    expect(text).toContain("3 Dog walking + 1 Dog training");
-    expect(text).toContain("Keep $68.25");
+    expect(text).toContain("In a typical week, I'll do 3 Dog walking jobs and 1 Dog training job.");
+    expect(text).toContain("I keep $68.25 a week.");
     expect(text).not.toContain("Keep $0");
   });
 });
@@ -130,6 +130,32 @@ describe("What others offer playback", () => {
     );
     expect(screen.getByText("cheaper than the rest")).toBeTruthy();
     expect(document.body.textContent).not.toContain("lower than others");
+  });
+});
+
+describe("What others offer count sentence", () => {
+  it("uses I checked only when averages are saved, and the range line otherwise", () => {
+    renderPages({
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      [SET_PRICE_ANSWER_KEY]: price("lower than"),
+      [COMPETITOR_ANSWER_KEY]: competitor(["solo-walk-one-dog-only"]),
+    });
+    const range = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(range).toContain("3 other dog walkers charge $10 to $20. They often include");
+    expect(range).not.toContain("I checked");
+    cleanup();
+    const withOffers = {
+      ...competitor(["solo-walk-one-dog-only"]),
+      servicePrices: [{ serviceId: "dog-walking", offers: ["15-minute-walk"], averages: { "15-minute-walk": 12 } }],
+    } as unknown as CompetitorAnswer;
+    renderPages({
+      "l1-offer": selectionAnswer(["dog-walking"]),
+      [SET_PRICE_ANSWER_KEY]: price("lower than"),
+      [COMPETITOR_ANSWER_KEY]: withOffers,
+    });
+    const averages = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(averages).toContain("I checked 3 other dog walkers.");
+    expect(averages).not.toContain("other dog walkers charge");
   });
 });
 

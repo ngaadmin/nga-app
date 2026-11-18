@@ -240,16 +240,17 @@ export function floorState(
   return level === currentLevel(progress, floors) ? "current" : "locked";
 }
 
-/** Plaque states on a floor: done ones first, one current, the rest locked. */
+/**
+ * Plaque states on a floor: done ones first, then the first not-done (Up next),
+ * then locked. Every level uses this order, including floors the test route
+ * can enter early.
+ */
 export function silverStates(
   progress: VentureTestProgress,
   floors: readonly VentureTestFloor[],
   floor: VentureTestFloor,
 ): NodeState[] {
   const open = floorState(progress, floors, floor.level) !== "locked";
-  if (open && ventureTestDoorsUnlocked(floor.level)) {
-    return floor.silvers.map((s) => (isSilverDone(progress, s) ? "done" : "current"));
-  }
   let seenCurrent = false;
   return floor.silvers.map((s) => {
     if (isSilverDone(progress, s)) return "done";
@@ -285,7 +286,8 @@ export function pricingBronzeStates(progress: VentureTestProgress, silver: Ventu
 export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true, independent = false): NodeState[] {
   // A door left open ("Come back") stays current and does not block the next door.
   // A placeholder beside real doors stays locked and does not gate the next door.
-  // `independent` opens every built door at once. The test route uses it for Sales and Delivery.
+  // `independent` opens every built door at once. The corridors do not use it:
+  // the first not-done door is Up next and the doors after it stay locked.
   let blocked = false;
   return silver.bronzes.map((b) => {
     if (skippedPlaceholder(silver, b)) return "locked";

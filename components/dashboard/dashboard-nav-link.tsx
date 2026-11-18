@@ -2,15 +2,13 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   useDashboardNavPending,
   useDashboardPendingHref,
 } from "@/components/dashboard/dashboard-nav-pending";
-import { LaunchpadGuestLockedModal } from "@/components/dashboard/launchpad/launchpad-guest-locked-modal";
 import type { DashboardNavLinkItem } from "@/lib/dashboard/navigation";
 import { isNavItemActive } from "@/lib/dashboard/navigation";
-import { LockIcon } from "@/lib/dashboard/icons";
 import { TACTILE_PRESS } from "@/lib/dashboard/styles";
 import { cn } from "@/lib/utils/cn";
 
@@ -26,7 +24,6 @@ type NavLinkFaceProps = {
   variant: "sidebar" | "bottom";
   denseLabel: boolean;
   isActive: boolean;
-  locked?: boolean;
 };
 
 function NavLinkFace({
@@ -34,7 +31,6 @@ function NavLinkFace({
   variant,
   denseLabel,
   isActive,
-  locked = false,
 }: NavLinkFaceProps) {
   const { pending } = useLinkStatus();
   const pendingHref = useDashboardPendingHref();
@@ -64,7 +60,7 @@ function NavLinkFace({
       >
         <span
           className={cn(
-            "relative flex h-[30px] w-[52px] items-center justify-center rounded-full",
+            "flex h-[30px] w-[52px] items-center justify-center rounded-full",
             // Direction A: bold orange pill on the selected tab; the icon's
             // duotone fill turns soft peach so it still reads on orange.
             highlighted
@@ -73,9 +69,6 @@ function NavLinkFace({
           )}
         >
           <Icon className="size-6 shrink-0" />
-          {locked ? (
-            <LockIcon className="absolute -right-0.5 -bottom-0.5 size-3 text-nga-primary" />
-          ) : null}
         </span>
         <span
           className={cn(
@@ -103,14 +96,11 @@ function NavLinkFace({
     >
       <span
         className={cn(
-          "relative flex shrink-0",
+          "flex shrink-0",
           highlighted ? "[--tab-icon-fill:#FFE7B8]" : "[--tab-icon-fill:#BDE9FB]",
         )}
       >
         <Icon className="size-6 shrink-0" />
-        {locked ? (
-          <LockIcon className="absolute -right-1 -bottom-1 size-3 text-nga-primary" />
-        ) : null}
       </span>
       <span className="min-w-0 leading-tight">{item.label}</span>
     </span>
@@ -123,7 +113,6 @@ export function DashboardNavLink({
   denseLabel = false,
 }: DashboardNavLinkProps) {
   const pathname = usePathname();
-  const [lockOpen, setLockOpen] = useState(false);
   const isActive = item.matchesPath
     ? item.matchesPath(pathname)
     : isNavItemActive(pathname, item.href);
@@ -134,33 +123,6 @@ export function DashboardNavLink({
     if (alreadyOnHref || (isActive && item.id !== "settings")) {
       event.preventDefault();
     }
-  }
-
-  if (item.locked) {
-    return (
-      <>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded={lockOpen}
-          aria-label={item.label}
-          onClick={() => setLockOpen(true)}
-          className={variant === "bottom" ? "flex min-w-0" : "block w-full"}
-        >
-          <NavLinkFace
-            item={item}
-            variant={variant}
-            denseLabel={denseLabel}
-            isActive={false}
-            locked
-          />
-        </button>
-        <LaunchpadGuestLockedModal
-          isOpen={lockOpen}
-          onClose={() => setLockOpen(false)}
-        />
-      </>
-    );
   }
 
   return (

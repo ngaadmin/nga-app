@@ -38,6 +38,7 @@ import {
 } from "@/lib/launchpad/venture-test/venture-test-storage";
 import { VentureTestShell } from "@/components/launchpad/venture-test/venture-test-shell";
 import { VentureBuilding, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
+import { GuestExplorePrompt } from "@/components/launchpad/venture-test/guest-explore-prompt";
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 import { FloorTemplate } from "@/components/launchpad/venture/floor-templates";
 import { BronzeDoors } from "@/components/launchpad/venture/bronze-doors";
@@ -221,6 +222,7 @@ export function VentureFlow({
   openBronze: openBronzeRequested = null,
   openSilverWorkbook: openSilverWorkbookRequested = null,
   live = false,
+  guest: guestRequested = false,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -247,7 +249,14 @@ export function VentureFlow({
    * shortcuts, resets, draft jumps, and the test shell.
    */
   live?: boolean;
+  /**
+   * Guest on the signed-in route (live only). They see the shop front and can
+   * play Level 1 with progress kept on the device. Finishing Level 1 or
+   * opening Level 2 asks them to create an account. Never set for a learner.
+   */
+  guest?: boolean;
 }) {
+  const guest = live && guestRequested;
   const initialVentureId = live ? null : requestedVentureId;
   const reset = live ? false : resetRequested;
   const shortcut = live ? null : shortcutRequested;
@@ -341,11 +350,22 @@ export function VentureFlow({
     );
   };
 
-  const go = useCallback((next: View) => {
-    setHandbook(null);
-    setView(next);
-    window.scrollTo({ top: 0 });
-  }, []);
+  const [guestPromptOpen, setGuestPromptOpen] = useState(false);
+  const guestFinishShown = useRef(false);
+
+  const go = useCallback(
+    (next: View) => {
+      // A guest stays on Level 1. Level 2 and above, the lift and the rooftop ask for an account instead.
+      if (guest && ((next.screen === "corridor" || next.screen === "doors" || next.screen === "workbook") ? next.level >= 2 : next.screen === "lift" || next.screen === "rooftop")) {
+        setGuestPromptOpen(true);
+        return;
+      }
+      setHandbook(null);
+      setView(next);
+      window.scrollTo({ top: 0 });
+    },
+    [guest],
+  );
 
   const openVenture = useCallback(
     (id: string) => {
@@ -473,10 +493,11 @@ export function VentureFlow({
   }, [stopActive, ventureId, stopAttempt]);
 
   useEffect(() => {
-    if (!live || visitRecorded.current || view.screen !== "home" || !inProgress || !ventures["dog-walking"]?.ok) return;
+    // A guest is not counted as a learner visit.
+    if (!live || guest || visitRecorded.current || view.screen !== "home" || !inProgress || !ventures["dog-walking"]?.ok) return;
     visitRecorded.current = true;
     recordUsageEvent("launchpad_visit");
-  }, [live, view.screen, inProgress, ventures]);
+  }, [live, guest, view.screen, inProgress, ventures]);
 
   useEffect(() => {
     if (!live) return;
@@ -523,6 +544,23 @@ export function VentureFlow({
     }, LIFT_MS);
     return () => window.clearTimeout(t);
   }, [view, go, ventureId, progress, remember]);
+
+  // A guest who has finished Level 1 and is back on its corridor is asked once to create an account.
+  const guestLevelOneFloor = guest && ventureId ? ventures[ventureId] : undefined;
+  const guestLevelOneDone =
+    guestLevelOneFloor?.ok && progress
+      ? (() => {
+          const first = guestLevelOneFloor.payload.floors.find((f) => f.level === 1);
+          return first ? isFloorDone(progress, first) : false;
+        })()
+      : false;
+  useEffect(() => {
+    if (!guest || guestFinishShown.current || !guestLevelOneDone || handbook) return;
+    if (view.screen !== "corridor" || view.level !== 1) return;
+    guestFinishShown.current = true;
+    setGuestPromptOpen(true);
+  }, [guest, guestLevelOneDone, handbook, view]);
+  const guestPrompt = guest ? <GuestExplorePrompt isOpen={guestPromptOpen} onClose={() => setGuestPromptOpen(false)} /> : null;
 
   if (view.screen === "home") {
     const dogWalking = ventures["dog-walking"];
@@ -595,6 +633,7 @@ export function VentureFlow({
             );
           })()
         : null}
+      {guestPrompt}
       </SurfaceCopyProvider>
     );
   }
@@ -1214,6 +1253,7 @@ export function VentureFlow({
       </div>,
       view.screen === "workbook" || view.screen === "rooftop",
     )}
+    {guestPrompt}
     </SurfaceCopyProvider>
   );
 }

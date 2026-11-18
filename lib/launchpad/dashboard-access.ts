@@ -53,3 +53,23 @@ export async function launchpadViewerIsParent(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * True when no Auth user is on this request: a guest trying the app (guest
+ * play lives in the browser only) or a visitor with no session. They may look
+ * around the Launchpad and play Level 1; the page asks them to create an
+ * account to go further. A signed-in pending or declined child, a teacher, or
+ * anyone with a profile that is not an active learner or a parent is not a
+ * guest and keeps the redirect.
+ */
+export async function launchpadViewerIsGuest(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return !user;
+  } catch {
+    return false;
+  }
+}

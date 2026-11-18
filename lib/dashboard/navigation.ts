@@ -28,11 +28,6 @@ export type DashboardNavLinkItem = {
   shortLabel?: string;
   /** Optional exact route matcher — use when sibling paths share a prefix. */
   matchesPath?: (pathname: string) => boolean;
-  /**
-   * When true the tab opens a lock message instead of navigating.
-   * Used for guests on Launchpad; they must not reach the href.
-   */
-  locked?: boolean;
 };
 
 export type DashboardNavItem = DashboardNavLinkItem & {

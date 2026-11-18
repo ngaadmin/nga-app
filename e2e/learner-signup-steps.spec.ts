@@ -162,7 +162,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
 
   for (const viewport of WIDTHS) {
@@ -194,7 +194,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/signup-375-C-maverick.png",
@@ -215,7 +215,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await page.setViewportSize({ width: 375, height: 667 });
   await page.screenshot({
@@ -296,7 +296,7 @@ test("age flag decides the parent step and guest play never asks for a year", as
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   expect(page.url()).not.toContain("2010");
 
@@ -314,7 +314,7 @@ test("age flag decides the parent step and guest play never asks for a year", as
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Request Parent Approval" }),
+    page.getByRole("button", { name: "Send to my parent" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Create My Free Account" }),

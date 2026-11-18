@@ -1,5 +1,6 @@
 "use client";
 
+import { WrappingEmailField } from "@/components/onboarding/wrapping-email-field";
 import { CredentialForm } from "@/components/ui/credential-form";
 import { useHydrated } from "@/lib/ui/use-hydrated";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1022,10 +1023,9 @@ export function SignUpForm() {
               >
                 Parent or guardian&apos;s email address
               </label>
-              <input
+              <WrappingEmailField
                 id="signup-parent-email"
                 name="parentEmail"
-                type="email"
                 autoComplete="email"
                 value={parentEmail}
                 readOnly
@@ -1455,20 +1455,19 @@ export function SignUpForm() {
                   >
                     Approval saves your coins. You can keep playing while you wait.
                   </p>
-                  <input
+                  <WrappingEmailField
                     id="signup-parent-email"
                     name="parentEmail"
-                    type="email"
                     autoComplete="email"
                     placeholder="parent@example.com"
                     value={parentEmail}
                     onChange={(e) => {
-                      setParentEmail(e.target.value);
+                      setParentEmail(e.target.value.replace(/[\r\n]+/g, ""));
                       clearError("parentEmail");
                     }}
                     aria-invalid={Boolean(errors.parentEmail)}
                     aria-describedby="signup-parent-email-hint"
-                    className={learnerFieldClass}
+                    className={cn(learnerFieldClass, "py-[14px]")}
                   />
                   {errors.parentEmail ? (
                     <p
@@ -1519,7 +1518,7 @@ export function SignUpForm() {
                   {needsParentApproval
                     ? isSendingApprovalEmail
                       ? "Sending…"
-                      : "Request Parent Approval"
+                      : copyMatrix.onboarding.parentApprovalRequest.submit
                     : isSendingApprovalEmail
                       ? "Creating…"
                       : "Create My Free Account"}

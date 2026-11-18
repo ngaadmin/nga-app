@@ -37,6 +37,7 @@ import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
+import { useParentHubUnreadCount } from "@/lib/parent/use-parent-hub-unread";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
 import {
@@ -123,6 +124,7 @@ export function DashboardStatusHeader() {
   }, []);
 
   const isParent = session?.accountRole === "parent_master";
+  const parentHubUnreadCount = useParentHubUnreadCount(isParent);
   const showTrack = Boolean(session) && !isParent && !isTeacher;
   const trackLabel = showTrack ? masteryCohortLabel(masteryCohort) : null;
   const profileKey =
@@ -228,6 +230,7 @@ export function DashboardStatusHeader() {
           // button gets the rest, so the name is not cut off.
           rowClassName={isGuestMode ? GUEST_STATUS_ROW_CLASS : undefined}
           profileHasAttention={skillsHasAttention}
+          parentHubUnreadCount={parentHubUnreadCount}
           showCoins={!isTeacher}
           // The avatar always opens the dropdown (never the Profile page
           // directly), even while the household is still loading.
@@ -261,6 +264,7 @@ export function DashboardStatusHeader() {
         onOpenParentHub={canOpenParentHub ? openParentHubFromSwitcher : undefined}
         isParent={isParent}
         isGuest={isGuestMode}
+        parentHubUnreadCount={parentHubUnreadCount}
       />
 
       <FullHeightPanel

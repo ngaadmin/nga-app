@@ -611,6 +611,11 @@ export const copyMatrix = {
       description:
         "Your skill cabinet - track Locked, Unlocked, Bronze, Silver, and Gold across your learning track.",
     },
+    parentHubUnread: {
+      overflowLabel: "9+",
+      ariaLabelOne: "1 unread Parent Hub item",
+      ariaLabelMany: "{count} unread Parent Hub items",
+    },
   },
   home: {
     streak: {

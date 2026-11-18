@@ -12,6 +12,7 @@ function renderMenu(props: {
   household: HouseholdProfiles | null;
   isParent?: boolean;
   loading?: boolean;
+  parentHubUnreadCount?: number;
 }) {
   const anchor = document.createElement("button");
   document.body.appendChild(anchor);
@@ -29,6 +30,7 @@ function renderMenu(props: {
       onOpenSettings={vi.fn()}
       onOpenParentHub={props.isParent ? vi.fn() : undefined}
       isParent={props.isParent}
+      parentHubUnreadCount={props.parentHubUnreadCount}
     />,
   );
 }
@@ -83,5 +85,38 @@ describe("ProfileSwitcherMenu: no parent-to-child switching", () => {
   it("the top-bar header never shows the switch tip to a parent", () => {
     const source = readFileSync("components/dashboard/dashboard-status-header.tsx", "utf8");
     expect(source).toContain("household && tipVisible && !isParent");
+  });
+});
+
+describe("ProfileSwitcherMenu: Parent Hub unread pill", () => {
+  const parentHousehold: HouseholdProfiles = {
+    currentUserId: "p1",
+    profiles: [
+      { userId: "p1", name: "Sam", role: "parent", cohort: null, isCurrent: true },
+    ],
+    linkedChildCount: 1,
+  };
+
+  it("hides the count when there are no unread items", () => {
+    renderMenu({ isParent: true, household: parentHousehold, parentHubUnreadCount: 0 });
+    const row = document.querySelector('[data-profile-switcher-link="parent-hub"]');
+    expect(row).toBeTruthy();
+    expect(row?.querySelector("[data-parent-hub-unread-count]")).toBeNull();
+  });
+
+  it("shows the exact count on the Parent Hub row", () => {
+    renderMenu({ isParent: true, household: parentHousehold, parentHubUnreadCount: 3 });
+    const pill = document.querySelector("[data-parent-hub-unread-count]");
+    expect(pill).toBeTruthy();
+    expect(pill?.getAttribute("data-parent-hub-unread-count")).toBe("3");
+    expect(pill?.textContent).toBe("3");
+    expect(pill?.getAttribute("aria-label")).toBe("3 unread Parent Hub items");
+  });
+
+  it("shows 9+ when the count is above 9", () => {
+    renderMenu({ isParent: true, household: parentHousehold, parentHubUnreadCount: 12 });
+    const pill = document.querySelector("[data-parent-hub-unread-count]");
+    expect(pill?.textContent).toBe("9+");
+    expect(pill?.getAttribute("aria-label")).toBe("12 unread Parent Hub items");
   });
 });

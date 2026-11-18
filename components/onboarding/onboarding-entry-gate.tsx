@@ -24,7 +24,7 @@ type OnboardingEntryGateProps = {
 export function OnboardingEntryGate({
   signUpHref = ONBOARDING_START_PATH,
   subtitle = "Built like a game. Designed for real life.",
-  primaryCtaLabel = "Try the free app",
+  primaryCtaLabel = copyMatrix.onboarding.entryGate.primaryCta,
   secondaryCtaLabel = copyMatrix.onboarding.signIn.heroLogIn,
 }: OnboardingEntryGateProps) {
   return (

@@ -461,7 +461,7 @@ export function buildExplorerParentEmail(
     "",
     `${username} wants to save their progress on NextGenAchiever$.`,
     "",
-    "It's a free app that turns screen time into money sense (but don't worry, no real cash or bank accounts involved).",
+    "It's an app that turns screen time into money sense, and it's free to get started (but don't worry, no real cash or bank accounts involved).",
     "",
     "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
@@ -487,7 +487,7 @@ export function buildExplorerParentEmail(
         ${safeName} wants to save their progress on NextGenAchiever$.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        It&apos;s a free app that <strong>turns screen time into money sense</strong>
+        It&apos;s an app that <strong>turns screen time into money sense</strong>, and it&apos;s free to get started
         (but don&apos;t worry, no real cash or bank accounts involved).
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
@@ -619,7 +619,7 @@ export function buildPathfinderParentEmail(
     "",
     `${username} just started on NextGenAchiever$.`,
     "",
-    "It's a free app that turns screen time into money sense, from everyday skills to first business ideas (but don't worry, no real cash or bank accounts involved).",
+    "It's an app that turns screen time into money sense, from everyday skills to first business ideas, and it's free to get started (but don't worry, no real cash or bank accounts involved).",
     "",
     "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
@@ -643,8 +643,8 @@ export function buildPathfinderParentEmail(
         ${safeName} just started on NextGenAchiever$.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        It&apos;s a free app that turns screen time into money sense, from everyday
-        skills to first business ideas (but don&apos;t worry, no real cash or bank
+        It&apos;s an app that turns screen time into money sense, from everyday
+        skills to first business ideas, and it&apos;s free to get started (but don&apos;t worry, no real cash or bank
         accounts involved).
       </p>
       <p style="margin:0 0 16px;font-size:16px;">

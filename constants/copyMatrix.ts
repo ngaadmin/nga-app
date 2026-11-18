@@ -4,6 +4,9 @@ export const COPY_USERNAME_TOKEN = "[Username]" as const;
 
 export const copyMatrix = {
   onboarding: {
+    entryGate: {
+      primaryCta: "Try the app",
+    },
     signIn: {
       title: "Log in",
       submit: "Log in",

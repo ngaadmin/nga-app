@@ -444,12 +444,13 @@ export function VentureFlow({
   }, []);
 
   /**
-   * Parent approval stop (live Launchpad only). Opening the gated door asks the
-   * server whether this learner needs a parent's OK. A learner with a linked
+   * Parent approval stop (the signed-in Launchpad and the preview test route).
+   * Opening the gated door asks the server whether this learner needs a parent's
+   * OK. Guests and anyone who is not a learner with a linked parent are let through. A learner with a linked
    * parent who has not said yes sees the stop, and the first visit sends the
    * parent their message. Anything unclear fails closed (retry), never open.
    */
-  const stopActive = live && view.screen === "workbook" && view.bronzeId === PARENT_APPROVAL_GATED_BRONZE_ID && ventureId !== null;
+  const stopActive = view.screen === "workbook" && view.bronzeId === PARENT_APPROVAL_GATED_BRONZE_ID && ventureId !== null;
   const [stopState, setStopState] = useState<ParentApprovalStopState | "open">("checking");
   const [stopAttempt, setStopAttempt] = useState(0);
   useLayoutEffect(() => {
@@ -806,7 +807,7 @@ export function VentureFlow({
         screens: t.screens,
         ctaLabel: t.ctaLabel,
       }));
-      if (live && bronze.id === PARENT_APPROVAL_GATED_BRONZE_ID && stopState !== "open") {
+      if (bronze.id === PARENT_APPROVAL_GATED_BRONZE_ID && stopState !== "open") {
         body = (
           <ParentApprovalStop
             state={stopState}

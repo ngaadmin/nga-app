@@ -108,17 +108,18 @@ async function writeMilestones(
 export async function loadLaunchpadApprovalGate(
   ventureId: string,
 ): Promise<LearnerApprovalGateView> {
+  if (!isVentureId(ventureId)) return NO_APPROVAL_GATE;
+  // No session (a guest, or an environment with no Supabase): nothing to gate.
+  const userId = await signedInUserId().catch(() => null);
+  if (!userId) return NO_APPROVAL_GATE;
   try {
-    if (!isVentureId(ventureId)) return NO_APPROVAL_GATE;
-    const userId = await signedInUserId();
-    if (!userId) return NO_APPROVAL_GATE;
     const admin = createAdminClient();
     if (!(await isActiveLearner(admin, userId))) return NO_APPROVAL_GATE;
     if (!(await linkedParentId(admin, userId))) return NO_APPROVAL_GATE;
     const row = await readVentureRow(admin, userId, ventureId);
     return { applies: true, status: parentApprovalStatus(row?.wrap_up_confirmed_at) };
   } catch {
-    // Fail closed for a learner: the screen shows a retry, never the task.
+    // A signed-in learner fails closed: the screen shows a retry, never the task.
     throw new Error("approval-gate-unavailable");
   }
 }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { WEBSITE_LEGAL_LINKS } from "@/lib/legal/paths";
 import { PARENT_HUB_UNREAD_CHANGED_EVENT } from "@/lib/launchpad/parent-approval/config";
@@ -68,7 +67,8 @@ export function LaunchpadApprovalRow({
 
 /**
  * Review sheet: what the parent is saying yes to, our counsel, the disclaimer,
- * then Approve or Not now. Each answer asks for the Parent PIN again.
+ * then Approve or Not now. One tap each. No second PIN: the Parent PIN was asked
+ * when the parent opened the Parent Hub, and the server checks the parent link.
  */
 export function LaunchpadApprovalSheet({
   item,
@@ -79,34 +79,35 @@ export function LaunchpadApprovalSheet({
   onClose: () => void;
   onDecided: () => void;
 }) {
-  const [decision, setDecision] = useState<"yes" | "no" | null>(null);
+  const [deciding, setDeciding] = useState<"yes" | "no" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function close() {
     if (busy) return;
-    setDecision(null);
+    setDeciding(null);
     setError(null);
     onClose();
   }
 
-  async function decide(answer: "yes" | "no", pass: string) {
+  async function decide(answer: "yes" | "no") {
     if (!item || busy) return;
     setBusy(true);
+    setDeciding(answer);
     setError(null);
     try {
-      const result = await decideLaunchpadApproval(pass, item.learnerId, item.ventureId, answer);
+      const result = await decideLaunchpadApproval(item.learnerId, item.ventureId, answer);
       if (!result.ok) {
         setError(result.error || copy.saveError);
         return;
       }
-      setDecision(null);
       window.dispatchEvent(new Event(PARENT_HUB_UNREAD_CHANGED_EVENT));
       onDecided();
     } catch {
       setError(copy.saveError);
     } finally {
       setBusy(false);
+      setDeciding(null);
     }
   }
 
@@ -157,66 +158,37 @@ export function LaunchpadApprovalSheet({
               {error}
             </p>
           ) : null}
-          {decision ? (
-            <div data-launchpad-approval-pin={decision}>
-              <ParentPinGate
-                parentName=""
-                className="mx-0 mt-3 shadow-none ring-1 ring-[#E3EAF5]"
-                enterBody={fill(decision === "yes" ? copy.pinApprove : copy.pinNotNow, vars)}
-                onUnlocked={async (actionPass) => {
-                  const answer = decision;
-                  setDecision(null);
-                  await decide(answer, actionPass);
-                }}
-              />
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              type="button"
+              data-launchpad-approval-approve
+              disabled={busy}
+              onClick={() => void decide("yes")}
+              className="rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] disabled:opacity-50"
+            >
+              {busy && deciding === "yes" ? copy.saving : copy.approve}
+            </button>
+            {item.status === "pending" ? (
               <button
                 type="button"
+                data-launchpad-approval-not-now
                 disabled={busy}
-                onClick={() => setDecision(null)}
-                className="mt-2 block w-full py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
+                onClick={() => void decide("no")}
+                className="rounded-full border-2 border-[#C9D6EA] py-2 font-heading text-sm font-bold text-[#031F82] disabled:opacity-50"
               >
-                {copy.back}
+                {busy && deciding === "no" ? copy.saving : copy.notNow}
               </button>
-            </div>
-          ) : (
-            <div className="mt-4 flex flex-col gap-2">
-              <button
-                type="button"
-                data-launchpad-approval-approve
-                disabled={busy}
-                onClick={() => {
-                  setError(null);
-                  setDecision("yes");
-                }}
-                className="rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] disabled:opacity-50"
-              >
-                {copy.approve}
-              </button>
-              {item.status === "pending" ? (
-                <button
-                  type="button"
-                  data-launchpad-approval-not-now
-                  disabled={busy}
-                  onClick={() => {
-                    setError(null);
-                    setDecision("no");
-                  }}
-                  className="rounded-full border-2 border-[#C9D6EA] py-2 font-heading text-sm font-bold text-[#031F82] disabled:opacity-50"
-                >
-                  {copy.notNow}
-                </button>
-              ) : null}
-              <button
-                type="button"
-                data-launchpad-approval-back
-                disabled={busy}
-                onClick={close}
-                className="py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
-              >
-                {copy.back}
-              </button>
-            </div>
-          )}
+            ) : null}
+            <button
+              type="button"
+              data-launchpad-approval-back
+              disabled={busy}
+              onClick={close}
+              className="py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
+            >
+              {copy.back}
+            </button>
+          </div>
         </div>
       ) : null}
     </ModalShell>

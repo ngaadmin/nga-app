@@ -4,7 +4,6 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import {
   isVentureId,
@@ -101,10 +100,10 @@ async function writeMilestones(
 
 /**
  * The learner's view of the stop for one venture. `applies` is true for a
- * signed-in active learner with a linked parent. Learners at 16 or over are
- * not skipped yet: no birth year is stored, so this over-gates (open question
- * (a) in decisions.md). Learners with no linked parent are not gated yet
- * (open question (b)).
+ * signed-in active learner, with or without a linked parent. A learner with no
+ * linked parent fails closed: the waiting screen shows and nothing is sent.
+ * Learners at 16 or over are not skipped yet: no birth year is stored, so this
+ * over-gates (open question (a) in decisions.md).
  */
 export async function loadLaunchpadApprovalGate(
   ventureId: string,
@@ -156,12 +155,12 @@ export async function requestLaunchpadParentApproval(
 }
 
 /**
- * Parent answers: yes or not now. Needs the parent session, a Parent PIN gate
- * pass, and the learner linked to this parent in parent_child. A yes can't be
- * turned back into a no.
+ * Parent answers: yes or not now, in one tap from the review sheet. The Parent
+ * PIN is asked once, when the parent opens the Parent Hub, so there is no second
+ * PIN here. The caller must still be the signed-in parent_master account that is
+ * linked to this learner in parent_child. A yes can't be turned back into a no.
  */
 export async function decideLaunchpadApproval(
-  pass: string,
   learnerId: string,
   ventureId: string,
   decision: "yes" | "no",
@@ -172,9 +171,6 @@ export async function decideLaunchpadApproval(
     }
     const parentId = await signedInUserId();
     if (!parentId) return { ok: false, error: "Sign in as a parent first." };
-    if (!parentTabGatePassValid(pass, parentId)) {
-      return { ok: false, error: "Enter your parent PIN first." };
-    }
     const admin = createAdminClient();
     const { data: profile } = await admin
       .from("profiles")

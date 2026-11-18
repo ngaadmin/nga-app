@@ -1,5 +1,7 @@
 import { MASTERY_COHORT, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
+import { copyMatrix } from "@/constants/copyMatrix";
+import { WEBSITE_LEGAL_LINKS } from "@/lib/legal/paths";
 
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
@@ -15,7 +17,9 @@ export type OnboardingEmailType =
   | "INACTIVITY_WARNING"
   | "TEACHER_CLASS_CONFIRM"
   | "PARENT_PIN_RESET"
-  | "LEARNER_WELCOME";
+  | "LEARNER_WELCOME"
+  | "LAUNCHPAD_PARENT_APPROVAL"
+  | "LAUNCHPAD_PARENT_APPROVAL_REMINDER";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -116,6 +120,16 @@ export type ParentPinResetEmailData = {
   token: string;
 };
 
+/**
+ * Launchpad Level 4 parent approval (request and the one reminder). The
+ * learner's username is used in the body only, never in the subject.
+ */
+export type LaunchpadParentApprovalEmailData = {
+  childUsername?: string | null;
+  /** Display name of the business idea, for example "Dog walking". */
+  ventureName?: string | null;
+};
+
 export type OnboardingEmailDataMap = {
   EXPLORER_PARENT: ExplorerParentEmailData;
   PATHFINDER_PARENT: PathfinderParentEmailData;
@@ -131,6 +145,8 @@ export type OnboardingEmailDataMap = {
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
   PARENT_PIN_RESET: ParentPinResetEmailData;
   LEARNER_WELCOME: LearnerWelcomeEmailData;
+  LAUNCHPAD_PARENT_APPROVAL: LaunchpadParentApprovalEmailData;
+  LAUNCHPAD_PARENT_APPROVAL_REMINDER: LaunchpadParentApprovalEmailData;
 };
 
 export type BuiltEmail = {
@@ -1426,6 +1442,88 @@ export function buildCancellationConfirmedEmail(
   return { subject, preheader, html, text };
 }
 
+/*
+ * Launchpad Level 4 parent approval emails. All wording lives in
+ * copyMatrix.launchpadParentApproval.email (placeholder copy for review).
+ */
+
+const LAUNCHPAD_DISCLAIMER_HREF =
+  WEBSITE_LEGAL_LINKS.find((link) => link.label === "Disclaimer")?.href ??
+  "https://nextgenachievers.com/disclaimer";
+
+function fillLaunchpadCopy(template: string, values: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? "");
+}
+
+function buildLaunchpadParentApprovalMail(
+  kind: "request" | "reminder",
+  data: LaunchpadParentApprovalEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const shared = copyMatrix.launchpadParentApproval.email;
+  const copy = shared[kind];
+  const hubUrl = planParentHubUrl(appUrl);
+  const child = emailPlain(data.childUsername ?? "").trim() || shared.childFallback;
+  const venture = (emailPlain(data.ventureName ?? "").trim() || shared.ventureFallback).toLowerCase();
+  const vars = { child, venture };
+  const paragraphs =
+    kind === "request"
+      ? [
+          fillLaunchpadCopy(shared.request.intro, vars),
+          shared.request.whatYouApprove,
+          shared.request.counsel,
+        ]
+      : [
+          fillLaunchpadCopy(shared.reminder.intro, vars),
+          shared.reminder.whatYouApprove,
+          shared.reminder.counsel,
+          shared.reminder.onlyOne,
+        ];
+  const text = [
+    "Hi there,",
+    "",
+    ...paragraphs.flatMap((line) => [line, ""]),
+    `${shared.cta}: ${hubUrl}`,
+    "",
+    shared.afterCta,
+    "",
+    shared.disclaimerLead,
+    `${shared.disclaimerLinkLabel}: ${LAUNCHPAD_DISCLAIMER_HREF}`,
+    "",
+    shared.signOff,
+  ].join("\n");
+  const html = wrapHtml({
+    header: copy.header,
+    preheader: copy.preheader,
+    bodyInner: `
+      ${planParagraph("Hi there,")}
+      ${paragraphs.map((line) => planParagraph(line)).join("\n      ")}
+      ${ctaButton(shared.cta, hubUrl)}
+      ${planParagraph(shared.afterCta)}
+      <p style="margin:0 0 16px;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        ${escapeHtml(shared.disclaimerLead)}
+        <a href="${safeHttpHref(LAUNCHPAD_DISCLAIMER_HREF)}" style="color:#031F82;font-weight:700;">${escapeHtml(shared.disclaimerLinkLabel)}</a>
+      </p>
+      <p style="margin:24px 0 0;font-size:16px;">${escapeHtml(shared.signOff)}</p>
+    `,
+  });
+  return { subject: copy.subject, preheader: copy.preheader, html, text };
+}
+
+export function buildLaunchpadParentApprovalEmail(
+  data: LaunchpadParentApprovalEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  return buildLaunchpadParentApprovalMail("request", data, appUrl);
+}
+
+export function buildLaunchpadParentApprovalReminderEmail(
+  data: LaunchpadParentApprovalEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  return buildLaunchpadParentApprovalMail("reminder", data, appUrl);
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],
@@ -1500,6 +1598,16 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "LEARNER_WELCOME":
       return buildLearnerWelcomeEmail(
         data as LearnerWelcomeEmailData,
+        appUrl,
+      );
+    case "LAUNCHPAD_PARENT_APPROVAL":
+      return buildLaunchpadParentApprovalEmail(
+        data as LaunchpadParentApprovalEmailData,
+        appUrl,
+      );
+    case "LAUNCHPAD_PARENT_APPROVAL_REMINDER":
+      return buildLaunchpadParentApprovalReminderEmail(
+        data as LaunchpadParentApprovalEmailData,
         appUrl,
       );
     default: {

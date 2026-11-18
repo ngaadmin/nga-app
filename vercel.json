@@ -6,6 +6,10 @@
     {
       "path": "/api/cron/privacy-retention",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/launchpad-parent-approval-emails",
+      "schedule": "15 * * * *"
     }
   ]
 }

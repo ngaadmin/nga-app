@@ -2,11 +2,14 @@
 
 import "server-only";
 
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
+import { sendLaunchpadApprovalEmail } from "@/lib/launchpad/parent-approval/email";
 import {
   isVentureId,
+  learnerSkipsStopForAge,
   NO_APPROVAL_GATE,
   parentApprovalStatus,
   withApprovalDecision,
@@ -63,16 +66,22 @@ async function linkedParentId(
   return (data?.parent_id as string | undefined) ?? null;
 }
 
-async function isActiveLearner(
+/**
+ * True for a signed-in active learner who still has to pass the stop. A learner
+ * who was 16 or over at sign-up skips it (learnerSkipsStopForAge), so for them
+ * this is false and no request or email is ever created.
+ */
+async function isGatedLearner(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
 ): Promise<boolean> {
   const { data } = await admin
     .from("profiles")
-    .select("account_role, account_status")
+    .select("account_role, account_status, parent_approval_required, age_checked_at")
     .eq("id", userId)
     .maybeSingle();
-  return data?.account_role === "child" && data?.account_status === "active";
+  if (data?.account_role !== "child" || data?.account_status !== "active") return false;
+  return !learnerSkipsStopForAge(data);
 }
 
 async function writeMilestones(
@@ -102,8 +111,8 @@ async function writeMilestones(
  * The learner's view of the stop for one venture. `applies` is true for a
  * signed-in active learner, with or without a linked parent. A learner with no
  * linked parent fails closed: the waiting screen shows and nothing is sent.
- * Learners at 16 or over are not skipped yet: no birth year is stored, so this
- * over-gates (open question (a) in decisions.md).
+ * Learners who were 16 or over at sign-up skip the stop. A learner who signed up
+ * under 16 keeps it, even after turning 16, because no birth year is stored.
  */
 export async function loadLaunchpadApprovalGate(
   ventureId: string,
@@ -114,7 +123,7 @@ export async function loadLaunchpadApprovalGate(
   if (!userId) return NO_APPROVAL_GATE;
   try {
     const admin = createAdminClient();
-    if (!(await isActiveLearner(admin, userId))) return NO_APPROVAL_GATE;
+    if (!(await isGatedLearner(admin, userId))) return NO_APPROVAL_GATE;
     const hasParent = (await linkedParentId(admin, userId)) !== null;
     const row = hasParent ? await readVentureRow(admin, userId, ventureId) : null;
     return learnerApprovalGate(hasParent, row?.wrap_up_confirmed_at).view;
@@ -138,7 +147,7 @@ export async function requestLaunchpadParentApproval(
   const userId = await signedInUserId();
   if (!userId) return NO_APPROVAL_GATE;
   const admin = createAdminClient();
-  if (!(await isActiveLearner(admin, userId))) return NO_APPROVAL_GATE;
+  if (!(await isGatedLearner(admin, userId))) return NO_APPROVAL_GATE;
   const hasParent = (await linkedParentId(admin, userId)) !== null;
   const row = hasParent ? await readVentureRow(admin, userId, ventureId) : null;
   const { view, needsRequest } = learnerApprovalGate(hasParent, row?.wrap_up_confirmed_at);
@@ -151,6 +160,16 @@ export async function requestLaunchpadParentApproval(
     withApprovalRequested(row?.wrap_up_confirmed_at, new Date().toISOString()),
   );
   if (!saved) throw new Error("approval-request-failed");
+  // The request email. It runs after the response so the learner never waits on
+  // it. The send claims its marker first, so a double call cannot send twice.
+  const sendRequestEmail = async () => {
+    await sendLaunchpadApprovalEmail(admin, { learnerId: userId, ventureId, kind: "request" });
+  };
+  try {
+    after(sendRequestEmail);
+  } catch {
+    await sendRequestEmail();
+  }
   return { applies: true, status: "pending" };
 }
 

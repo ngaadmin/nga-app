@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
+  APPROVAL_KEY_EMAIL_SENT,
   APPROVAL_KEY_NO,
+  APPROVAL_KEY_REMINDER_SENT,
   APPROVAL_KEY_REQUESTED,
   APPROVAL_KEY_YES,
   PARENT_APPROVAL_GATED_BRONZE_ID,
 } from "@/lib/launchpad/parent-approval/config";
 import {
+  approvalEmailAction,
   isVentureId,
   learnerApprovalGate,
+  learnerSkipsStopForAge,
   NO_APPROVAL_GATE,
   parentApprovalRequestedAt,
   parentApprovalStatus,
@@ -127,5 +131,52 @@ describe("learnerApprovalGate (hard stop)", () => {
     });
     expect(learnerApprovalGate(true, { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_YES]: T2 }).view.status).toBe("approved");
     expect(learnerApprovalGate(true, { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_NO]: T2 }).view.status).toBe("declined");
+  });
+});
+
+describe("learnerSkipsStopForAge (the 16+ skip)", () => {
+  it("skips only when sign-up recorded an age check that said 16 or over", () => {
+    expect(learnerSkipsStopForAge({ parent_approval_required: false, age_checked_at: T1 })).toBe(true);
+  });
+
+  it("keeps the stop for under 16, unknown, or no age check on record", () => {
+    expect(learnerSkipsStopForAge({ parent_approval_required: true, age_checked_at: T1 })).toBe(false);
+    expect(learnerSkipsStopForAge({ parent_approval_required: null, age_checked_at: T1 })).toBe(false);
+    expect(learnerSkipsStopForAge({ parent_approval_required: false, age_checked_at: null })).toBe(false);
+    expect(learnerSkipsStopForAge({ parent_approval_required: false, age_checked_at: "not a date" })).toBe(false);
+    expect(learnerSkipsStopForAge({})).toBe(false);
+    expect(learnerSkipsStopForAge(null)).toBe(false);
+    expect(learnerSkipsStopForAge(undefined)).toBe(false);
+  });
+});
+
+describe("approvalEmailAction (request email, then one reminder)", () => {
+  const t0 = Date.parse(T1);
+  const hour = 60 * 60 * 1000;
+  const sent = { [APPROVAL_KEY_REQUESTED]: T1, [APPROVAL_KEY_EMAIL_SENT]: T1 };
+
+  it("sends nothing before a request exists or after a parent answered", () => {
+    expect(approvalEmailAction({}, t0 + 48 * hour)).toBeNull();
+    expect(approvalEmailAction({ ...sent, [APPROVAL_KEY_YES]: T2 }, t0 + 48 * hour)).toBeNull();
+    expect(approvalEmailAction({ ...sent, [APPROVAL_KEY_NO]: T2 }, t0 + 48 * hour)).toBeNull();
+  });
+
+  it("holds the reminder until 24 hours after the request email", () => {
+    expect(approvalEmailAction(sent, t0 + 23 * hour)).toBeNull();
+    expect(approvalEmailAction(sent, t0 + 24 * hour)).toBe("reminder");
+    expect(approvalEmailAction(sent, t0 + 70 * hour)).toBe("reminder");
+  });
+
+  it("never sends a second reminder", () => {
+    const done = { ...sent, [APPROVAL_KEY_REMINDER_SENT]: T3 };
+    expect(approvalEmailAction(done, t0 + 24 * hour)).toBeNull();
+    expect(approvalEmailAction(done, t0 + 500 * hour)).toBeNull();
+  });
+
+  it("retries a request email that failed, but only within the first day", () => {
+    const failed = { [APPROVAL_KEY_REQUESTED]: T1 };
+    expect(approvalEmailAction(failed, t0 + 60 * 1000)).toBeNull();
+    expect(approvalEmailAction(failed, t0 + 10 * 60 * 1000)).toBe("request");
+    expect(approvalEmailAction(failed, t0 + 25 * hour)).toBeNull();
   });
 });

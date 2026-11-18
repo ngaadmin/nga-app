@@ -723,6 +723,47 @@ export const copyMatrix = {
       saving: "Saving...",
       saveError: "Could not save that. Try again.",
     },
+    /**
+     * Parent emails for the Level 4 approval. PLACEHOLDER wording for Storybird
+     * or Camille to review. Tokens in braces: {child}, {venture}. The child's
+     * name only ever appears in the body, never in the subject or preheader.
+     * {child} is the learner's username, or "Your child" when there is none, so
+     * it only ever starts a sentence.
+     */
+    email: {
+      childFallback: "Your child",
+      ventureFallback: "new",
+      cta: "Open the Parent Hub",
+      afterCta:
+        "You will be asked for your Parent PIN. Then tap Approve or Not now. It takes less than a minute.",
+      disclaimerLead:
+        "NextGenAchiever$ is an educational tool. We do not take on any risk for you or your child, and what you read here is not advice. You decide what your child does in the real world.",
+      disclaimerLinkLabel: "Read our disclaimer",
+      signOff: "The Team at NextGenAchiever$",
+      request: {
+        subject: "Your OK is needed: your child is ready to tell people about their business",
+        preheader: "One tap in the Parent Hub: Approve or Not now.",
+        header: "Your OK is needed",
+        intro:
+          "{child} has finished the planning steps for their {venture} business. Next they start telling people about it and reaching out to customers.",
+        whatYouApprove:
+          "Saying yes means you know your child is about to start selling and talking to customers. Small changes to their plan later do not need another OK.",
+        counsel:
+          "Before you say yes, talk it through together. Check when, where and how they will deliver the business to customers, and who they will be dealing with.",
+      },
+      reminder: {
+        subject: "Reminder: your child is still waiting for your OK",
+        preheader: "They can keep building the rest of their plan while they wait.",
+        header: "Your child is still waiting for your OK",
+        intro:
+          "{child} asked for your OK a day ago, so they can start telling people about their {venture} business.",
+        onlyOne: "This is the only reminder we will send. You can answer any time in the Parent Hub.",
+        whatYouApprove:
+          "Saying yes means you know your child is about to start selling and talking to customers.",
+        counsel:
+          "Before you say yes, talk it through together. Check when, where and how they will deliver the business to customers, and who they will be dealing with.",
+      },
+    },
   },
 } as const;
 

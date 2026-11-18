@@ -1,5 +1,9 @@
 import {
+  APPROVAL_EMAIL_RETRY_AFTER_MS,
+  APPROVAL_KEY_EMAIL_SENT,
   APPROVAL_KEY_NO,
+  APPROVAL_KEY_REMINDER_SENT,
+  APPROVAL_REMINDER_AFTER_MS,
   APPROVAL_KEY_REQUESTED,
   APPROVAL_KEY_YES,
 } from "@/lib/launchpad/parent-approval/config";
@@ -67,6 +71,59 @@ export type LearnerApprovalGateView = {
 };
 
 export const NO_APPROVAL_GATE: LearnerApprovalGateView = { applies: false, status: "none" };
+
+/**
+ * The 16+ skip. Sign-up asks for a birth year once, turns it into one stored
+ * yes/no (profiles.parent_approval_required) and drops the year. False plus a
+ * recorded age check means the conservative age (this year minus birth year
+ * minus one) was already 16 or more at sign-up, so the learner skips the stop.
+ * Anything else (true, null for parent-added profiles, class seats and older
+ * rows, or no age check on record) keeps the stop. The track (Explorer,
+ * Pathfinder, Maverick) is the learner's own choice, so it is never used as an
+ * age signal.
+ */
+export type LearnerAgeProfile = {
+  parent_approval_required?: boolean | null;
+  age_checked_at?: string | null;
+};
+
+export function learnerSkipsStopForAge(profile: LearnerAgeProfile | null | undefined): boolean {
+  if (!profile) return false;
+  return (
+    profile.parent_approval_required === false &&
+    typeof profile.age_checked_at === "string" &&
+    !Number.isNaN(Date.parse(profile.age_checked_at))
+  );
+}
+
+/** Time the request or reminder email was claimed, or null. */
+export function approvalEmailSentAt(map: ParentApprovalMilestones, key: string): string | null {
+  const raw = map && typeof map === "object" ? (map as Record<string, unknown>)[key] : null;
+  return typeof raw === "string" && !Number.isNaN(Date.parse(raw)) ? raw : null;
+}
+
+export type ApprovalEmailAction = "request" | "reminder" | null;
+
+/**
+ * What the email job should send for one venture row right now. Only a request
+ * still waiting on the parent gets mail. The reminder is due 24 hours after the
+ * request email and is sent once: the marker is checked here and claimed
+ * atomically before the send.
+ */
+export function approvalEmailAction(map: ParentApprovalMilestones, nowMs: number): ApprovalEmailAction {
+  if (parentApprovalStatus(map) !== "pending") return null;
+  const requestedMs = stamp(map, APPROVAL_KEY_REQUESTED);
+  if (requestedMs === null) return null;
+  const emailMs = stamp(map, APPROVAL_KEY_EMAIL_SENT);
+  if (emailMs === null) {
+    // The request email failed at the time. Retry it, but not for a request
+    // that is already over a day old (that one gets nothing, not a late "reminder").
+    const age = nowMs - requestedMs;
+    return age >= APPROVAL_EMAIL_RETRY_AFTER_MS && age < APPROVAL_REMINDER_AFTER_MS ? "request" : null;
+  }
+  if (stamp(map, APPROVAL_KEY_REMINDER_SENT) !== null) return null;
+  return nowMs - emailMs >= APPROVAL_REMINDER_AFTER_MS ? "reminder" : null;
+}
 
 /**
  * The gate for a signed-in active learner. The stop is a hard stop, so a learner

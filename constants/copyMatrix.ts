@@ -440,9 +440,16 @@ export const copyMatrix = {
       title: "Business Launchpad",
       description:
         "Launch your own business, step by step. Start with the Dog Walking business!",
-      guestLocked: {
-        body: "The Business Launchpad is only for signed-up learners. Create an account to start building your own business!",
-        cta: "Create an account",
+      /**
+       * PLACEHOLDER wording for Storybird to replace. Shown to a guest at the
+       * end of Level 1 or when they try to enter Level 2. The button goes to
+       * the existing learner sign-up.
+       */
+      guestExplore: {
+        heading: "Like what you're building?",
+        body: "Create a free account to keep going and save your progress.",
+        cta: "Create my account",
+        notNow: "Not now",
       },
     },
     community: {

@@ -25,7 +25,6 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
   it("gives the parent five tabs: Academy, Launchpad, Vault, Community, Subscription", () => {
     expect(ids(parent)).toEqual(["academy", "launchpad", "vault", "community", "subscription"]);
     expect(parent.at(-1)?.label).toBe("Subscription");
-    expect(parent.find((item) => item.id === "launchpad")?.locked).toBeFalsy();
   });
 
   it("keeps Subscription for parents only", () => {
@@ -43,7 +42,6 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
 
   it("keeps Launchpad for a child and hides it from a teacher", () => {
     expect(ids(child)).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
-    expect(child.find((item) => item.id === "launchpad")?.locked).toBeFalsy();
     const teacher = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "teacher" });
     expect(ids(teacher)).not.toContain("launchpad");
     const eligibleNonParent = dashboardNavItemsFor({
@@ -74,7 +72,7 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
     expect(ids(pending)).toContain("academy");
   });
 
-  it("shows guests a locked Launchpad tab that does not navigate to the route", () => {
+  it("shows guests the Launchpad tab as a normal link to the route", () => {
     const guest = dashboardNavItemsFor({
       parentTabEligible: false,
       isParentProfile: false,
@@ -82,11 +80,11 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
     });
     const launchpad = guest.find((item) => item.id === "launchpad");
     expect(ids(guest)).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
-    expect(launchpad?.locked).toBe(true);
+    expect(launchpad).not.toHaveProperty("locked");
     expect(launchpad?.href).toBe("/dashboard/launchpad");
   });
 
-  it("hides Launchpad until the session is ready, so signed-in users do not see a guest lock flash", () => {
+  it("hides Launchpad until the session is ready, so signed-in users do not see a guest tab flash", () => {
     const loading = dashboardNavItemsFor({
       parentTabEligible: false,
       isParentProfile: false,

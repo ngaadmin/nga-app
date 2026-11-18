@@ -12,7 +12,7 @@ import {
 
 export type DashboardNavAudience = "child" | "parent" | "teacher" | "guest";
 
-/** Launchpad is a learner route. Parents, teachers, and guests do not see the tab. */
+/** Launchpad shows for learners, parents, and guests. Teachers do not see the tab. */
 export function dashboardNavAudience(session: UserSession | null): DashboardNavAudience {
   if (!session || session.accessMode !== "registered") return "guest";
   if (session.accountRole === "parent_master") return "parent";
@@ -23,11 +23,11 @@ export function dashboardNavAudience(session: UserSession | null): DashboardNavA
 
 /**
  * The one list both the phone bottom bar and the desktop sidebar render, so
- * they can't drift apart. An active child sees Launchpad. A guest sees a
- * locked Launchpad tab that does not open the route. A pending or declined
- * child, or a teacher, does not see the tab. A parent sees Academy,
- * Launchpad, Vault, Community, Subscription. Settings and the Parent Hub open from the
- * avatar menu.
+ * they can't drift apart. An active child sees Launchpad. A guest sees it too
+ * and can look around and play Level 1 (the page asks them to create an
+ * account to go further). A pending or declined child, or a teacher, does not
+ * see the tab. A parent sees Academy, Launchpad, Vault, Community,
+ * Subscription. Settings and the Parent Hub open from the avatar menu.
  */
 export function dashboardNavItemsFor(options: {
   advancedMoneyUnlocked?: boolean;
@@ -37,8 +37,8 @@ export function dashboardNavItemsFor(options: {
   /** profiles.account_status, or the session lifecycle value (ACTIVE, …). */
   accountStatus?: string | null;
   /**
-   * When false, the session has not been read yet, so a locked guest tab is
-   * not shown (avoids a flash for signed-in users). Omit or true otherwise.
+   * When false, the session has not been read yet, so the guest tab is not
+   * shown (avoids a flash for signed-in users). Omit or true otherwise.
    */
   sessionReady?: boolean;
 }): DashboardNavLinkItem[] {
@@ -61,10 +61,6 @@ export function dashboardNavItemsFor(options: {
         accountStatus: options.accountStatus,
       }));
   if (showLaunchpad) return items;
-  if (audience === "guest" && options.sessionReady !== false) {
-    return items.map((item) =>
-      item.id === "launchpad" ? { ...item, locked: true } : item,
-    );
-  }
+  if (audience === "guest" && options.sessionReady !== false) return items;
   return items.filter((item) => item.id !== "launchpad");
 }

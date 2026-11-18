@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
-import { launchpadLearnerMayEnter, launchpadViewerIsParent } from "@/lib/launchpad/dashboard-access";
+import { launchpadLearnerMayEnter, launchpadViewerIsGuest, launchpadViewerIsParent } from "@/lib/launchpad/dashboard-access";
 import { LaunchpadDashboard } from "@/components/dashboard/launchpad/launchpad-dashboard";
 import { loadDashboardLaunchpadVenture } from "@/lib/launchpad/content/dashboard-source";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
@@ -19,13 +19,16 @@ export const metadata: Metadata = {
 const DOG_WALKING_ID = "dog-walking";
 
 /**
- * Signed-in learner Launchpad. Query shortcuts (?complete, ?level, ?rooftop,
- * ?reset, ?venture, ?draft) are not read. Content is loadDashboardLaunchpadVenture.
+ * Launchpad route. Query shortcuts (?complete, ?level, ?rooftop, ?reset,
+ * ?venture, ?draft) are not read. Content is loadDashboardLaunchpadVenture.
+ * An active learner gets the full flow. A guest (no Auth user) gets the same
+ * shop front and can play Level 1; Level 2 asks them to create an account.
  */
 export default async function LaunchpadPage() {
+  let guest = false;
   if (!(await launchpadLearnerMayEnter())) {
     // A parent has the Launchpad tab but is not a learner: the same "coming
-    // soon" page they see today. Anyone else goes back to the dashboard.
+    // soon" page they see today.
     if (await launchpadViewerIsParent()) {
       return (
         <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white">
@@ -33,7 +36,10 @@ export default async function LaunchpadPage() {
         </div>
       );
     }
-    redirect(DASHBOARD_DEFAULT_HREF);
+    // A guest may explore. Any other signed-in account (pending or declined
+    // child, teacher) goes back to the dashboard.
+    guest = await launchpadViewerIsGuest();
+    if (!guest) redirect(DASHBOARD_DEFAULT_HREF);
   }
 
   const load = await loadDashboardLaunchpadVenture(DOG_WALKING_ID);
@@ -51,6 +57,7 @@ export default async function LaunchpadPage() {
   return (
     <VentureFlow
       live
+      guest={guest}
       initialVentureId={null}
       ventureTitles={{ [DOG_WALKING_ID]: title }}
       ventures={{ [DOG_WALKING_ID]: view }}

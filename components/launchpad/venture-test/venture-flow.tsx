@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { LaunchpadFloor, LaunchpadTask } from "@/lib/launchpad/content/types";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
@@ -76,6 +76,9 @@ import { hydrateLaunchpadLearnerProgress, noteAnswerStamps, scheduleLaunchpadLea
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { useSetLaunchpadFrame } from "@/components/dashboard/launchpad-frame";
+import { ParentApprovalStop, type ParentApprovalStopState } from "@/components/launchpad/venture/parent-approval-stop";
+import { PARENT_APPROVAL_GATED_BRONZE_ID } from "@/lib/launchpad/parent-approval/config";
+import { loadLaunchpadApprovalGate, requestLaunchpadParentApproval } from "@/lib/launchpad/parent-approval/server";
 
 
 type NarratedScreen = {
@@ -440,6 +443,34 @@ export function VentureFlow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Parent approval stop (live Launchpad only). Opening the gated door asks the
+   * server whether this learner needs a parent's OK. A learner with a linked
+   * parent who has not said yes sees the stop, and the first visit sends the
+   * parent their message. Anything unclear fails closed (retry), never open.
+   */
+  const stopActive = live && view.screen === "workbook" && view.bronzeId === PARENT_APPROVAL_GATED_BRONZE_ID && ventureId !== null;
+  const [stopState, setStopState] = useState<ParentApprovalStopState | "open">("checking");
+  const [stopAttempt, setStopAttempt] = useState(0);
+  useLayoutEffect(() => {
+    if (!stopActive || !ventureId) return;
+    let cancelled = false;
+    setStopState("checking");
+    void (async () => {
+      try {
+        let gate = await loadLaunchpadApprovalGate(ventureId);
+        if (gate.applies && gate.status === "none") gate = await requestLaunchpadParentApproval(ventureId);
+        if (cancelled) return;
+        setStopState(!gate.applies || gate.status === "approved" ? "open" : gate.status === "declined" ? "declined" : "pending");
+      } catch {
+        if (!cancelled) setStopState("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stopActive, ventureId, stopAttempt]);
+
   useEffect(() => {
     if (!live || visitRecorded.current || view.screen !== "home" || !inProgress || !ventures["dog-walking"]?.ok) return;
     visitRecorded.current = true;
@@ -775,6 +806,16 @@ export function VentureFlow({
         screens: t.screens,
         ctaLabel: t.ctaLabel,
       }));
+      if (live && bronze.id === PARENT_APPROVAL_GATED_BRONZE_ID && stopState !== "open") {
+        body = (
+          <ParentApprovalStop
+            state={stopState}
+            onBack={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onRetry={() => setStopAttempt((n) => n + 1)}
+          />
+        );
+        break;
+      }
       const where = { level: floor.level, silverId: silver.id, bronzeId: bronze.id };
       const index = view.index;
       const current = bronze.tasks[index];

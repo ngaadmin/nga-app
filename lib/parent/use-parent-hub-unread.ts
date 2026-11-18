@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { resolveParentHubUnreadCount } from "@/lib/parent/parent-hub-unread";
+import { PARENT_HUB_UNREAD_CHANGED_EVENT } from "@/lib/launchpad/parent-approval/config";
+import { loadParentHubUnreadCount } from "@/lib/launchpad/parent-approval/server";
+import { readParentUnreadOverride } from "@/lib/parent/parent-hub-unread";
+
+/** How often the open app asks again, so a request that arrives while the parent is here shows up. */
+const REFRESH_MS = 60_000;
 
 /**
  * Unread Parent Hub items for the top-bar signals. Always 0 for non-parents.
- * In production the live source is 0 (no messages table yet). Off production,
- * `?parentUnread=N` overrides the count for preview testing.
+ * The live source is the number of Launchpad approval requests still waiting
+ * on this parent. Off production, `?parentUnread=N` overrides the count for
+ * preview testing (ignored in production).
  *
  * Starts at 0 on the first render so the server HTML and the hydrated client
- * match, then reads the query on the client.
+ * match, then reads the query and the server count on the client.
  */
 export function useParentHubUnreadCount(isParent: boolean): number {
   const [count, setCount] = useState(0);
@@ -19,7 +25,31 @@ export function useParentHubUnreadCount(isParent: boolean): number {
       setCount(0);
       return;
     }
-    setCount(resolveParentHubUnreadCount({ search: window.location.search }));
+    const override = readParentUnreadOverride(window.location.search);
+    if (override != null) {
+      setCount(override);
+      return;
+    }
+    let cancelled = false;
+    const refresh = () => {
+      void loadParentHubUnreadCount()
+        .then((next) => {
+          if (!cancelled) setCount(next);
+        })
+        .catch(() => {
+          // Keep the last count; the next refresh tries again.
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, REFRESH_MS);
+    window.addEventListener("focus", refresh);
+    window.addEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, refresh);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, refresh);
+    };
   }, [isParent]);
 
   return isParent ? count : 0;

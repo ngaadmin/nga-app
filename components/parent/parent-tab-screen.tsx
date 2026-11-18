@@ -35,6 +35,10 @@ import { cn } from "@/lib/utils/cn";
 import { HUB_CHILD_PARAM } from "@/lib/parent/cash-rate-return";
 import { HubChildPage } from "@/components/parent/hub-child-page";
 import { ParentHubChildCard } from "@/components/parent/parent-hub-child-card";
+import {
+  LaunchpadApprovalRow,
+  LaunchpadApprovalSheet,
+} from "@/components/parent/launchpad-approval";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 
@@ -290,6 +294,11 @@ function UnlockedView({
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
   /** Parent ticks the Terms box before approving a child in the app. */
   const [reviewTermsAccepted, setReviewTermsAccepted] = useState(false);
+  /** Launchpad approval sheet: a learner is at the parent approval stop. */
+  const [launchpadReview, setLaunchpadReview] = useState<Extract<
+    ParentTabOkItem,
+    { kind: "launchpad" }
+  > | null>(null);
   /** To settle: the parent confirms they paid this amount outside the app. */
   const [settle, setSettle] = useState<Extract<
     ParentTabOkItem,
@@ -493,6 +502,11 @@ function UnlockedView({
     }
   }
 
+  /** A "not now" answer stays listed so it can be changed, but is not a to-do. */
+  const todoCount = data.needsOk.filter(
+    (item) => !(item.kind === "launchpad" && item.status === "declined"),
+  ).length;
+
   return (
     <div data-parent-tab-content>
       <div
@@ -551,9 +565,7 @@ function UnlockedView({
             Needs your OK
           </h2>
           <small className="font-sans text-[11.5px] font-semibold text-[#8A5300]">
-            {data.needsOk.length === 0
-              ? "All done"
-              : `${data.needsOk.length} to do`}
+            {todoCount === 0 ? "All done" : `${todoCount} to do`}
           </small>
         </div>
         {data.needsOk.length === 0 ? (
@@ -561,7 +573,15 @@ function UnlockedView({
             Nothing needs your OK right now.
           </p>
         ) : (
-          data.needsOk.map((item, index) => (
+          data.needsOk.map((item, index) =>
+            item.kind === "launchpad" ? (
+              <LaunchpadApprovalRow
+                key={`launchpad-${item.learnerId}-${item.ventureId}`}
+                item={item}
+                first={index === 0}
+                onReview={() => setLaunchpadReview(item)}
+              />
+            ) : (
             <div
               key={
                 item.kind === "approval"
@@ -631,13 +651,23 @@ function UnlockedView({
                 </button>
               )}
             </div>
-          ))
+            ),
+          )
         )}
       </section>
 
       {data.messages.length > 0 ? (
         <MessagesLog messages={data.messages} />
       ) : null}
+
+      <LaunchpadApprovalSheet
+        item={launchpadReview}
+        onClose={() => setLaunchpadReview(null)}
+        onDecided={() => {
+          setLaunchpadReview(null);
+          onChanged();
+        }}
+      />
 
       <ModalShell
         isOpen={Boolean(settle)}

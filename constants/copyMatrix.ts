@@ -677,6 +677,47 @@ export const copyMatrix = {
       },
     ],
   },
+  /**
+   * Launchpad parent approval stop (Cath's decisions, 17 Nov 2026). Tokens in
+   * braces are filled in by the screens: {child}, {venture}, {date}.
+   */
+  launchpadParentApproval: {
+    learner: {
+      title: "Time to check in with a parent",
+      waitingBody:
+        "Before you start telling people about your business, a parent needs to say OK. We sent them a message in the Parent Hub.",
+      waitingChip: "Waiting for a parent's OK",
+      notNowBody:
+        "Your parent said not right now. You can keep building the rest of your business while you wait.",
+      checking: "Checking in with your parent...",
+      errorBody: "We couldn't check on that just now. Try again in a moment.",
+      retry: "Try again",
+      back: "Go back",
+    },
+    parent: {
+      rowEyebrow: "Business approval",
+      rowTitle: "{child} is ready to tell people about their {venture} business",
+      rowPending: "Asked on {date}.",
+      rowNotNow: "You said not now. You can change your answer any time.",
+      review: "Review",
+      sheetTitle: "{child} is ready to tell people about their business",
+      sheetIntro:
+        "{child} has finished the planning steps for their {venture} business. Next they start telling people about it and reaching out to customers.",
+      sheetWhatYouApprove:
+        "Saying yes means you know your child is about to start selling and talking to customers. Small changes to their plan later do not need another OK.",
+      sheetCounsel:
+        "Before you say yes, talk it through together. Check when, where and how they will deliver the business to customers, and who they will be dealing with.",
+      sheetDisclaimer:
+        "NextGenAchiever$ is an educational tool. We do not take on any risk for you or your child, and what you see here is not advice. You decide what your child does in the real world.",
+      disclaimerLink: "Read our disclaimer",
+      approve: "Approve",
+      notNow: "Not now",
+      back: "Back",
+      pinApprove: "Enter your Parent PIN to approve {child}'s business.",
+      pinNotNow: "Enter your Parent PIN to say not now for {child}'s business.",
+      saveError: "Could not save that. Try again.",
+    },
+  },
 } as const;
 
 export type DashboardCopyPillar = keyof Pick<

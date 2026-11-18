@@ -4,8 +4,9 @@ import { copyMatrix } from "@/constants/copyMatrix";
  * Shared unread-count source for the Parent Hub signals on the parent
  * avatar (red dot) and the Parent Hub menu row (count pill).
  *
- * There is no messages table yet, so the live count is always 0. Off
- * production, `?parentUnread=N` can override the count for preview tests.
+ * The live count (Launchpad approval requests waiting on the parent) comes
+ * from the server: see loadParentHubUnreadCount and use-parent-hub-unread.ts.
+ * There is no messages table yet. Off production, `?parentUnread=N` can override the count for preview tests.
  * That query is ignored when VERCEL_ENV or NEXT_PUBLIC_VERCEL_ENV is
  * production, so it cannot leak into the live app.
  */
@@ -81,7 +82,7 @@ export function readParentUnreadOverride(
   );
 }
 
-/** Live source. No messages table yet, so this is always 0. */
+/** Synchronous fallback before the server count arrives. */
 export function parentHubUnreadCountFromSource(): number {
   return 0;
 }

@@ -36,6 +36,7 @@ import {
 import { assembleLearnerView } from "@/lib/privacy/data-controls";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { listLaunchpadApprovals } from "@/lib/launchpad/parent-approval/list";
 
 type ChildProfileRow = {
   id: string;
@@ -417,6 +418,16 @@ export type ParentTabOkItem =
       expiresAt: string;
     }
   | {
+      /** A learner reached the Launchpad parent approval stop (or was told not now). */
+      kind: "launchpad";
+      learnerId: string;
+      childUsername: string;
+      ventureId: string;
+      ventureName: string;
+      requestedAt: string;
+      status: "pending" | "declined";
+    }
+  | {
       kind: "owed";
       childUserId: string;
       childUsername: string;
@@ -508,6 +519,12 @@ export async function loadParentTabData(
       childCohort: request.childCohort,
       expiresAt: request.expiresAt,
     });
+  }
+  const launchpadApprovals = await listLaunchpadApprovals(
+    active.map((row) => ({ id: row.id, username: String(row.username).trim() })),
+  );
+  for (const request of launchpadApprovals) {
+    needsOk.push({ kind: "launchpad", ...request });
   }
   for (const row of active) {
     const progress = payloads.get(row.id) as { wallet?: unknown } | undefined;

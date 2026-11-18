@@ -68,11 +68,11 @@ async function resolveParentContext(): Promise<ParentContext | null> {
   if (!user) return null;
 
   const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id, username, account_role")
-    .eq("id", user.id)
-    .maybeSingle();
+  // The profile and the child links only need the user id, so ask together.
+  const [{ data: profile }, { data: links }] = await Promise.all([
+    admin.from("profiles").select("id, username, account_role").eq("id", user.id).maybeSingle(),
+    admin.from("parent_child").select("child_id").eq("parent_id", user.id),
+  ]);
   if (!profile || profile.account_role !== "parent_master") {
     return {
       userId: user.id,
@@ -82,10 +82,6 @@ async function resolveParentContext(): Promise<ParentContext | null> {
     };
   }
 
-  const { data: links } = await admin
-    .from("parent_child")
-    .select("child_id")
-    .eq("parent_id", user.id);
   const childIds = [
     ...new Set((links ?? []).map((row) => row.child_id).filter(Boolean)),
   ] as string[];
@@ -469,10 +465,13 @@ export async function loadParentTabData(
   // Progress is read for active children only: a waiting child's parent
   // hasn't consented, so none of their data reaches the Hub.
   const active = shown.filter((row) => row.account_status === "active");
-  const [payloads, lifetimeLessons, pending] = await Promise.all([
+  const [payloads, lifetimeLessons, pending, launchpadApprovals] = await Promise.all([
     readLearnerProgressPayloads(active.map((row) => row.id)),
     readLifetimeLessonCounts(active.map((row) => String(row.username).trim())),
     listPendingConsentRequestsForParent(),
+    listLaunchpadApprovals(
+      active.map((row) => ({ id: row.id, username: String(row.username).trim() })),
+    ),
   ]);
 
   const linked: ParentTabChildSummary[] = shown.map((row) => {
@@ -520,9 +519,6 @@ export async function loadParentTabData(
       expiresAt: request.expiresAt,
     });
   }
-  const launchpadApprovals = await listLaunchpadApprovals(
-    active.map((row) => ({ id: row.id, username: String(row.username).trim() })),
-  );
   for (const request of launchpadApprovals) {
     needsOk.push({ kind: "launchpad", ...request });
   }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PARENT_HUB_UNREAD_CHANGED_EVENT } from "@/lib/launchpad/parent-approval/config";
-import { loadParentHubUnreadCount } from "@/lib/launchpad/parent-approval/server";
+import { fetchParentHubSignals } from "@/lib/parent/hub-signals-client";
 import { readParentUnreadOverride } from "@/lib/parent/parent-hub-unread";
 
 /** How often the open app asks again, so a request that arrives while the parent is here shows up. */
@@ -32,9 +32,9 @@ export function useParentHubUnreadCount(isParent: boolean): number {
     }
     let cancelled = false;
     const refresh = () => {
-      void loadParentHubUnreadCount()
-        .then((next) => {
-          if (!cancelled) setCount(next);
+      void fetchParentHubSignals()
+        .then(({ unreadCount }) => {
+          if (!cancelled) setCount(unreadCount);
         })
         .catch(() => {
           // Keep the last count; the next refresh tries again.

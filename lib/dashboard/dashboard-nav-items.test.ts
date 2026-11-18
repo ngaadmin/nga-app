@@ -22,10 +22,18 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
     accountStatus: "ACTIVE",
   });
 
-  it("gives the parent Academy, Vault, Community, Subscription", () => {
-    expect(ids(parent)).toEqual(["academy", "vault", "community", "subscription"]);
+  it("gives the parent five tabs: Academy, Launchpad, Vault, Community, Subscription", () => {
+    expect(ids(parent)).toEqual(["academy", "launchpad", "vault", "community", "subscription"]);
     expect(parent.at(-1)?.label).toBe("Subscription");
-    expect(ids(parent)).not.toContain("launchpad");
+    expect(parent.find((item) => item.id === "launchpad")?.locked).toBeFalsy();
+  });
+
+  it("keeps Subscription for parents only", () => {
+    expect(ids(child)).not.toContain("subscription");
+    const teacher = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "teacher" });
+    expect(ids(teacher)).not.toContain("subscription");
+    const guest = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "guest" });
+    expect(ids(guest)).not.toContain("subscription");
   });
 
   it("drops Parent and Settings for the parent even before eligibility loads", () => {

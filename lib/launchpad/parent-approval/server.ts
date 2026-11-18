@@ -213,16 +213,12 @@ export async function loadParentHubUnreadCount(): Promise<number> {
     const parentId = await signedInUserId();
     if (!parentId) return 0;
     const admin = createAdminClient();
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("account_role")
-      .eq("id", parentId)
-      .maybeSingle();
+    // The role and the links only need the parent id, so ask together.
+    const [{ data: profile }, { data: links }] = await Promise.all([
+      admin.from("profiles").select("account_role").eq("id", parentId).maybeSingle(),
+      admin.from("parent_child").select("child_id").eq("parent_id", parentId),
+    ]);
     if (profile?.account_role !== "parent_master") return 0;
-    const { data: links } = await admin
-      .from("parent_child")
-      .select("child_id")
-      .eq("parent_id", parentId);
     const childIds = (links ?? []).map((row) => row.child_id as string);
     if (childIds.length === 0) return 0;
     const { data } = await admin

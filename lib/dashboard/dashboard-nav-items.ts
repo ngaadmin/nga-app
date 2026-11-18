@@ -25,8 +25,8 @@ export function dashboardNavAudience(session: UserSession | null): DashboardNavA
  * The one list both the phone bottom bar and the desktop sidebar render, so
  * they can't drift apart. An active child sees Launchpad. A guest sees a
  * locked Launchpad tab that does not open the route. A pending or declined
- * child, a parent, or a teacher does not see the tab. A parent sees Academy,
- * Vault, Community, Subscription. Settings and the Parent Hub open from the
+ * child, or a teacher, does not see the tab. A parent sees Academy,
+ * Launchpad, Vault, Community, Subscription. Settings and the Parent Hub open from the
  * avatar menu.
  */
 export function dashboardNavItemsFor(options: {
@@ -50,12 +50,16 @@ export function dashboardNavItemsFor(options: {
   );
   const items = parentBottomBarItems(base, options.isParentProfile);
   const audience = options.audience ?? (options.isParentProfile ? "parent" : "child");
+  // A parent keeps Launchpad on their bar (the five tabs approved on 2 Nov).
+  // A child sees it only once their account is active. Teachers, and children
+  // who are pending or declined, do not.
   const showLaunchpad =
-    audience === "child" &&
-    launchpadLearnerMayEnterProfile({
-      accountRole: "child",
-      accountStatus: options.accountStatus,
-    });
+    audience === "parent" ||
+    (audience === "child" &&
+      launchpadLearnerMayEnterProfile({
+        accountRole: "child",
+        accountStatus: options.accountStatus,
+      }));
   if (showLaunchpad) return items;
   if (audience === "guest" && options.sessionReady !== false) {
     return items.map((item) =>

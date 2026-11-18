@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
-import { launchpadLearnerMayEnter } from "@/lib/launchpad/dashboard-access";
+import { launchpadLearnerMayEnter, launchpadViewerIsParent } from "@/lib/launchpad/dashboard-access";
+import { LaunchpadDashboard } from "@/components/dashboard/launchpad/launchpad-dashboard";
 import { loadDashboardLaunchpadVenture } from "@/lib/launchpad/content/dashboard-source";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
@@ -22,7 +23,18 @@ const DOG_WALKING_ID = "dog-walking";
  * ?reset, ?venture, ?draft) are not read. Content is loadDashboardLaunchpadVenture.
  */
 export default async function LaunchpadPage() {
-  if (!(await launchpadLearnerMayEnter())) redirect(DASHBOARD_DEFAULT_HREF);
+  if (!(await launchpadLearnerMayEnter())) {
+    // A parent has the Launchpad tab but is not a learner: the same "coming
+    // soon" page they see today. Anyone else goes back to the dashboard.
+    if (await launchpadViewerIsParent()) {
+      return (
+        <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white">
+          <LaunchpadDashboard />
+        </div>
+      );
+    }
+    redirect(DASHBOARD_DEFAULT_HREF);
+  }
 
   const load = await loadDashboardLaunchpadVenture(DOG_WALKING_ID);
   const view: LaunchpadVentureView = load.ok

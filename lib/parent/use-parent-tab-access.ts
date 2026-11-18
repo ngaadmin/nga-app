@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
-import {
-  loadParentTabAccess,
-  type ParentTabAccess,
-} from "@/lib/parent/parent-tab-server";
+import type { ParentTabAccess } from "@/lib/parent/parent-tab-server";
+import { fetchParentHubSignals } from "@/lib/parent/hub-signals-client";
 
 /**
  * Whether to show the Parent tab. The server decides (parent_master plus an
@@ -17,9 +15,9 @@ const cache = new Map<string, Promise<ParentTabAccess>>();
 function accessFor(userId: string): Promise<ParentTabAccess> {
   let pending = cache.get(userId);
   if (!pending) {
-    pending = loadParentTabAccess().catch(
-      () => ({ eligible: false }) as ParentTabAccess,
-    );
+    pending = fetchParentHubSignals()
+      .then(({ access }) => access)
+      .catch(() => ({ eligible: false }) as ParentTabAccess);
     cache.set(userId, pending);
   }
   return pending;

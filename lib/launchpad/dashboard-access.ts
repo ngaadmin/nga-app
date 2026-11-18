@@ -31,3 +31,25 @@ export async function launchpadLearnerMayEnter(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * True when the signed-in account is a parent. A parent has Launchpad on their
+ * bar but is not a learner, so they see the "coming soon" page, not the route.
+ */
+export async function launchpadViewerIsParent(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data } = await supabase
+      .from("profiles")
+      .select("account_role")
+      .eq("id", user.id)
+      .maybeSingle();
+    return data?.account_role === "parent_master";
+  } catch {
+    return false;
+  }
+}

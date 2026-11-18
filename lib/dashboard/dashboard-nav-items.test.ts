@@ -15,7 +15,12 @@ const active = (items: DashboardNavLinkItem[], pathname: string) =>
 
 describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
   const parent = dashboardNavItemsFor({ parentTabEligible: true, isParentProfile: true, audience: "parent" });
-  const child = dashboardNavItemsFor({ parentTabEligible: false, isParentProfile: false, audience: "child" });
+  const child = dashboardNavItemsFor({
+    parentTabEligible: false,
+    isParentProfile: false,
+    audience: "child",
+    accountStatus: "ACTIVE",
+  });
 
   it("gives the parent Academy, Vault, Community, Subscription", () => {
     expect(ids(parent)).toEqual(["academy", "vault", "community", "subscription"]);
@@ -39,9 +44,28 @@ describe("dashboardNavItemsFor (phone bar and desktop sidebar)", () => {
       parentTabEligible: true,
       isParentProfile: false,
       audience: "child",
+      accountStatus: "active",
     });
     expect(ids(eligibleNonParent)).toContain("settings");
     expect(ids(eligibleNonParent)).toContain("launchpad");
+  });
+
+  it("hides Launchpad from a pending or declined child", () => {
+    const pending = dashboardNavItemsFor({
+      parentTabEligible: false,
+      isParentProfile: false,
+      audience: "child",
+      accountStatus: "PENDING_CONSENT",
+    });
+    const declined = dashboardNavItemsFor({
+      parentTabEligible: false,
+      isParentProfile: false,
+      audience: "child",
+      accountStatus: "declined",
+    });
+    expect(ids(pending)).not.toContain("launchpad");
+    expect(ids(declined)).not.toContain("launchpad");
+    expect(ids(pending)).toContain("academy");
   });
 
   it("highlights nothing for the parent on Hub and Settings pages", () => {

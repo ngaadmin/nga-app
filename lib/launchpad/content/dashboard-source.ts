@@ -9,10 +9,7 @@ import {
   type LaunchpadVentureLoad,
 } from "@/lib/launchpad/content/fetch-published";
 
-/** A signed-in learner. Parents, teachers, and guests are not learners. */
-export function launchpadLearnerRoleAllowed(accountRole: string | null | undefined): boolean {
-  return accountRole === "child";
-}
+export { launchpadLearnerRoleAllowed } from "@/lib/launchpad/learner-access";
 
 /**
  * Production (either Vercel env) must not fall through to the bundled seed.

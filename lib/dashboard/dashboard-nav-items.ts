@@ -4,6 +4,7 @@ import {
   type DashboardNavLinkItem,
 } from "@/lib/dashboard/navigation";
 import type { UserSession } from "@/lib/onboarding/guest-session";
+import { launchpadLearnerMayEnterProfile } from "@/lib/launchpad/learner-access";
 import {
   parentBottomBarItems,
   withParentTabNavItem,
@@ -22,15 +23,18 @@ export function dashboardNavAudience(session: UserSession | null): DashboardNavA
 
 /**
  * The one list both the phone bottom bar and the desktop sidebar render, so
- * they can't drift apart. A child sees Launchpad. A parent sees Academy,
- * Vault, Community, Subscription. A teacher or guest does not see Launchpad.
- * Settings and the Parent Hub open from the avatar menu.
+ * they can't drift apart. An active child sees Launchpad. A pending or
+ * declined child, a parent, a teacher, or a guest does not. A parent sees
+ * Academy, Vault, Community, Subscription. Settings and the Parent Hub open
+ * from the avatar menu.
  */
 export function dashboardNavItemsFor(options: {
   advancedMoneyUnlocked?: boolean;
   parentTabEligible: boolean;
   isParentProfile: boolean;
   audience?: DashboardNavAudience;
+  /** profiles.account_status, or the session lifecycle value (ACTIVE, …). */
+  accountStatus?: string | null;
 }): DashboardNavLinkItem[] {
   const base = withParentTabNavItem(
     withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
@@ -40,6 +44,12 @@ export function dashboardNavItemsFor(options: {
   );
   const items = parentBottomBarItems(base, options.isParentProfile);
   const audience = options.audience ?? (options.isParentProfile ? "parent" : "child");
-  if (audience === "child") return items;
+  const showLaunchpad =
+    audience === "child" &&
+    launchpadLearnerMayEnterProfile({
+      accountRole: "child",
+      accountStatus: options.accountStatus,
+    });
+  if (showLaunchpad) return items;
   return items.filter((item) => item.id !== "launchpad");
 }

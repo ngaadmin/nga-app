@@ -46,6 +46,7 @@ export function DashboardNavigation() {
     parentTabEligible: parentTab.eligible,
     isParentProfile: session?.accountRole === "parent_master",
     audience: hasSyncedUserSession() ? dashboardNavAudience(session) : "guest",
+    accountStatus: session?.accountStatus,
   });
 
   if (isDesktop) {

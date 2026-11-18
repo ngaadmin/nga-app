@@ -8,7 +8,10 @@ const server = vi.hoisted(() => ({
 }));
 const data = vi.hoisted(() => ({ loadParentHubChildProgress: vi.fn() }));
 
+const launchpad = vi.hoisted(() => ({ decideLaunchpadApproval: vi.fn() }));
+
 vi.mock("@/lib/parent/parent-tab-server", () => server);
+vi.mock("@/lib/launchpad/parent-approval/server", () => launchpad);
 vi.mock("@/lib/privacy/account-data-server", () => data);
 vi.mock("@/lib/onboarding/approve-consent-request", () => ({
   approveConsentRequestFromParentTab: vi.fn(),
@@ -100,5 +103,41 @@ describe("ParentTabScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "See Zed's progress" }));
     await act(async () => {});
     expect(data.loadParentHubChildProgress).toHaveBeenCalledWith("pass-3", "a1");
+  });
+
+  it("Launchpad approval: one tap, no second PIN, the row clears and the count drops at once", async () => {
+    const launchpadItem = {
+      kind: "launchpad",
+      learnerId: "a1",
+      childUsername: "Zed",
+      ventureId: "dog-walking",
+      ventureName: "Dog walking",
+      requestedAt: "2026-11-18T10:00:00.000Z",
+      status: "pending",
+    };
+    // The reload still returns the old list: the screen must not depend on it to clear.
+    server.loadParentTabData.mockResolvedValue({
+      ok: true,
+      data: { ...hubData, needsOk: [...hubData.needsOk, launchpadItem] },
+    });
+    launchpad.decideLaunchpadApproval.mockResolvedValue({ ok: true, status: "approved" });
+    const deltas: unknown[] = [];
+    const listen = (event: Event) => deltas.push((event as CustomEvent).detail);
+    window.addEventListener("parent-hub:unread-changed", listen);
+
+    await openHub();
+    expect(document.querySelectorAll("[data-parent-tab-ok-row=launchpad]")).toHaveLength(1);
+    fireEvent.click(document.querySelector("[data-launchpad-approval-review]")!);
+    expect(document.querySelector("[data-launchpad-approval-sheet] [data-parent-tab-pin-input]")).toBeNull();
+    expect(screen.queryByTestId("entry-gate")).toBeNull();
+    await act(async () => {
+      fireEvent.click(document.querySelector("[data-launchpad-approval-approve]")!);
+    });
+
+    expect(launchpad.decideLaunchpadApproval).toHaveBeenCalledWith("a1", "dog-walking", "yes");
+    expect(document.querySelector("[data-launchpad-approval-sheet]")).toBeNull();
+    expect(document.querySelectorAll("[data-parent-tab-ok-row=launchpad]")).toHaveLength(0);
+    expect(deltas).toEqual([{ pendingDelta: -1 }]);
+    window.removeEventListener("parent-hub:unread-changed", listen);
   });
 });

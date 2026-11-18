@@ -50,7 +50,7 @@ describe("Launchpad approval sheet: one tap, no second PIN", () => {
       fireEvent.click(document.querySelector("[data-launchpad-approval-approve]")!);
     });
     expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "yes");
-    expect(onDecided).toHaveBeenCalledTimes(1);
+    expect(onDecided).toHaveBeenCalledWith("approved");
     expect(changed).toHaveBeenCalledTimes(1);
     window.removeEventListener("parent-hub:unread-changed", changed);
   });
@@ -62,7 +62,7 @@ describe("Launchpad approval sheet: one tap, no second PIN", () => {
       fireEvent.click(document.querySelector("[data-launchpad-approval-not-now]")!);
     });
     expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "no");
-    expect(onDecided).toHaveBeenCalledTimes(1);
+    expect(onDecided).toHaveBeenCalledWith("declined");
   });
 
   it("shows the server's message when it says no, and stays usable", async () => {

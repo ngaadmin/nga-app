@@ -77,7 +77,7 @@ export function LaunchpadApprovalSheet({
 }: {
   item: LaunchpadApprovalItem | null;
   onClose: () => void;
-  onDecided: () => void;
+  onDecided: (status: "approved" | "declined") => void;
 }) {
   const [deciding, setDeciding] = useState<"yes" | "no" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -101,8 +101,14 @@ export function LaunchpadApprovalSheet({
         setError(result.error || copy.saveError);
         return;
       }
-      window.dispatchEvent(new Event(PARENT_HUB_UNREAD_CHANGED_EVENT));
-      onDecided();
+      // The count drops at once (a waiting request was answered), then the
+      // server count confirms it.
+      window.dispatchEvent(
+        new CustomEvent(PARENT_HUB_UNREAD_CHANGED_EVENT, {
+          detail: { pendingDelta: item.status === "pending" ? -1 : 0 },
+        }),
+      );
+      onDecided(result.status === "approved" ? "approved" : "declined");
     } catch {
       setError(copy.saveError);
     } finally {

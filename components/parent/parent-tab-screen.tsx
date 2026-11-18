@@ -299,6 +299,11 @@ function UnlockedView({
     ParentTabOkItem,
     { kind: "launchpad" }
   > | null>(null);
+  /**
+   * Launchpad answers given here, applied at once so the row clears or turns to
+   * "Not now" without waiting for the Hub to reload. The reload then agrees.
+   */
+  const [launchpadAnswered, setLaunchpadAnswered] = useState<Record<string, "approved" | "declined">>({});
   /** To settle: the parent confirms they paid this amount outside the app. */
   const [settle, setSettle] = useState<Extract<
     ParentTabOkItem,
@@ -502,8 +507,15 @@ function UnlockedView({
     }
   }
 
+  const needsOk = data.needsOk.flatMap((item): ParentTabOkItem[] => {
+    if (item.kind !== "launchpad") return [item];
+    const answered = launchpadAnswered[`${item.learnerId}:${item.ventureId}`];
+    if (answered === "approved") return [];
+    return [answered === "declined" ? { ...item, status: "declined" } : item];
+  });
+
   /** A "not now" answer stays listed so it can be changed, but is not a to-do. */
-  const todoCount = data.needsOk.filter(
+  const todoCount = needsOk.filter(
     (item) => !(item.kind === "launchpad" && item.status === "declined"),
   ).length;
 
@@ -527,7 +539,7 @@ function UnlockedView({
           }
           // Waiting for consent: never opens progress. With an open request
           // the card opens that approval (same sheet as Review).
-          const approval = data.needsOk.find(
+          const approval = needsOk.find(
             (item): item is Extract<ParentTabOkItem, { kind: "approval" }> =>
               item.kind === "approval" && item.requestId === child.requestId,
           );
@@ -568,12 +580,12 @@ function UnlockedView({
             {todoCount === 0 ? "All done" : `${todoCount} to do`}
           </small>
         </div>
-        {data.needsOk.length === 0 ? (
+        {needsOk.length === 0 ? (
           <p className="pb-2.5 pt-1 font-sans text-[12.5px] text-[#1E3A5F]">
             Nothing needs your OK right now.
           </p>
         ) : (
-          data.needsOk.map((item, index) =>
+          needsOk.map((item, index) =>
             item.kind === "launchpad" ? (
               <LaunchpadApprovalRow
                 key={`launchpad-${item.learnerId}-${item.ventureId}`}
@@ -663,7 +675,11 @@ function UnlockedView({
       <LaunchpadApprovalSheet
         item={launchpadReview}
         onClose={() => setLaunchpadReview(null)}
-        onDecided={() => {
+        onDecided={(status) => {
+          if (launchpadReview) {
+            const key = `${launchpadReview.learnerId}:${launchpadReview.ventureId}`;
+            setLaunchpadAnswered((current) => ({ ...current, [key]: status }));
+          }
           setLaunchpadReview(null);
           onChanged();
         }}

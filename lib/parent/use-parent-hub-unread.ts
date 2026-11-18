@@ -43,12 +43,18 @@ export function useParentHubUnreadCount(isParent: boolean): number {
     refresh();
     const timer = window.setInterval(refresh, REFRESH_MS);
     window.addEventListener("focus", refresh);
-    window.addEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, refresh);
+    const onChanged = (event: Event) => {
+      // A request was just answered here: drop the count now, then confirm.
+      const delta = (event as CustomEvent<{ pendingDelta?: number } | undefined>).detail?.pendingDelta;
+      if (typeof delta === "number" && delta !== 0) setCount((current) => Math.max(0, current + delta));
+      refresh();
+    };
+    window.addEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, onChanged);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
       window.removeEventListener("focus", refresh);
-      window.removeEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, refresh);
+      window.removeEventListener(PARENT_HUB_UNREAD_CHANGED_EVENT, onChanged);
     };
   }, [isParent]);
 

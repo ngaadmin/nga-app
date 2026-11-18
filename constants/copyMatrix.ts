@@ -756,7 +756,7 @@ export const copyMatrix = {
         preheader: "They can keep building the rest of their plan while they wait.",
         header: "Your child is still waiting for your OK",
         intro:
-          "{child} asked for your OK a day ago, so they can start telling people about their {venture} business.",
+          "{child} asked for your OK so they can start telling people about their {venture} business.",
         onlyOne: "This is the only reminder we will send. You can answer any time in the Parent Hub.",
         whatYouApprove:
           "Saying yes means you know your child is about to start selling and talking to customers.",

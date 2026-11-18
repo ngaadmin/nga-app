@@ -1,6 +1,17 @@
-import { getParentPinState } from "@/lib/parent/parent-tab-server";
+type PinState =
+  | { ok: true; hasPin: boolean; lockedUntil: number | null }
+  | { ok: false; error: string };
 
-type PinState = Awaited<ReturnType<typeof getParentPinState>>;
+/** GET /api/parent/pin-state: a plain request, so it never waits behind server actions. */
+async function getParentPinState(): Promise<PinState> {
+  try {
+    const response = await fetch("/api/parent/pin-state", { cache: "no-store", credentials: "same-origin" });
+    if (!response.ok) throw new Error(`pin-state ${response.status}`);
+    return (await response.json()) as PinState;
+  } catch {
+    return { ok: false, error: "Couldn't check your PIN. Try again." };
+  }
+}
 
 /** Short, so a lock that starts elsewhere is never hidden for long. The server checks every PIN anyway. */
 const TTL_MS = 20_000;

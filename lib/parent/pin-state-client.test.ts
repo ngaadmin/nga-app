@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const server = vi.hoisted(() => ({ getParentPinState: vi.fn() }));
-vi.mock("@/lib/parent/parent-tab-server", () => server);
+vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => server.getParentPinState() }));
 
 import { clearParentPinStateCache, getParentPinStateCached } from "@/lib/parent/pin-state-client";
 

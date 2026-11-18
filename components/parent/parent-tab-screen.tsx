@@ -25,9 +25,9 @@ import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import type { ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
+import { openParentHubFromBrowser } from "@/lib/parent/hub-open-client";
 import {
   loadParentTabData,
-  openParentHubWithPin,
   renewParentTabGatePass,
   type ParentHubLoad,
   type ParentTabChildSummary,
@@ -191,7 +191,7 @@ export function ParentTabScreen({
             className="mx-0"
             enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to open the Parent Hub.`}
             onUnlocked={unlock}
-            openGate={openParentHubWithPin}
+            openGate={openParentHubFromBrowser}
           />
         )}
       </div>

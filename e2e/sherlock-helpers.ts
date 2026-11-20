@@ -15,7 +15,7 @@ const NGA_TEST_REF = "gullnudronyguhkwppta";
 const ACCOUNTS_FILE =
   process.env.NGA_TEST_ACCOUNTS_FILE || "/workspace/supabase-test/test-accounts.json";
 
-export type TestAccount = { username: string; password: string };
+export type TestAccount = { label: string; username: string; password: string };
 
 /** Throws unless the app under test uses the nga-test project (never prod). */
 export function assertNgaTestProject(): void {
@@ -37,16 +37,31 @@ export function testAccount(key: string): TestAccount {
   if (!account?.username || !account?.password) {
     throw new Error(`Account "${key}" is missing from the nga-test accounts file.`);
   }
-  return { username: account.username, password: account.password };
+  return { label: key, username: account.username, password: account.password };
 }
 
-/** Signs in through the real sign-in screen and waits for the Academy home. */
+/**
+ * Signs in through the real sign-in screen and waits for the Academy home.
+ * Fails fast, with a clear message, if the sign-in is rate-limited (HTTP 429).
+ * The message names the account by its label only, never a password.
+ */
 export async function signIn(page: Page, account: TestAccount): Promise<void> {
   await page.goto("/onboarding/sign-in");
   await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
   await page.getByRole("textbox", { name: "Email or username" }).fill(account.username);
   await page.getByPlaceholder("Password").fill(account.password);
+
+  const signInResponse = page.waitForResponse(
+    (res) => res.url().includes("/api/auth/sign-in") && res.request().method() === "POST",
+    { timeout: 30_000 },
+  );
   await page.getByRole("button", { name: "LOG IN" }).click();
+  const status = (await signInResponse).status();
+  if (status === 429) {
+    throw new Error(
+      `Sign-in rate-limited (429) for ${account.label} - wait 15 min and run again.`,
+    );
+  }
   await expect(page).toHaveURL(/\/dashboard\/academy\/?$/, { timeout: 20_000 });
 }
 

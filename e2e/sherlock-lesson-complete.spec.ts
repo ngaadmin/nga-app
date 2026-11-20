@@ -87,8 +87,14 @@ for (const { label, viewport } of sizes) {
     }) => {
       await signIn(page, testAccount("learner_fresh"));
       const replayStep1 = page.getByRole("button", { name: "Replay Academy step 1", exact: true });
+      const freshStep1 = page.getByRole("button", { name: "Academy step 1", exact: true });
+      // Wait for the home screen to settle: step 1 shows in one of its two states
+      // and the coins button is there. Only then read the starting state.
+      await expect(replayStep1.or(freshStep1)).toBeVisible();
+      await expect(page.getByRole("button", { name: /coins to cash in/i }).first()).toBeVisible();
       const alreadyDone = await replayStep1.isVisible();
       const coinsBefore = await coinsToCashIn(page);
+      console.log(`[evidence] ${label}: already completed=${alreadyDone}, coins before=${coinsBefore}`);
       const expectedCoins = coinsBefore + (alreadyDone ? 0 : LESSON_COINS);
 
       await playLesson1ToTheEnd(page);
@@ -114,12 +120,14 @@ for (const { label, viewport } of sizes) {
       await expect(page).toHaveURL(/\/dashboard\/academy\/?$/);
       await expect(replayStep1).toBeVisible();
       await expect(page.getByRole("button", { name: `${expectedCoins} coins to cash in` })).toBeVisible();
+      console.log(`[evidence] ${label}: coins after lesson=${await coinsToCashIn(page)} (expected ${expectedCoins})`);
 
       // Reload: the result was saved, not just shown.
       await page.unroute("**/dashboard/academy/lesson/1");
       await page.reload();
       await expect(replayStep1).toBeVisible();
       await expect(page.getByRole("button", { name: `${expectedCoins} coins to cash in` })).toBeVisible();
+      console.log(`[evidence] ${label}: coins after reload=${await coinsToCashIn(page)}`);
     });
   });
 }

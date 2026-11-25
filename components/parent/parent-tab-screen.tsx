@@ -685,6 +685,7 @@ function UnlockedView({
 
       <LaunchpadApprovalSheet
         item={launchpadReview}
+        pass={pass}
         onClose={() => setLaunchpadReview(null)}
         onDecided={(status) => {
           if (launchpadReview) {

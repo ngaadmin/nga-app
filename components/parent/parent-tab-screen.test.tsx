@@ -137,7 +137,7 @@ describe("ParentTabScreen", () => {
       fireEvent.click(document.querySelector("[data-launchpad-approval-approve]")!);
     });
 
-    expect(launchpad.decideLaunchpadApproval).toHaveBeenCalledWith("a1", "dog-walking", "yes");
+    expect(launchpad.decideLaunchpadApproval).toHaveBeenCalledWith("a1", "dog-walking", "yes", "pass-1");
     expect(document.querySelector("[data-launchpad-approval-sheet]")).toBeNull();
     expect(document.querySelectorAll("[data-parent-tab-ok-row=launchpad]")).toHaveLength(0);
     expect(deltas).toEqual([{ pendingDelta: -1 }]);

@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { sendLaunchpadApprovalEmail } from "@/lib/launchpad/parent-approval/email";
+import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import {
   isVentureId,
   learnerSkipsStopForAge,
@@ -23,7 +24,7 @@ import {
  * Launchpad parent approval, server side. Reads and writes the learner's
  * launchpad_learner_ventures row with the service role, after checking who is
  * asking: the learner for their own row, or the linked parent holding a Parent
- * PIN gate pass. Nothing here changes the schema.
+ * PIN gate pass. The database stops a learner session writing the approval keys.
  */
 
 type VentureRow = {
@@ -178,11 +179,18 @@ export async function requestLaunchpadParentApproval(
  * PIN is asked once, when the parent opens the Parent Hub, so there is no second
  * PIN here. The caller must still be the signed-in parent_master account that is
  * linked to this learner in parent_child. A yes can't be turned back into a no.
+ *
+ * Self-approve lock (Cath, 25 Nov 2026): the answer must carry the Parent Hub
+ * gate pass the server signed when the Parent PIN was entered, so the action
+ * can't be called straight from a session that never passed the PIN, and the
+ * caller can never be the learner. The database refuses the same write from a
+ * learner session (migration 20261125123000_launchpad_parent_approval_lock).
  */
 export async function decideLaunchpadApproval(
   learnerId: string,
   ventureId: string,
   decision: "yes" | "no",
+  parentPinPass: string,
 ): Promise<{ ok: true; status: ParentApprovalStatus } | { ok: false; error: string }> {
   try {
     if (!isVentureId(ventureId) || (decision !== "yes" && decision !== "no")) {
@@ -190,6 +198,10 @@ export async function decideLaunchpadApproval(
     }
     const parentId = await signedInUserId();
     if (!parentId) return { ok: false, error: "Sign in as a parent first." };
+    if (parentId === learnerId) return { ok: false, error: "Only a parent can answer this." };
+    if (!parentTabGatePassValid(parentPinPass, parentId)) {
+      return { ok: false, error: "Open the Parent Hub with your Parent PIN first." };
+    }
     const admin = createAdminClient();
     const { data: profile } = await admin
       .from("profiles")

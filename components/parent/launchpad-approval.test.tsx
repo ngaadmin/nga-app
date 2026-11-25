@@ -24,7 +24,7 @@ const item = {
 const copy = copyMatrix.launchpadParentApproval.parent;
 
 function open(onClose = vi.fn(), onDecided = vi.fn()) {
-  render(<LaunchpadApprovalSheet item={item} onClose={onClose} onDecided={onDecided} />);
+  render(<LaunchpadApprovalSheet item={item} pass="hub-pass" onClose={onClose} onDecided={onDecided} />);
   return { onClose, onDecided };
 }
 
@@ -49,7 +49,7 @@ describe("Launchpad approval sheet: one tap, no second PIN", () => {
     await act(async () => {
       fireEvent.click(document.querySelector("[data-launchpad-approval-approve]")!);
     });
-    expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "yes");
+    expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "yes", "hub-pass");
     expect(onDecided).toHaveBeenCalledWith("approved");
     expect(changed).toHaveBeenCalledTimes(1);
     window.removeEventListener("parent-hub:unread-changed", changed);
@@ -61,7 +61,7 @@ describe("Launchpad approval sheet: one tap, no second PIN", () => {
     await act(async () => {
       fireEvent.click(document.querySelector("[data-launchpad-approval-not-now]")!);
     });
-    expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "no");
+    expect(server.decideLaunchpadApproval).toHaveBeenCalledWith("kid-1", "dog-walking", "no", "hub-pass");
     expect(onDecided).toHaveBeenCalledWith("declined");
   });
 

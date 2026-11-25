@@ -72,10 +72,13 @@ export function LaunchpadApprovalRow({
  */
 export function LaunchpadApprovalSheet({
   item,
+  pass,
   onClose,
   onDecided,
 }: {
   item: LaunchpadApprovalItem | null;
+  /** Parent Hub gate pass from the Parent PIN. The server refuses an answer without it. */
+  pass: string;
   onClose: () => void;
   onDecided: (status: "approved" | "declined") => void;
 }) {
@@ -96,7 +99,7 @@ export function LaunchpadApprovalSheet({
     setDeciding(answer);
     setError(null);
     try {
-      const result = await decideLaunchpadApproval(item.learnerId, item.ventureId, answer);
+      const result = await decideLaunchpadApproval(item.learnerId, item.ventureId, answer, pass);
       if (!result.ok) {
         setError(result.error || copy.saveError);
         return;
